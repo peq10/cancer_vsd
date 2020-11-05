@@ -12,8 +12,10 @@ import scipy.ndimage as ndimage
 import skimage.filters
 import time
 import matplotlib.cm
+
 import scipy.stats
 import scipy.signal
+
 
 import cancer_functions as cf
 
@@ -76,7 +78,9 @@ def label_roi_centroids(ax,masks,colours,fontdict = None):
 
 
 
+
 font = 10
+
 show_im = np.copy(im)
 show_im[-20:-15,-48-10:-10] = im.max()
 
@@ -97,6 +101,7 @@ axarr[1][0].set_title('Voltage signal map')
 axarr[1][1].set_title('Cell time courses')
 for i in range(time_courses.shape[0]):
     axarr[1][1].plot(time_courses[i,-1,:] - 5*np.arange(time_courses.shape[0])[i],color =colours[i],linewidth = 0.75)
+
     axarr[1][1].text(-10, -5*np.arange(time_courses.shape[0])[i],str(i+1),color = colours[i],fontdict = {'fontsize':font}, ha = 'center', va = 'center')
 
 x = 5

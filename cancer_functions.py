@@ -14,6 +14,7 @@ import tifffile
 import quantities as pq
 import scipy.interpolate as interp
 
+
 import f.general_functions as gf
 import f.ephys_functions as ef
 
@@ -127,6 +128,7 @@ def get_steps_image_ephys(im_dir,ephys_fname):
     
     return ephys_dict,stacks
 
+
 def interpolate_stack(ratio_stack, framelim = 1000):
     nits = int(np.ceil(ratio_stack.shape[0]/framelim))
     
@@ -146,5 +148,6 @@ def interpolate_stack(ratio_stack, framelim = 1000):
         full_res[:,it*framelim:it*framelim+result.shape[1],...] = result
         
     return full_res
+
 
         
