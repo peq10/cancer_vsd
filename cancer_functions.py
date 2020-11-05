@@ -12,6 +12,7 @@ import json
 import re
 import tifffile
 import quantities as pq
+import scipy.interpolate as interp
 
 import f.general_functions as gf
 import f.ephys_functions as ef
@@ -126,6 +127,24 @@ def get_steps_image_ephys(im_dir,ephys_fname):
     
     return ephys_dict,stacks
 
-
+def interpolate_stack(ratio_stack, framelim = 1000):
+    nits = int(np.ceil(ratio_stack.shape[0]/framelim))
+    
+    full_res = np.zeros((2,)+ratio_stack.shape)
+    for it in range(nits):
+        stack = ratio_stack[it*framelim:(it+1)*framelim,...]
+        result = np.zeros((2,)+stack.shape)
+        y, x = np.arange(stack.shape[1],dtype = int),np.arange(stack.shape[2],dtype = int)
+        z = [np.arange(0,stack.shape[0],2,dtype = int),np.arange(1,stack.shape[0],2,dtype = int)]
+        for i in range(2):
+            j = np.mod(i+1,2)
+            result[i,i::2,...] = stack[i::2,...]
+            interped = interp.RegularGridInterpolator((z[i],y,x),stack[i::2,...],bounds_error= False,fill_value=None)
+            pts = np.indices(stack.shape,dtype = int)[:,j::2,...].reshape((3,-1))
+            result[i,j::2,...] = interped(pts.T).reshape(stack[1::2,...].shape)
+        
+        full_res[:,it*framelim:it*framelim+result.shape[1],...] = result
+        
+    return full_res
 
         
