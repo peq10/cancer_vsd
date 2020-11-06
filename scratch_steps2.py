@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+se#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Fri Oct 30 13:07:04 2020
@@ -136,7 +136,7 @@ fit_eval = fit_x*fit.slope +fit.intercept
 
 
 font = 8
-fig,axarr = plt.subplots(nrows = 2,ncols = 3)
+afig,axarr = plt.subplots(nrows = 2,ncols = 3)
 axarr[0][0].imshow(show_im,cmap = 'Greys_r')
 axarr[0][0].axis('off')
 
@@ -155,6 +155,7 @@ pf.set_all_fontsize(axarr[1][1], font)
 
 
 x_v = np.arange(vm.shape[-1])/(40*10**3)
+axarr[0][1].set_prop_cycle('color',[matplotlib.cm.gist_rainbow(i) for i in np.linspace(0, 1, vm.shape[0])])
 axarr[0][1].plot(x_v,vm.T)
 pf.make_square_plot(axarr[0][1])
 axarr[0][1].set_xlabel('t (s)')
@@ -165,7 +166,7 @@ pf.set_all_fontsize(axarr[0][1], font)
 
 tc2 = tc[:,:-1].reshape((tc.shape[0],-1,2)).mean(-1)
 x_f = np.arange(tc2.shape[-1])/50
-
+axarr[0][2].set_prop_cycle('color',[matplotlib.cm.gist_rainbow(i) for i in np.linspace(0, 1, vm.shape[0])])
 axarr[0][2].plot(x_f,tc2.T)
 axarr[0][2].set_xlabel('t (s)')
 axarr[0][2].set_ylabel('dF/F (%)')
