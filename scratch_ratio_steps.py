@@ -7,15 +7,16 @@ Created on Thu Nov 12 18:10:23 2020
 """
 import numpy as np
 import pyqtgraph as pg
+import scipy.stats
 
 import cancer_functions as cf
 
 import f.image_functions as imf
 import f.general_functions as gf 
 
-im_dir = '/home/peter/data/Firefly/cancer/20201111/slip1/cell1/steps'
+im_dir = '/home/peter/data/Firefly/cancer/20201113/slip1/cell2/steps'
 
-ephys = '/home/peter/data/Firefly/cancer/20201111/slip1/cell1/ephys.smr'
+ephys = '/home/peter/data/Firefly/cancer/20201113/slip1/cell2/ephys.smr'
 
 
 
@@ -39,8 +40,8 @@ rat = interped[:,0,:,:,:]/interped[:,1,:,:,:]
 
 df_rat = np.array([gf.to_df(rat[i,...],offset = 0)[0] for i in range(rat.shape[0])])
 
-if False:
-    roi,_ = imf.get_cell_rois(np.mean(rat[-1,...],-3),1)
+if True:
+    roi,_ = imf.get_cell_rois(np.mean(stacks[-1,...],-3),1)
     
     
 t_courses = gf.t_course_from_roi(df_interped, roi[0])
