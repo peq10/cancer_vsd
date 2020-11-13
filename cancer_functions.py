@@ -48,6 +48,36 @@ def get_stack_offset(fname,ephys_start):
     
     return offset
 
+def load_ephys(fname, analog_names = ['LED','vcVm'],event_names = ['CamDown','Keyboard']):
+    s = ef.load_ephys(fname).segments[0]
+    as_names = [s.analogsignals[i].name for i in range(len(s.analogsignals))]
+    res_dict = {}
+    for name in analog_names:
+        try:
+            idx = as_names.index(name)
+            res_dict[name] = s.analogsignals[idx]
+        except ValueError:
+            idx = [i for i,x in enumerate(as_names) if name in x][0]
+            bundle = as_names[idx][len('Channel bundle ('):as_names[idx].find(')')].strip().split(',')
+            idx2 = bundle.index(name)
+            res_dict[name] = s.analogsignals[idx][:,idx2]
+            
+    ev_names = [s.events[i].name for i in range(len(s.events))]
+    for name in event_names:
+        idx = ev_names.index(name)
+        
+        res_dict[name+'_times'] = s.events[idx].times.magnitude
+        res_dict[name+'_labels'] = s.events[idx].labels
+    
+        #for backwards compatibility
+        if 'cam' in name.lower():
+            res_dict['cam'] = s.events[idx].times.magnitude
+            
+    ephys_start = ef.get_ephys_datetime(fname)
+    res_dict['ephys_start']  = ephys_start
+     
+    return res_dict
+'''
 def load_ephys(fname):
     ephys_start = ef.get_ephys_datetime(fname)
     ephys = ef.load_ephys(fname)
@@ -58,7 +88,7 @@ def load_ephys(fname):
     Im_cc = ephys.segments[0].analogsignals[3]
     
     return {'ephys_start':ephys_start,'ephys':ephys,'cam':cam,'Vm_vc':Vm_vc,'Im_vc':Im_vc,'Vm_cc':Vm_cc,'Im_cc':Im_cc}
-
+'''
 def slice_cam(cam_frames,n_frames,n_repeats,T):
     starts = np.where(np.concatenate(([1], np.diff(cam_frames) > 2*T)))[0]
     #remove any consecutive and take last
@@ -119,7 +149,9 @@ def get_steps_image_ephys(im_dir,ephys_fname):
         raise ValueError('Problemo!')
         
     #now slice the ephys from the cam
-    for key in ['Vm_vc','Vm_cc','Im_vc','Im_cc']:
+    for key in ['vcVm','ccVm','ccIm','ccVm']:
+        if key not in ephys_dict.keys():
+            continue
         ephys_dict[key + '_sliced'] = slice_all_ephys(ephys_dict[key],sliced_cam)
         idx0 = ef.time_to_idx(ephys_dict[key], offsets[0] - 10)
         idx1 = ef.time_to_idx(ephys_dict[key], offsets[-1] + 10)
@@ -128,6 +160,19 @@ def get_steps_image_ephys(im_dir,ephys_fname):
     
     return ephys_dict,stacks
 
+
+def process_ratio_stacks(stacks):
+    '''
+    assumes dims = (....,t,y,x)
+    '''
+    sh = stacks.shape
+    stacks = stacks.reshape((-1,)+sh[-3:])
+    res = np.zeros((stacks.shape[0],2)+sh[-3:]).astype(float)
+    for idx,st in enumerate(stacks):
+        res[idx,...] = interpolate_stack(st)
+        
+    return res.reshape(sh[:-3]+(2,)+sh[-3:])
+    
 
 def interpolate_stack(ratio_stack, framelim = 1000):
     nits = int(np.ceil(ratio_stack.shape[0]/framelim))
