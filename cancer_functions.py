@@ -13,7 +13,10 @@ import re
 import tifffile
 import quantities as pq
 import scipy.interpolate as interp
-
+import scipy.ndimage as ndimage
+import pandas as pd
+import datetime
+import pdb
 
 import f.general_functions as gf
 import f.ephys_functions as ef
@@ -48,6 +51,9 @@ def get_stack_offset(fname,ephys_start):
     
     return offset
 
+    
+    
+'''
 def load_ephys(fname, analog_names = ['LED','vcVm'],event_names = ['CamDown','Keyboard']):
     s = ef.load_ephys(fname).segments[0]
     as_names = [s.analogsignals[i].name for i in range(len(s.analogsignals))]
@@ -77,7 +83,7 @@ def load_ephys(fname, analog_names = ['LED','vcVm'],event_names = ['CamDown','Ke
     res_dict['ephys_start']  = ephys_start
      
     return res_dict
-'''
+
 def load_ephys(fname):
     ephys_start = ef.get_ephys_datetime(fname)
     ephys = ef.load_ephys(fname)
@@ -119,7 +125,7 @@ def slice_all_ephys(analog_signal,sliced_cam):
     return np.array([np.squeeze(all_ephys[i][:sh]) for i in range(len(all_ephys))])
 
 def get_steps_image_ephys(im_dir,ephys_fname):
-    ephys_dict = load_ephys(ephys_fname)
+    ephys_dict = ef.load_ephys(ephys_fname)
         
     files = [f for f in Path(im_dir).glob('./**/*.tif')]
     offsets = np.array([get_stack_offset(f,ephys_dict['ephys_start']) for f in files])
@@ -195,4 +201,210 @@ def interpolate_stack(ratio_stack, framelim = 1000):
     return full_res
 
 
+def get_LED_powers(LED,cam,T_approx,cam_edge = 'falling'):
+    #assumes LED and cam contain only sliced vals, cam is camDown
+    if cam_edge != 'falling':
+        raise NotImplementedError('Only implemented for cam falling edge')
+    
+    #do a rough pass then a second to get LED real value
+    ids = ef.time_to_idx(LED, [cam[1]+T_approx,cam[1]+3*T_approx,cam[0] - T_approx, cam[0],cam[1] - T_approx, cam[1]])
+    zer = LED[ids[0]:ids[1]].magnitude.mean()
+    l1 = LED[ids[2]:ids[3]].magnitude.mean()
+    l2 = LED[ids[4]:ids[5]].magnitude.mean()
+    thr = 0.5*(zer + min(l1,l2)) + zer
+    
+    LED_thr = LED > thr
+    
+    ##get actual T
+    T = (np.sum(LED_thr.astype(int))/len(cam))/LED.sampling_rate.magnitude
+    
+    if np.abs(T-T_approx) > T_approx/2:
+        print(T)
+        print(T_approx)
+        print('Problems?')
+    
+    #now get accurate values 
+    ids1 = np.array([ef.time_to_idx(LED, cam[::2] - 3*T/4),ef.time_to_idx(LED, cam[::2] - T/4)]).T
+    led1 = np.mean([LED[x[0]:x[1]].magnitude.mean() for x in ids1])
+    
+    ids2 = np.array([ef.time_to_idx(LED, cam[1::2] - 3*T/4),ef.time_to_idx(LED, cam[1::2] - T/4)]).T
+    led2 = np.mean([LED[x[0]:x[1]].magnitude.mean() for x in ids2])
+    
+    ids3 = np.array([ef.time_to_idx(LED, cam[1:-1:2] + T),ef.time_to_idx(LED, cam[2::2] - 5*T)]).T
+    zer = np.mean([LED[x[0]:x[1]].magnitude.mean() for x in ids3])
+    
+    led1 -= zer
+    led2 -= zer
+
+    return led1,led2
+
+def cam_check(cam,T,fs,scan = 'slow'):
+    IFI = np.array([np.diff(cam[::2]),np.diff(cam[1::2])])
+    
+    #check frame rate consistent
+    if np.any(np.abs(IFI - 1/fs) > (1/fs)/100):
+        print('IFI issue')
+        return False
+    
+    #check that is correct pattern (two frames then gap)
+    dc = np.diff(cam)
+    if np.mean(dc[::2]) > np.mean(dc[1::2]):
+        print('Frame order issue')
+        return False
+    
+    return True
+
+def save_result_hdf(hdf_file,result_dict,group = None):
+    f = hd5py.File(hdf_file,'a')
+    
+    if group is not None:
+        group = f'{group}/{to_trial_string(result_dict["tif_file"])}'
+    else:
+        group = f'{to_trial_string(result_dict["tif_file"])}'
         
+    grp = f.create_group(group)
+    
+    for key in result_dict.keys():
+        t = type(result_dict[key])
+        if t == 'neo.core.analogsignal.AnalogSignal':
+            print(0)
+        elif t == 'numpy.ndarray':
+            print(1)
+        else:
+            raise NotImplementedError('Implement this')
+    
+
+def load_and_slice_long_ratio(stack_fname,ephys_fname, T_approx = 3*10**-3, fs = 5):
+    ephys_dict = ef.load_ephys_parse(ephys_fname,analog_names=['LED','vcVm'],event_names = ['CamDown'])
+    offset = get_stack_offset(stack_fname,ephys_dict['ephys_start'])
+    stack = tifffile.imread(stack_fname)
+    n_frames = len(stack)
+    
+    cam = ephys_dict['CamDown_times']
+    cam_id = np.where(cam > offset - 0.5)[0][0]
+    cam = cam[cam_id:cam_id+n_frames]
+
+    if not cam_check(cam,T_approx,fs):
+        #sometimes there is a rogue bad frame
+        cam = ephys_dict['CamDown_times'][cam_id+1:cam_id+n_frames+1]
+        if not cam_check(cam,T_approx,fs):  
+            pdb.set_trace()
+            raise ValueError('possible bad segment')
+    
+    #extract LED powers (use slightly longer segment)
+    idx1, idx2 = ef.time_to_idx(ephys_dict['LED'], [cam[0] - T_approx*5,cam[-1] + T_approx*5])    
+    LED_power = get_LED_powers(ephys_dict['LED'][idx1:idx2],cam,T_approx)
+    
+    #return LED and vm on corect segment
+    idx1, idx2 = ef.time_to_idx(ephys_dict['LED'], [cam[0] - T_approx, cam[-1]])
+    LED = ephys_dict['LED'][idx1:idx2]
+    
+    idx1, idx2 = ef.time_to_idx(ephys_dict['vcVm'], [cam[0] - T_approx, cam[-1]])
+    vcVm = ephys_dict['vcVm'][idx1:idx2]
+    
+    if LED_power[0] < LED_power[1]:
+        blue = 0
+    else:
+        blue = 1
+    
+    ratio_stack = stack2rat(stack,blue = blue)
+    
+    result_dict = {'cam':cam,
+                   'LED':LED,
+                   'im':np.mean(stack[blue:100:2],0),
+                   'LED_powers':LED_power,
+                   'ratio_stack':ratio_stack, 
+                   'vcVm':vcVm,
+                   'tif_file':stack_fname,
+                   'smr_file':ephys_fname}
+    
+    return result_dict
+
+
+def stack2rat(stack,blue = 0,av_len = 1000,remove_first = True):
+    if remove_first:
+        stack = stack[2:,...]
+    
+    if blue == 0:
+        blue = stack[::2,...].astype(float)
+        green = stack[1::2,...].astype(float)
+    else: #if the leds flipped
+        blue = stack[1::2,...].astype(float)
+        green = stack[::2,...].astype(float)
+        
+    #divide by mean
+    blue /= ndimage.uniform_filter(blue,(av_len,0,0),mode = 'nearest')
+    green /= ndimage.uniform_filter(green,(av_len,0,0), mode = 'nearest')
+    
+    rat = blue/green
+    
+    return rat
+
+
+def strdate2int(strdate):
+    return int(strdate[:4]),int(strdate[4:6]),int(strdate[-2:])
+
+def select_daterange(str_date,str_mindate,str_maxdate):
+    if ((datetime.date(*strdate2int(str_date)) - datetime.date(*strdate2int(str_mindate))).days >= 0) and ((datetime.date(*strdate2int(str_date)) - datetime.date(*strdate2int(str_maxdate))).days <= 0):
+        return True
+    else:
+        return False
+    
+    
+def get_tif_smr(topdir,savefile,min_date,max_date):
+    
+    
+    files = Path(topdir).glob('./**/*.tif')
+    tif_files = []
+    smr_files = []
+    
+    for f in files:
+        
+        
+        sf = str(f)
+        loc = sf.find('cancer/')+len('cancer/')
+        day = sf[loc:loc+8]
+        
+        #reject non-date experiment (test etc.)
+        try: 
+            int(day)
+        except ValueError:
+            continue
+        
+        if not select_daterange(day,min_date,max_date):
+            continue
+        
+        if 'long' not in str(f):
+            continue
+        
+        tif_files.append(str(f))
+    
+    
+        #search parents for smr file from deepest to shallowest
+        start = f.parts.index(day)
+        for i in range(start+1,len(f.parts)-1):
+            direc = Path(*f.parts[:i])
+            smr = [f for f in direc.glob('*.smr')]
+            if len(smr) != 0:
+                break
+        
+        smr_files.append([str(s) for s in smr])
+        
+    max_len = max([len(x) for x in smr_files])
+    
+    df = pd.DataFrame()
+    
+    df['tif_file'] = tif_files
+    
+    
+    for i in range(max_len):
+        files = []
+        for j in range(len(smr_files)):
+            try:
+                files.append(smr_files[j][i])
+            except IndexError:
+                files.append(None)
+        
+        df[f'SMR_file_{i}'] = files
+    
+    df.to_csv(savefile)

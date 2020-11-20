@@ -34,6 +34,8 @@ fname = '/home/peter/data/Firefly/cancer/20201028/slip3/cell1/long_acq/ratio_ste
 #fname = '/home/peter/data/Firefly/cancer/20201028/slip3/cell2/steps/ratio_steps_high_both_4x4_100_hz_13/ratio_steps_high_both_4x4_100_hz_13_MMStack_Default.ome.tif'
 
 fname = '/home/peter/data/Firefly/cancer/20201028/slip3/cell2/long/ratio_steps_high_both_4x4_100_hz_1/ratio_steps_high_both_4x4_100_hz_1_MMStack_Default.ome.tif'
+
+fname = '/home/peter/data/Firefly/cancer/20201113/slip1/cell3/long_acq/ratio_steps_no_emission_0.04_green_0.0157_blue_1.5_ms_int_2/ratio_steps_no_emission_0.04_green_0.0157_blue_1.5_ms_int_2_MMStack_Default.ome.tif'
 stack = tifffile.imread(fname)
 
     
