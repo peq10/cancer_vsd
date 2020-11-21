@@ -84,7 +84,7 @@ for idx,data in enumerate(df.itertuples()):
 
     
     rat2 = ndimage.filters.gaussian_filter(rat,(3,2,2))
-    
+
 
     get_keyboard_input(rat2)
     
@@ -92,7 +92,8 @@ for idx,data in enumerate(df.itertuples()):
     
     np.save(Path(topdir,'intermed_activity.npy'),activity)
     
-    
+        
+        
 
 activity_dict = {'89':'y','78':'n','77':'m'}
 

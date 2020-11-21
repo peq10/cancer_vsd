@@ -57,7 +57,7 @@ for data in df.itertuples():
     im = result_dict['im']
     del result_dict
     
-    rat2 = ndimage.gaussian_filter(rat,(2,1,1))
+    rat2 = ndimage.gaussian_filter(rat,(3,2,2))
     std_im = np.std(rat2,0)
     
     fig,axarr = plt.subplots(ncols = 2)
