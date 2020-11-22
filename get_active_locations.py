@@ -69,7 +69,7 @@ for idx,data in enumerate(df.itertuples()):
 
     data_dir = Path(topdir,'ratio_stacks',data.trial_string) 
     
-    if Path(topdir,'tif_viewing', f'{data.trial_string}_overlay.tif').is_file():
+    if Path(topdir,'tif_viewing', f'{data.trial_string}_overlay_2.tif').is_file():
         continue
 
 
@@ -84,9 +84,9 @@ for idx,data in enumerate(df.itertuples()):
     
     stack = tifffile.imread(data.tif_file)[::2,...]
 
-    display = chunk_overlay(rat2,stack,100,cmap = matplotlib.cm.Spectral,alpha_top=0.4,percent = 50,contrast = [0.5,0.1])
+    display = chunk_overlay(rat2,stack,100,cmap = matplotlib.cm.Spectral,alpha_top=0.2,percent = 50,contrast = [0.5,0.1])
 
-    tifffile.imsave(Path(topdir,'tif_viewing', f'{data.trial_string}_overlay.tif'),display)
+    tifffile.imsave(Path(topdir,'tif_viewing', f'{data.trial_string}_overlay_2.tif'),display)
 
     im = np.load(Path(data_dir, f'{data.trial_string}_im.npy'))
     

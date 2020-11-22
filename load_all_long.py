@@ -28,6 +28,9 @@ savefile = Path(topdir,'analysis','long_acqs_sorted.csv')
 df = pd.read_csv(savefile)
 failed = []
 
+redo = ['cancer_20201117_slip2_area1_long_acq_ratio_slow_scan_blue_0.0348_green_0.07088_1',
+        'cancer_20201117_slip3_area2_long_acq_ratio_slow_scan_blue_0.0255_green_0.0445_1']
+
 for data in df.itertuples():
 
     
@@ -36,6 +39,8 @@ for data in df.itertuples():
     trial_string = '_'.join(parts[parts.index('cancer'):-1])
     
 
+    if trial_string not in redo:
+        continue
 
     result_dict = canf.load_and_slice_long_ratio(data.tif_file,
                                                  data.SMR_file,

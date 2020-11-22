@@ -26,17 +26,17 @@ def load_tif_metadata(fname):
     metadata_file = Path(fname.parent,Path(fname.stem).stem+'_metadata.txt')
     to_file = Path('/tmp/tmp_metadata.txt')
     shutil.copy(metadata_file,to_file) #this is to deal with a wierd bug due to NTFS filesystem?
-    with open(to_file) as f:
+    with open(to_file,'r') as f:
         metadict = json.load(f)
     return metadict
 
 def parse_time(metadata_time):
-    date = re.sub('-','',metadata_time[:10])
-    time = re.sub(':','',metadata_time[11:19])
+    date = metadata_time.split(' ')[0].split('-')
+    time = metadata_time.split(' ')[1].split(':')
     return date,time
     
 def lin_time(time):
-    return int(time[:2])*60**2 + int(time[2:4])*60 + int(time[4:])
+    return float(time[0])*60**2 + float(time[1])*60 + float(time[2])
     
 
 def get_stack_offset(fname,ephys_start):
@@ -238,18 +238,19 @@ def get_LED_powers(LED,cam,T_approx,cam_edge = 'falling'):
 
     return led1,led2
 
-def cam_check(cam,T,fs,scan = 'slow'):
-    IFI = np.array([np.diff(cam[::2]),np.diff(cam[1::2])])
+def cam_check(cam,cam_id,times,e_start,fs):
+    cam_seg = cam[cam_id:cam_id+len(times)]
+    IFI = np.array([np.diff(cam_seg[::2]),np.diff(cam_seg[1::2])])
     
     #check frame rate consistent
     if np.any(np.abs(IFI - 1/fs) > (1/fs)/100):
         print('IFI issue')
         return False
-    
-    #check that is correct pattern (two frames then gap)
-    dc = np.diff(cam)
-    if np.mean(dc[::2]) > np.mean(dc[1::2]):
-        print('Frame order issue')
+
+    #compare our segment with if we are off by one each direction - are we at a minimum?
+    var = [np.std(cam[cam_id+x:cam_id+x+len(times)]+e_start-times) for x in [-1,0,1]]
+    if var[1] > var[0] or var[1] > var[2]:
+        print('Bad times?')
         return False
     
     return True
@@ -273,23 +274,43 @@ def save_result_hdf(hdf_file,result_dict,group = None):
         else:
             raise NotImplementedError('Implement this')
     
+def get_all_frame_times(metadict):
+    frames = []
+    times = []
+    for k in metadict.keys():
+        if k == 'Summary':
+            continue
+        
+        frame = int(k.split('-')[1])
+        frames.append(frame)
+        time = metadict[k]['UserData']['TimeReceivedByCore']['scalar'].split(' ')[1].split(':')
+        time = float(time[0])*60**2 + float(time[1])*60 + float(time[2])
+        times.append(time)
+        
+    frames,times = gf.sort_zipped_lists([frames,times])
+
+    return np.array(frames),np.array(times)
 
 def load_and_slice_long_ratio(stack_fname,ephys_fname, T_approx = 3*10**-3, fs = 5):
     ephys_dict = ef.load_ephys_parse(ephys_fname,analog_names=['LED','vcVm'],event_names = ['CamDown'])
-    offset = get_stack_offset(stack_fname,ephys_dict['ephys_start'])
+
     stack = tifffile.imread(stack_fname)
     n_frames = len(stack)
     
+    e_start = [float(str(ephys_dict['ephys_start'][1])[i*2:(i+1)*2])  for i in range(3)]
+    e_start[-1] += (float(ephys_dict['ephys_start'][2])/10)/1000
+    e_start = lin_time(e_start)
+    
+    meta = load_tif_metadata(stack_fname)
+    frames,times = get_all_frame_times(meta)
+    
     cam = ephys_dict['CamDown_times']
-    cam_id = np.where(cam > offset - 0.5)[0][0]
-    cam = cam[cam_id:cam_id+n_frames]
+    cam_id = np.argmin(np.abs(cam + e_start - times[0]))
 
-    if not cam_check(cam,T_approx,fs):
-        #sometimes there is a rogue bad frame
-        cam = ephys_dict['CamDown_times'][cam_id+1:cam_id+n_frames+1]
-        if not cam_check(cam,T_approx,fs):  
-            pdb.set_trace()
-            raise ValueError('possible bad segment')
+    if not cam_check(cam,cam_id,times,e_start,fs):
+        raise ValueError('possible bad segment')
+    
+    cam = cam[cam_id:cam_id+n_frames]
     
     #extract LED powers (use slightly longer segment)
     idx1, idx2 = ef.time_to_idx(ephys_dict['LED'], [cam[0] - T_approx*5,cam[-1] + T_approx*5])    
