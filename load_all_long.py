@@ -9,69 +9,65 @@ Created on Wed Nov 18 16:55:44 2020
 #a scratch process long im script
 
 import numpy as np
-import matplotlib.pyplot as plt
-import pyqtgraph as pg
-import scipy.ndimage as ndimage
 from pathlib import Path
 import pandas as pd
-import h5py
-
 
 import cancer_functions as canf
 
-
-topdir = Path('/home/peter/data/Firefly/cancer')
-
-savefile = Path(topdir,'analysis','long_acqs_sorted.csv')
-
-
-df = pd.read_csv(savefile)
-failed = []
-
-redo = ['cancer_20201117_slip2_area1_long_acq_ratio_slow_scan_blue_0.0348_green_0.07088_1',
-        'cancer_20201117_slip3_area2_long_acq_ratio_slow_scan_blue_0.0255_green_0.0445_1']
-
-for data in df.itertuples():
-
     
     
-    parts = Path(data.tif_file).parts
-    trial_string = '_'.join(parts[parts.index('cancer'):-1])
+def load_all_long(df_file,save_dir,redo = True):
     
-
-    if trial_string not in redo:
-        continue
-
-    result_dict = canf.load_and_slice_long_ratio(data.tif_file,
-                                                 data.SMR_file,
-                                                 T_approx = 3*10**-3,
-                                                 fs = 5)
-
+    df = pd.read_csv(df_file)
+    
+    if redo == True:
+        failed = []
+        redo_from = 0
+    else:
+        redo_from = np.load(Path(save_dir,f'{df_file.stem}_redo_from.npy'))
+        try:
+            failed = list(pd.read_csv(Path(save_dir,'failed.csv')).index)
+        except FileNotFoundError:
+            failed = []
+            
+    
+    for idx,data in enumerate(df.itertuples()):
+        if idx < redo_from:
+            continue
+    
+    
+        parts = Path(data.tif_file).parts
+        trial_string = '_'.join(parts[parts.index('cancer'):-1])
         
-
-    save_dir = Path(topdir,'analysis/ratio_stacks',trial_string)
-    if not save_dir.is_dir():
-        save_dir.mkdir(parents = True)
     
-    for key in result_dict.keys():
-        np.save(Path(save_dir,f'{trial_string}_{key}.npy'),result_dict[key])
+        try:
+            result_dict = canf.load_and_slice_long_ratio(data.tif_file,
+                                                         str(data.SMR_file),
+                                                         T_approx = 3*10**-3,
+                                                         fs = 5)
+        except ValueError as err:
+            print(err)
+            failed.append(data.Index)
+            redo_from += 1
+            df.loc[failed].to_csv( Path(save_dir,'failed.csv'))
+            continue
+            
     
-    print(f'Saved {trial_string}')
+        trial_save = Path(save_dir,'ratio_stacks',trial_string)
+        if not trial_save.is_dir():
+            trial_save.mkdir(parents = True)
+        
+        for key in result_dict.keys():
+            np.save(Path(trial_save,f'{trial_string}_{key}.npy'),result_dict[key])
+        
+        print(f'Saved {trial_string}')
+        redo_from += 1
+        np.save(Path(save_dir,f'{df_file.stem}_redo_from.npy'),redo_from)
     
-    rat = np.copy(result_dict['ratio_stack'])
-    im = result_dict['im']
-    del result_dict
+    if failed != []:
+        df.loc[failed].to_csv( Path(save_dir,'failed.csv'))
+        
+    not_failed = [i for i in df.index if i not in failed]
     
-    rat2 = ndimage.gaussian_filter(rat,(3,2,2))
-    std_im = np.std(rat2,0)
-    
-    fig,axarr = plt.subplots(ncols = 2)
-    axarr[0].imshow(im,cmap = 'Greys_r')
-    axarr[1].imshow(std_im)
-    axarr[0].axis('off')
-    axarr[1].axis('off')
-    fig.savefig(Path(topdir,'analysis/ims',trial_string+'.png'),bbox_inches = 'tight',dpi = 300)
-    
-    del rat
-    del rat2
+    return df.loc[not_failed],df.loc[failed]
     

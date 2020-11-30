@@ -239,6 +239,13 @@ def get_LED_powers(LED,cam,T_approx,cam_edge = 'falling'):
     return led1,led2
 
 def cam_check(cam,cam_id,times,e_start,fs):
+    if cam_id+len(times) > len(cam):
+        print('length issue')
+        return False
+    
+    if len(times) % 2 ==1:
+        times = times[:-1]
+        
     cam_seg = cam[cam_id:cam_id+len(times)]
     IFI = np.array([np.diff(cam_seg[::2]),np.diff(cam_seg[1::2])])
     
@@ -246,13 +253,20 @@ def cam_check(cam,cam_id,times,e_start,fs):
     if np.any(np.abs(IFI - 1/fs) > (1/fs)/100):
         print('IFI issue')
         return False
-
+    
     #compare our segment with if we are off by one each direction - are we at a minimum?
-    var = [np.std(cam[cam_id+x:cam_id+x+len(times)]+e_start-times) for x in [-1,0,1]]
-    if var[1] > var[0] or var[1] > var[2]:
+    if cam_id+len(times) == len(cam):
+        v = [-1,0]
+    elif cam_id == 0:
+        v = [0,1]
+    else:
+        v = [-1,0,1]
+        
+    var = [np.std(cam[cam_id+x:cam_id+x+len(times)]+e_start-times) for x in v]
+    if var[1] != min(var):
         print('Bad times?')
         return False
-    
+
     return True
 
 def save_result_hdf(hdf_file,result_dict,group = None):
@@ -292,42 +306,66 @@ def get_all_frame_times(metadict):
     return np.array(frames),np.array(times)
 
 def load_and_slice_long_ratio(stack_fname,ephys_fname, T_approx = 3*10**-3, fs = 5):
-    ephys_dict = ef.load_ephys_parse(ephys_fname,analog_names=['LED','vcVm'],event_names = ['CamDown'])
-
     stack = tifffile.imread(stack_fname)
+
     n_frames = len(stack)
     
-    e_start = [float(str(ephys_dict['ephys_start'][1])[i*2:(i+1)*2])  for i in range(3)]
-    e_start[-1] += (float(ephys_dict['ephys_start'][2])/10)/1000
-    e_start = lin_time(e_start)
+    if Path(ephys_fname).is_file():
+        ephys_dict = ef.load_ephys_parse(ephys_fname,analog_names=['LED','vcVm'],event_names = ['CamDown'])
+       
+        e_start = [float(str(ephys_dict['ephys_start'][1])[i*2:(i+1)*2])  for i in range(3)]
+        e_start[-1] += (float(ephys_dict['ephys_start'][2])/10)/1000
+        e_start = lin_time(e_start)
+        
+        meta = load_tif_metadata(stack_fname)
+        frames,times = get_all_frame_times(meta)
+        
+        cam = ephys_dict['CamDown_times']
+        cam_id = np.argmin(np.abs(cam + e_start - times[0]))
     
-    meta = load_tif_metadata(stack_fname)
-    frames,times = get_all_frame_times(meta)
-    
-    cam = ephys_dict['CamDown_times']
-    cam_id = np.argmin(np.abs(cam + e_start - times[0]))
 
-    if not cam_check(cam,cam_id,times,e_start,fs):
-        raise ValueError('possible bad segment')
+        if not cam_check(cam,cam_id,times,e_start,fs):
+            if cam_check(cam,cam_id-1,times,e_start,fs):
+                print('sub 1')
+                cam_id -= 1
+            elif cam_check(cam,cam_id+1,times,e_start,fs):
+                print('plus 1')
+                cam_id += 1
+            elif cam_check(cam,cam_id-2,times,e_start,fs):
+                print('sub 2')
+                cam_id -= 2
+            else:
+                
+                raise ValueError('possible bad segment')
+
+        
+        cam = cam[cam_id:cam_id+n_frames]
+        
+        #extract LED powers (use slightly longer segment)
+        idx1, idx2 = ef.time_to_idx(ephys_dict['LED'], [cam[0] - T_approx*5,cam[-1] + T_approx*5])    
+        LED_power = get_LED_powers(ephys_dict['LED'][idx1:idx2],cam,T_approx)
+        
+        #return LED and vm on corect segment
+        idx1, idx2 = ef.time_to_idx(ephys_dict['LED'], [cam[0] - T_approx, cam[-1]])
+        LED = ephys_dict['LED'][idx1:idx2]
+        
+        idx1, idx2 = ef.time_to_idx(ephys_dict['vcVm'], [cam[0] - T_approx, cam[-1]])
+        vcVm = ephys_dict['vcVm'][idx1:idx2]
+        
+        if LED_power[0] < LED_power[1]:
+            blue = 0
+        else:
+            blue = 1
     
-    cam = cam[cam_id:cam_id+n_frames]
-    
-    #extract LED powers (use slightly longer segment)
-    idx1, idx2 = ef.time_to_idx(ephys_dict['LED'], [cam[0] - T_approx*5,cam[-1] + T_approx*5])    
-    LED_power = get_LED_powers(ephys_dict['LED'][idx1:idx2],cam,T_approx)
-    
-    #return LED and vm on corect segment
-    idx1, idx2 = ef.time_to_idx(ephys_dict['LED'], [cam[0] - T_approx, cam[-1]])
-    LED = ephys_dict['LED'][idx1:idx2]
-    
-    idx1, idx2 = ef.time_to_idx(ephys_dict['vcVm'], [cam[0] - T_approx, cam[-1]])
-    vcVm = ephys_dict['vcVm'][idx1:idx2]
-    
-    if LED_power[0] < LED_power[1]:
-        blue = 0
     else:
-        blue = 1
-    
+        
+        blue = 0
+        cam = None 
+        LED = None
+        LED_power = None
+        vcVm = None
+        ephys_fname = None
+        
     ratio_stack = stack2rat(stack,blue = blue)
     
     result_dict = {'cam':cam,
@@ -372,8 +410,11 @@ def select_daterange(str_date,str_mindate,str_maxdate):
         return False
     
     
-def get_tif_smr(topdir,savefile,min_date,max_date):
-    
+def get_tif_smr(topdir,savefile,min_date,max_date,prev_sorted = None,only_long = False):
+    if min_date is None:
+        min_date = '20000101'
+    if max_date is None:
+        max_date = '21000101'
     
     files = Path(topdir).glob('./**/*.tif')
     tif_files = []
@@ -403,7 +444,7 @@ def get_tif_smr(topdir,savefile,min_date,max_date):
     
         #search parents for smr file from deepest to shallowest
         start = f.parts.index(day)
-        for i in range(start+1,len(f.parts)-1):
+        for i in range(len(f.parts)-1,start+1,-1):
             direc = Path(*f.parts[:i])
             smr = [f for f in direc.glob('*.smr')]
             if len(smr) != 0:
@@ -416,16 +457,57 @@ def get_tif_smr(topdir,savefile,min_date,max_date):
     df = pd.DataFrame()
     
     df['tif_file'] = tif_files
-    
-    
+
     for i in range(max_len):
         files = []
         for j in range(len(smr_files)):
             try:
                 files.append(smr_files[j][i])
             except IndexError:
-                files.append(None)
+                files.append(np.NaN)
         
         df[f'SMR_file_{i}'] = files
     
+    
+    #now consolidate files that were split (i.e. two tif files in same directory, one has _1 at end,
+    #due to file size limits on tif file size)
+    remove = []
+    for data in df.itertuples():
+        fname = data.tif_file 
+        fname2 = fname[:fname.find('.ome.tif')]+'_1.ome.tif'
+        if Path(fname2).is_file():
+            df.loc[data.Index,'multi_tif'] = 1
+            remove.append(df[df.tif_file == fname2].index[0])
+            if Path(fname[:fname.find('.ome.tif')]+'_2.ome.tif').is_file():
+                raise NotImplementedError('Not done more than one extra')
+        else:
+            df.loc[data.Index,'multi_tif'] = 0
+        
+    df = df.drop(labels = remove)
+    
+    
+    if prev_sorted is not None:
+        prev_df = pd.read_csv(prev_sorted)
+    
+        for data in prev_df.itertuples():
+            loc = df[df.tif_file == data.tif_file].index
+            for i in range(max_len):
+                if i == 0:
+                     df.loc[loc,f'SMR_file_{i}'] = data.SMR_file
+                else:
+                     df.loc[loc,f'SMR_file_{i}'] = np.NaN
+    
+    if only_long:
+        df = df[['long_acq' in f for f in df.tif_file]]
+    
+
+    if np.all(np.isnan(df.SMR_file_1.values.astype(float))):
+
+        df['SMR_file'] = df.SMR_file_0
+        for i in range(max_len):
+            df = df.drop(columns = f'SMR_file_{i}')
+    
     df.to_csv(savefile)
+
+    
+    return df

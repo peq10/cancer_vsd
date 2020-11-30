@@ -36,11 +36,7 @@ def get_scalebar_overlay(im,px_sz,length,width = None,pos = None,color = None):
     return overlay
 
 for idx,data in enumerate(df.itertuples()):
-    if idx != 3:
-        continue
-    else:
-        break
-    
+
     roi_files = Path(topdir,'rois').glob(f'{data.trial_string}_roi_*.roi')
     
     im = np.load(Path(topdir,'ratio_stacks',data.trial_string,f'{data.trial_string}_im.npy'))

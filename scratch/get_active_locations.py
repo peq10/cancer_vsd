@@ -73,7 +73,7 @@ for idx,data in enumerate(df.itertuples()):
         continue
 
 
-    if False:
+    if True:
         rat = np.load(Path(data_dir, f'{data.trial_string}_ratio_stack.npy'))[:,2:-2,2:-2]
         rat2 = ndimage.filters.gaussian_filter(rat,(3,2,2))
         rat2 = np.pad(rat2,((0,0),(2,2),(2,2)),mode = 'edge')
