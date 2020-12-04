@@ -41,9 +41,14 @@ def make_all_tc(df_file,save_dir, redo = True, njobs = 2):
         redo_from = 0
     else:
         redo_from = np.load(Path(save_dir,f'{df_file.stem}_redo_from_make_all_tc.npy'))
+        print(f'{len(df) - redo_from} to do')
+
     
     with Parallel(n_jobs=njobs) as parallel:
         for idx,data in enumerate(df.itertuples()):
+            
+            if idx < redo_from:
+                continue
             
             parts = Path(data.tif_file).parts
             trial_string = '_'.join(parts[parts.index('cancer'):-1])

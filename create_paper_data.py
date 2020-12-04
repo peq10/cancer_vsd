@@ -13,6 +13,7 @@ redo = False
 
 top_dir = Path('/home/peter/data/Firefly/cancer')
 data_dir = Path(top_dir,'analysis','full')
+viewing_dir = Path(top_dir,'analysis','full','tif_viewing')
 
 if not data_dir.is_dir():
     data_dir.mkdir()
@@ -27,11 +28,20 @@ processed_df, failed_df = load_all_long.load_all_long(initial_df, data_dir,redo 
 processed_df.to_csv(Path(data_dir,initial_df.stem+'_loaded_long.csv'))
 failed_df.to_csv(Path(data_dir,initial_df.stem+'_failed_loaded_long.csv'))
 
-import segment_cellpose
-
-if redo:
-    segment_cellpose.segment_cellpose(Path(data_dir,initial_df.stem+'_loaded_long.csv'), data_dir)
-
-
+if False:
+    import segment_cellpose
+    
+    if redo:
+        segment_cellpose.segment_cellpose(Path(data_dir,initial_df.stem+'_loaded_long.csv'), data_dir)
+    
+print('Extracting time series...')
 import make_all_t_courses
 make_all_t_courses.make_all_tc(Path(data_dir,initial_df.stem+'_loaded_long.csv'), data_dir,redo = redo, njobs = 3)
+
+if redo:
+    import make_roi_overlays
+    make_roi_overlays.make_all_overlay(Path(data_dir,initial_df.stem+'_loaded_long.csv'), data_dir, Path(viewing_dir,'rois'))
+
+print('Detecting events...')
+import detect_events
+detect_events.detect_all_events(Path(data_dir,initial_df.stem+'_loaded_long.csv'),data_dir, redo = redo, njobs = 16, debug = False)
