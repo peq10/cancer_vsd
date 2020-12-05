@@ -51,50 +51,7 @@ def get_stack_offset(fname,ephys_start):
     
     return offset
 
-    
-    
-'''
-def load_ephys(fname, analog_names = ['LED','vcVm'],event_names = ['CamDown','Keyboard']):
-    s = ef.load_ephys(fname).segments[0]
-    as_names = [s.analogsignals[i].name for i in range(len(s.analogsignals))]
-    res_dict = {}
-    for name in analog_names:
-        try:
-            idx = as_names.index(name)
-            res_dict[name] = s.analogsignals[idx]
-        except ValueError:
-            idx = [i for i,x in enumerate(as_names) if name in x][0]
-            bundle = as_names[idx][len('Channel bundle ('):as_names[idx].find(')')].strip().split(',')
-            idx2 = bundle.index(name)
-            res_dict[name] = s.analogsignals[idx][:,idx2]
-            
-    ev_names = [s.events[i].name for i in range(len(s.events))]
-    for name in event_names:
-        idx = ev_names.index(name)
-        
-        res_dict[name+'_times'] = s.events[idx].times.magnitude
-        res_dict[name+'_labels'] = s.events[idx].labels
-    
-        #for backwards compatibility
-        if 'cam' in name.lower():
-            res_dict['cam'] = s.events[idx].times.magnitude
-            
-    ephys_start = ef.get_ephys_datetime(fname)
-    res_dict['ephys_start']  = ephys_start
-     
-    return res_dict
 
-def load_ephys(fname):
-    ephys_start = ef.get_ephys_datetime(fname)
-    ephys = ef.load_ephys(fname)
-    cam = ephys.segments[0].events[1].times.magnitude
-    Vm_vc = ephys.segments[0].analogsignals[2][:,1]
-    Im_vc = ephys.segments[0].analogsignals[1]
-    Vm_cc = ephys.segments[0].analogsignals[2][:,0]
-    Im_cc = ephys.segments[0].analogsignals[3]
-    
-    return {'ephys_start':ephys_start,'ephys':ephys,'cam':cam,'Vm_vc':Vm_vc,'Im_vc':Im_vc,'Vm_cc':Vm_cc,'Im_cc':Im_cc}
-'''
 def slice_cam(cam_frames,n_frames,n_repeats,T):
     starts = np.where(np.concatenate(([1], np.diff(cam_frames) > 2*T)))[0]
     #remove any consecutive and take last
@@ -415,6 +372,14 @@ def get_tif_smr(topdir,savefile,min_date,max_date,prev_sorted = None,only_long =
         min_date = '20000101'
     if max_date is None:
         max_date = '21000101'
+
+    home = Path.home()
+    local_home = '/home/peter'
+    hpc_home = '/rds/general/user/peq10/home'
+    if home == hpc_home:
+        HPC = True
+    else:
+        HPC = False
     
     files = Path(topdir).glob('./**/*.tif')
     tif_files = []
@@ -488,12 +453,31 @@ def get_tif_smr(topdir,savefile,min_date,max_date,prev_sorted = None,only_long =
     
     if prev_sorted is not None:
         prev_df = pd.read_csv(prev_sorted)
+        if local_home in prev_df.iloc[0].tif_file and HPC:
+            mismatch = True
+            root = str(Path(hpc_home,'firefly_link'))
+        elif hpc_home in prev_df.iloc[0].tif_file and not HPC:
+            mismatch = True
+            root = str(Path(hpc_home,'data/Firefly'))
+        else:
+            mismatch = False
     
         for data in prev_df.itertuples():
-            loc = df[df.tif_file == data.tif_file].index
+            if mismatch:
+                tf = data.tif_file
+                tf = str(Path(root,tf[tf.find('/cancer/'):]))
+                loc = df[df.tif_file == tf].index
+            else:
+                loc = df[df.tif_file == data.tif_file].index
+                
             for i in range(max_len):
                 if i == 0:
-                     df.loc[loc,f'SMR_file_{i}'] = data.SMR_file
+                    if mismatch:
+                        sf = data.SMR_file
+                        sf = str(Path(root,sf[sf.find('/cancer/'):]))
+                        df.loc[loc,f'SMR_file_{i}'] = sf
+                    else:
+                        df.loc[loc,f'SMR_file_{i}'] = data.SMR_file
                 else:
                      df.loc[loc,f'SMR_file_{i}'] = np.NaN
     

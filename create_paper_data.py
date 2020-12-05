@@ -9,20 +9,26 @@ Created on Mon Nov 30 13:50:32 2020
 from pathlib import Path
 import cancer_functions as canf
 
+
 redo = False
-HPC = False
-if HPC:
+
+
+
+home = Path.home()
+if 'peq10' in str(home):
+    HPC = True
     top_dir = Path(Path.home(),'firefly_link/cancer')
-    data_dir = Path(top_dir,'analysis','full')
-    viewing_dir = Path(top_dir,'analysis','full','tif_viewing')
 else:
+    HPC = False
     top_dir = Path('/home/peter/data/Firefly/cancer')
-    data_dir = Path(top_dir,'analysis','full')
-    viewing_dir = Path(top_dir,'analysis','full','tif_viewing')
+
+
+data_dir = Path(top_dir,'analysis','full')
+viewing_dir = Path(top_dir,'analysis','full','tif_viewing')
+
 
 if not data_dir.is_dir():
     data_dir.mkdir()
-
 
 
 initial_df = Path(top_dir,'analysis','long_acqs_20201129_sorted.csv')
