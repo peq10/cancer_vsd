@@ -7,8 +7,21 @@ Created on Thu Nov 26 18:57:33 2020
 """
 import cancer_functions as canf
 from pathlib import Path
+import datetime
 
-topdir = Path('/home/peter/data/Firefly/cancer')
-savefile = Path('/home/peter/data/Firefly/cancer/analysis/long_acqs_20201129.csv')
-prev_sorted = Path('/home/peter/data/Firefly/cancer/analysis/long_acqs_sorted.csv')
-df = canf.get_tif_smr(topdir,savefile,'20201116',None,prev_sorted = prev_sorted,only_long = True)
+home = Path.home()
+
+if 'peq10' in str(home):
+    HPC = True
+    top_dir = Path(home,'firefly_link/cancer')
+else:
+    HPC = False
+    top_dir = Path(home,'data/Firefly/cancer')
+
+
+
+save_file = Path(top_dir,'analysis',f'long_acqs_{datetime.datetime.now().year}{datetime.datetime.now().month:02}{datetime.datetime.now().day:02}.csv')
+prev_sorted = Path(top_dir,'analysis','long_acqs_20201129_sorted.csv')
+    
+
+df = canf.get_tif_smr(top_dir,save_file,'20201116',None,prev_sorted = prev_sorted,only_long = True)
