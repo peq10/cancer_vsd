@@ -456,6 +456,7 @@ def get_tif_smr(topdir,savefile,min_date,max_date,prev_sorted = None,only_long =
         if local_home in prev_df.iloc[0].tif_file and HPC:
             mismatch = True
             root = str(Path(hpc_home,'firefly_link'))
+            print('mismatch')
         elif hpc_home in prev_df.iloc[0].tif_file and not HPC:
             mismatch = True
             root = str(Path(hpc_home,'data/Firefly'))
