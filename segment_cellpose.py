@@ -14,13 +14,16 @@ from cellpose import models
 
 
 
-def segment_cellpose(df_file,save_dir):
+def segment_cellpose(df_file,save_dir, HPC_num = None):
 
     df = pd.read_csv(df_file)
     
     ims = []
     savenames = []
     for idx,data in enumerate(df.itertuples()):
+        if HPC_num is not None: #allows running in parallel on HPC
+            if idx != HPC_num:
+                continue
         
         parts = Path(data.tif_file).parts
         trial_string = '_'.join(parts[parts.index('cancer'):-1])

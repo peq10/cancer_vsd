@@ -33,9 +33,11 @@ def lab2masks(seg):
     return np.array(masks)
 
 
-def make_all_tc(df_file,save_dir, redo = True, njobs = 2):
+def make_all_tc(df_file,save_dir, redo = True, njobs = 2, HPC_num = None):
     df = pd.read_csv(df_file)
     
+    if HPC_num is not None:
+        njobs = 1
     
     if redo:
         redo_from = 0
@@ -46,6 +48,9 @@ def make_all_tc(df_file,save_dir, redo = True, njobs = 2):
     
     with Parallel(n_jobs=njobs) as parallel:
         for idx,data in enumerate(df.itertuples()):
+            if HPC_num is not None: #allows running in parallel on HPC
+                if idx != HPC_num:
+                    continue
             
             if idx < redo_from:
                 continue

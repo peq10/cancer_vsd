@@ -30,9 +30,11 @@ def get_change_points(t, model_params):
     return result
 
 
-def detect_all_events(df_file,save_dir, redo = True, njobs = 2, debug = False, model_params = None):
+def detect_all_events(df_file,save_dir, redo = True, njobs = 2, debug = False, model_params = None, HPC_num = None):
     df = pd.read_csv(df_file)
     
+    if HPC_num is not None:
+        njobs = 1
     
     if redo:
         redo_from = 0
@@ -43,6 +45,11 @@ def detect_all_events(df_file,save_dir, redo = True, njobs = 2, debug = False, m
     
     with Parallel(n_jobs=njobs) as parallel:
         for idx,data in enumerate(df.itertuples()):
+            
+            if HPC_num is not None: #allows running in parallel on HPC
+                if idx != HPC_num:
+                    continue
+        
             
             if idx < redo_from:
                 continue

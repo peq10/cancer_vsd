@@ -16,7 +16,7 @@ import cancer_functions as canf
 
     
     
-def load_all_long(df_file,save_dir,redo = True):
+def load_all_long(df_file,save_dir,redo = True, HPC_num = None):
     
     df = pd.read_csv(df_file)
     
@@ -32,6 +32,10 @@ def load_all_long(df_file,save_dir,redo = True):
             
     
     for idx,data in enumerate(df.itertuples()):
+        if HPC_num is not None: #allows running in parallel on HPC
+            if idx != HPC_num:
+                continue
+        
         if idx < redo_from:
             continue
     
@@ -46,6 +50,8 @@ def load_all_long(df_file,save_dir,redo = True):
                                                          T_approx = 3*10**-3,
                                                          fs = 5)
         except ValueError as err:
+            if HPC_num is not None:
+                raise err
             print(err)
             failed.append(data.Index)
             redo_from += 1

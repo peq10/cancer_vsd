@@ -24,10 +24,13 @@ def lab2masks(seg):
 def norm(arr):
     return (arr - arr.min())/(arr.max() - arr.min()) 
 
-def make_all_overlay(df_file,save_dir,viewing_dir):
+def make_all_overlay(df_file,save_dir,viewing_dir,HPC_num = None):
     df = pd.read_csv(df_file)
 
     for idx,data in enumerate(df.itertuples()):
+        if HPC_num is not None: #allows running in parallel on HPC
+            if idx != HPC_num:
+                continue
         
         parts = Path(data.tif_file).parts
         trial_string = '_'.join(parts[parts.index('cancer'):-1])
