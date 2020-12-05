@@ -376,11 +376,11 @@ def get_tif_smr(topdir,savefile,min_date,max_date,prev_sorted = None,only_long =
     home = Path.home()
     local_home = '/home/peter'
     hpc_home = '/rds/general/user/peq10/home'
-    if home == hpc_home:
+    if str(home) == hpc_home:
         HPC = True
     else:
         HPC = False
-    
+        
     files = Path(topdir).glob('./**/*.tif')
     tif_files = []
     smr_files = []
@@ -466,7 +466,7 @@ def get_tif_smr(topdir,savefile,min_date,max_date,prev_sorted = None,only_long =
         for data in prev_df.itertuples():
             if mismatch:
                 tf = data.tif_file
-                tf = str(Path(root,tf[tf.find('/cancer/'):]))
+                tf = str(Path(root,tf[tf.find('/cancer/')+1:]))
                 loc = df[df.tif_file == tf].index
             else:
                 loc = df[df.tif_file == data.tif_file].index
@@ -475,7 +475,10 @@ def get_tif_smr(topdir,savefile,min_date,max_date,prev_sorted = None,only_long =
                 if i == 0:
                     if mismatch:
                         sf = data.SMR_file
-                        sf = str(Path(root,sf[sf.find('/cancer/'):]))
+                        try:
+                            sf = str(Path(root,sf[sf.find('/cancer/')+1:]))
+                        except AttributeError:
+                            sf = np.NaN
                         df.loc[loc,f'SMR_file_{i}'] = sf
                     else:
                         df.loc[loc,f'SMR_file_{i}'] = data.SMR_file
@@ -484,7 +487,6 @@ def get_tif_smr(topdir,savefile,min_date,max_date,prev_sorted = None,only_long =
     
     if only_long:
         df = df[['long_acq' in f for f in df.tif_file]]
-    
 
     if np.all(np.isnan(df.SMR_file_1.values.astype(float))):
 
