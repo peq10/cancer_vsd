@@ -344,7 +344,10 @@ def load_and_slice_long_ratio(stack_fname,ephys_fname, T_approx = 3*10**-3, fs =
 def stack2rat(stack,blue = 0,av_len = 1000,remove_first = True):
     if remove_first:
         stack = stack[2:,...]
-    
+        
+    if len(stack)%2 == 1:
+        stack = stack[:-1,...]
+        
     if blue == 0:
         blue = stack[::2,...].astype(float)
         green = stack[1::2,...].astype(float)

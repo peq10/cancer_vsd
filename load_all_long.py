@@ -59,7 +59,8 @@ def load_all_long(df_file,save_dir,redo = True, HPC_num = None):
             print(err)
             failed.append(data.Index)
             redo_from += 1
-            df.loc[failed].to_csv( Path(save_dir,'failed.csv'))
+            fail_df = Path(save_dir,'failed.csv')
+            df.loc[failed].to_csv(fail_df,mode = 'a',header = not fail_df.is_file())
             continue
             
     
