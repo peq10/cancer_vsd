@@ -7,6 +7,7 @@ Created on Mon Nov 30 13:50:32 2020
 """
 
 from pathlib import Path
+import pandas as pd
 import cancer_functions as canf
 import sys
 
@@ -39,7 +40,8 @@ if not data_dir.is_dir():
 initial_df = Path(top_dir,'analysis',f'long_acqs_20201205{df_str}.csv')
 
 if HPC:
-    print(f'Doing {initial_df.iloc[HPC_num].tif_file}')
+    df_ = pd.read_csv(initial_df)
+    print(f'Doing {df_.iloc[HPC_num].tif_file}')
 
 print('Loading tif...')
 import load_all_long
