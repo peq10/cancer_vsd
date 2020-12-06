@@ -129,3 +129,6 @@ dmypy.json
 .pyre/
 
 *.tif
+
+#job files
+*.sh.*

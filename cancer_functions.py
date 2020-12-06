@@ -25,10 +25,11 @@ def load_tif_metadata(fname):
     fname = Path(fname)
     metadata_file = Path(fname.parent,Path(fname.stem).stem+'_metadata.txt')
     if 'rds' in str(Path.home()):
-        to_file = Path(Path.home(),'tmp/tmp_metadata.txt')
+        to_file = metadata_file
     else:
         to_file = Path('/tmp/tmp_metadata.txt')
-    shutil.copy(metadata_file,to_file) #this is to deal with a wierd bug due to NTFS filesystem?
+        shutil.copy(metadata_file,to_file) #this is to deal with a wierd bug due to NTFS filesystem?
+        
     with open(to_file,'r') as f:
         metadict = json.load(f)
     return metadict

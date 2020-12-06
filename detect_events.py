@@ -50,14 +50,17 @@ def detect_all_events(df_file,save_dir, redo = True, njobs = 2, debug = False, m
                 if idx != HPC_num:
                     continue
         
-            
-            if idx < redo_from:
-                continue
-            
             parts = Path(data.tif_file).parts
             trial_string = '_'.join(parts[parts.index('cancer'):-1])
             trial_save = Path(save_dir,'ratio_stacks',trial_string)
             
+            if not redo and HPC_num is None:
+                if idx < redo_from:
+                    continue
+            elif not redo and HPC_num is not None:
+                if Path(trial_save,f'{trial_string}_detected_events.npy').is_file():
+                    continue    
+
             tc = np.load(Path(trial_save,f'{trial_string}_all_tcs.npy'),allow_pickle = True)
             
             if debug:

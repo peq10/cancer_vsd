@@ -52,13 +52,20 @@ def make_all_tc(df_file,save_dir, redo = True, njobs = 2, HPC_num = None):
                 if idx != HPC_num:
                     continue
             
-            if idx < redo_from:
-                continue
             
             parts = Path(data.tif_file).parts
             trial_string = '_'.join(parts[parts.index('cancer'):-1])
             trial_save = Path(save_dir,'ratio_stacks',trial_string)
             
+            
+            
+            if not redo and HPC_num is None:
+                if idx < redo_from:
+                    continue
+            elif not redo and HPC_num is not None:
+                if Path(trial_save,f'{trial_string}_all_tcs.npy').is_file():
+                    continue
+        
             seg = np.load(Path(trial_save,f'{trial_string}_seg.npy'))
             
             masks = lab2masks(seg)

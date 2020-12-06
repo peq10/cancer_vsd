@@ -35,15 +35,19 @@ def load_all_long(df_file,save_dir,redo = True, HPC_num = None):
         if HPC_num is not None: #allows running in parallel on HPC
             if idx != HPC_num:
                 continue
-        
-        if idx < redo_from:
-            continue
-    
-    
+              
         parts = Path(data.tif_file).parts
         trial_string = '_'.join(parts[parts.index('cancer'):-1])
+        trial_save = Path(save_dir,'ratio_stacks',trial_string)
         
-    
+        if not redo and HPC_num is None:
+            if idx < redo_from:
+                continue
+        elif not redo and HPC_num is not None:
+            if Path(trial_save,f'{trial_string}_ratio_stack.npy').is_file():
+                continue
+                
+                
         try:
             result_dict = canf.load_and_slice_long_ratio(data.tif_file,
                                                          str(data.SMR_file),
@@ -59,7 +63,7 @@ def load_all_long(df_file,save_dir,redo = True, HPC_num = None):
             continue
             
     
-        trial_save = Path(save_dir,'ratio_stacks',trial_string)
+        
         if not trial_save.is_dir():
             trial_save.mkdir(parents = True)
         
