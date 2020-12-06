@@ -65,3 +65,5 @@ make_roi_overlays.make_all_overlay(initial_df, data_dir, Path(viewing_dir,'rois'
 print('Detecting events...')
 import detect_events
 detect_events.detect_all_events(initial_df,data_dir, redo = redo, njobs = 16, debug = False, HPC_num = HPC_num)
+
+print('Finished successfully')
