@@ -32,10 +32,7 @@ def get_change_points(t, model_params):
 
 def detect_all_events(df_file,save_dir, redo = True, njobs = 2, debug = False, model_params = None, HPC_num = None):
     df = pd.read_csv(df_file)
-    
-    if HPC_num is not None:
-        njobs = 1
-    
+        
     if redo:
         redo_from = 0
     else:
@@ -43,41 +40,45 @@ def detect_all_events(df_file,save_dir, redo = True, njobs = 2, debug = False, m
     
     print(f'{len(df) - redo_from} to do')
     
-    with Parallel(n_jobs=njobs) as parallel:
-        for idx,data in enumerate(df.itertuples()):
-            
-            if HPC_num is not None: #allows running in parallel on HPC
-                if idx != HPC_num:
-                    continue
+    
+    for idx,data in enumerate(df.itertuples()):
         
-            parts = Path(data.tif_file).parts
-            trial_string = '_'.join(parts[parts.index('cancer'):-1])
-            trial_save = Path(save_dir,'ratio_stacks',trial_string)
-            
-            if not redo and HPC_num is None:
-                if idx < redo_from:
-                    continue
-            elif not redo and HPC_num is not None:
-                if Path(trial_save,f'{trial_string}_detected_events.npy').is_file():
-                    continue    
+        if HPC_num is not None: #allows running in parallel on HPC
+            if idx != HPC_num:
+                continue
+    
+        parts = Path(data.tif_file).parts
+        trial_string = '_'.join(parts[parts.index('cancer'):-1])
+        trial_save = Path(save_dir,'ratio_stacks',trial_string)
+        
+        if not redo and HPC_num is None:
+            if idx < redo_from:
+                continue
+        elif not redo and HPC_num is not None:
+            if Path(trial_save,f'{trial_string}_detected_events.npy').is_file():
+                continue    
 
-            tc = np.load(Path(trial_save,f'{trial_string}_all_tcs.npy'),allow_pickle = True)
-            
-            if debug:
-                tc = tc[:10,:]
-
+        tc = np.load(Path(trial_save,f'{trial_string}_all_tcs.npy'),allow_pickle = True)
+        
+        if debug:
+            tc = tc[:10,:]
+        
+        if HPC_num is None:
             try:
-                ev = parallel(delayed(get_change_points)(t,model_params) for t in tc)
+                with Parallel(n_jobs=njobs) as parallel:
+                    ev = parallel(delayed(get_change_points)(t,model_params) for t in tc)
             except Exception as err:
                 print(err)
                 ev = [get_change_points(t) for t in tc]
-                
-            ev = np.array(ev,dtype = object)
-        
-            np.save(Path(trial_save,f'{trial_string}_detected_events.npy'),ev)
+        else:
+            ev = [get_change_points(t) for t in tc]
+            
+        ev = np.array(ev,dtype = object)
+    
+        np.save(Path(trial_save,f'{trial_string}_detected_events.npy'),ev)
 
-            print(f'Saved {trial_string}')
-            redo_from += 1
-            np.save(Path(save_dir,f'{df_file.stem}_redo_from_detect_all_event.npy'),redo_from)
+        print(f'Saved {trial_string}')
+        redo_from += 1
+        np.save(Path(save_dir,f'{df_file.stem}_redo_from_detect_all_event.npy'),redo_from)
             
             
