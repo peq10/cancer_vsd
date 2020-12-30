@@ -37,7 +37,7 @@ if not data_dir.is_dir():
 
 
 
-initial_df = Path(top_dir,'analysis',f'long_acqs_20201205{df_str}.csv')
+initial_df = Path(top_dir,'analysis',f'long_acqs_20201230_experiments_onlynew{df_str}.csv')
 
 if HPC:
     df_ = pd.read_csv(initial_df)
@@ -50,6 +50,9 @@ processed_df, failed_df = load_all_long.load_all_long(initial_df, data_dir,redo 
 processed_df.to_csv(Path(data_dir,initial_df.stem+'_loaded_long.csv'))
 failed_df.to_csv(Path(data_dir,initial_df.stem+'_failed_loaded_long.csv'))
 
+raise NotImplementedError('Must change to load ratio stack as double - saved as single float')
+
+'''
 print('Segmenting...')
 import segment_cellpose
 segment_cellpose.segment_cellpose(initial_df, data_dir, HPC_num = HPC_num)
@@ -67,3 +70,4 @@ import detect_events
 detect_events.detect_all_events(initial_df,data_dir, redo = redo, njobs = 16, debug = False, HPC_num = HPC_num)
 
 print('Finished successfully')
+'''

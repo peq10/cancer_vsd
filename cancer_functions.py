@@ -266,7 +266,7 @@ def get_all_frame_times(metadict):
 
     return np.array(frames),np.array(times)
 
-def load_and_slice_long_ratio(stack_fname,ephys_fname, T_approx = 3*10**-3, fs = 5):
+def load_and_slice_long_ratio(stack_fname,ephys_fname, T_approx = 3*10**-3, fs = 5,washin = False):
     stack = tifffile.imread(stack_fname)
 
     n_frames = len(stack)
@@ -327,7 +327,7 @@ def load_and_slice_long_ratio(stack_fname,ephys_fname, T_approx = 3*10**-3, fs =
         vcVm = None
         ephys_fname = None
         
-    ratio_stack = stack2rat(stack,blue = blue)
+    ratio_stack = stack2rat(stack,blue = blue, causal = washin)
     
     result_dict = {'cam':cam,
                    'LED':LED,
@@ -341,7 +341,7 @@ def load_and_slice_long_ratio(stack_fname,ephys_fname, T_approx = 3*10**-3, fs =
     return result_dict
 
 
-def stack2rat(stack,blue = 0,av_len = 1000,remove_first = True):
+def stack2rat(stack,blue = 0,av_len = 1000,remove_first = True, causal = False):
     if remove_first:
         stack = stack[2:,...]
         
@@ -355,9 +355,13 @@ def stack2rat(stack,blue = 0,av_len = 1000,remove_first = True):
         blue = stack[1::2,...].astype(float)
         green = stack[::2,...].astype(float)
         
+    if causal:
+        origin = (av_len//2 - 1,0,0) #whether the filter is centered over the sample, or average strictly previous
+    else:
+        origin = (0,0,0)
     #divide by mean
-    blue /= ndimage.uniform_filter(blue,(av_len,0,0),mode = 'nearest')
-    green /= ndimage.uniform_filter(green,(av_len,0,0), mode = 'nearest')
+    blue /= ndimage.uniform_filter(blue,(av_len,0,0),mode = 'nearest',origin = origin)
+    green /= ndimage.uniform_filter(green,(av_len,0,0), mode = 'nearest', origin = origin)
     
     rat = blue/green
     
@@ -495,11 +499,16 @@ def get_tif_smr(topdir,savefile,min_date,max_date,prev_sorted = None,only_long =
     if only_long:
         df = df[['long_acq' in f for f in df.tif_file]]
 
-    if np.all(np.isnan(df.SMR_file_1.values.astype(float))):
-
-        df['SMR_file'] = df.SMR_file_0
-        for i in range(max_len):
-            df = df.drop(columns = f'SMR_file_{i}')
+    try:
+        if np.all(np.isnan(df.SMR_file_1.values.astype(float))):
+    
+            df['SMR_file'] = df.SMR_file_0
+            for i in range(max_len):
+                df = df.drop(columns = f'SMR_file_{i}')
+    except Exception:
+        pass
+    
+    
     
     df.to_csv(savefile)
 
