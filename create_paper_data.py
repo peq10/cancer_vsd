@@ -12,7 +12,7 @@ import cancer_functions as canf
 import sys
 
 
-redo = False
+redo = True
 
 home = Path.home()
 if 'peq10' in str(home):
@@ -37,7 +37,7 @@ if not data_dir.is_dir():
 
 
 
-initial_df = Path(top_dir,'analysis',f'long_acqs_20201230_experiments_onlynew{df_str}.csv')
+initial_df = Path(top_dir,'analysis',f'long_acqs_20201230_experiments_correct{df_str}.csv')
 
 if HPC:
     df_ = pd.read_csv(initial_df)
@@ -49,6 +49,9 @@ processed_df, failed_df = load_all_long.load_all_long(initial_df, data_dir,redo 
 
 processed_df.to_csv(Path(data_dir,initial_df.stem+'_loaded_long.csv'))
 failed_df.to_csv(Path(data_dir,initial_df.stem+'_failed_loaded_long.csv'))
+
+
+#processed_df, failed_df = load_all_long.load_all_long(Path(data_dir,initial_df.stem+'_failed_loaded_long_backup.csv'), data_dir,redo = True, HPC_num = HPC_num,raise_err = True)
 
 raise NotImplementedError('Must change to load ratio stack as double - saved as single float')
 

@@ -11,12 +11,12 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 import tifffile
+import scipy.stats
 
 import cancer_functions as canf
 import f.ephys_functions as ef
 import f.general_functions as gf
 
-from cellpose import models
 
 
 # =============================================================================
@@ -163,6 +163,13 @@ def cam_check_steps(cam,cam_id,times,n_frames):
     else:
         return False
 
+
+mean_fs = []
+mean_vs = []
+mean_rs = []
+fits = []
+sens = []
+
 for data in df.itertuples():
     
     s = data.tif_file
@@ -189,7 +196,7 @@ for data in df.itertuples():
     
     stack = result_dict['stack']
     bl = result_dict['blue_idx']
-    
+    print(bl)
     #blue start is high for some reason, exclude
     stack[:,bl,...] = stack[:,bl+2,...]
     
@@ -199,10 +206,50 @@ for data in df.itertuples():
     t_courses = gf.t_course_from_roi(interped_stack, roi)
     
     #use linear fit for bleaching
+    sta = np.mean(t_courses[...,:5],-1)
+    sto = np.mean(t_courses[...,-5:],-1)
+    m = (sto - sta)/t_courses.shape[-1]
+    
+    lin_fit = np.arange(t_courses.shape[-1])[None,None,:]*m[:,:,None] + sta[:,:,None]
+    
+    df_t = ((t_courses - lin_fit) / lin_fit)
+    
+    np.save(Path(trial_save,f'{trial_string}_df_tc.npy'),df_t)    
+    
+    stim_locs = np.array([25,49])
+    
+    mean_f = np.mean(df_t[...,stim_locs[0]:stim_locs[1]],-1)
+    
+    mean_fs.append(mean_f)
+    
+    dr_t = (df_t[:,0,:] + 1)/(df_t[:,1,:] +1)
+    
+    mean_r = np.mean(dr_t[...,stim_locs[0]:stim_locs[1]],-1)
+    mean_rs.append(mean_r)
     
     
+    vm = result_dict['vcVm']
+    v_locs = np.round((stim_locs/t_courses.shape[-1])*vm.shape[-1]).astype(int)
     
-    break
+    mean_v = np.mean(vm[:,v_locs[0]:v_locs[1]],-1)
+    mean_vs.append(mean_v)
+    
+    
+    fit_blue = scipy.stats.linregress(mean_v,mean_f[:,0])
+    fit_green = scipy.stats.linregress(mean_v,mean_f[:,1])
+    fit_rat = scipy.stats.linregress(mean_v,mean_r)
+    
+    fits.append([fit_blue,fit_green,fit_rat])
 
+    sens.append([fit_blue.slope,fit_green.slope,fit_rat.slope])
+    
+mean_fs = np.array(mean_fs)
+mean_vs = np.array(mean_vs)
+mean_rs = np.array(mean_rs)
+
+sens = np.array(sens)
+
+
+#now plot
     
 

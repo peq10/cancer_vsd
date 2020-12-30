@@ -16,7 +16,7 @@ import cancer_functions as canf
 
     
     
-def load_all_long(df_file,save_dir,redo = True, HPC_num = None):
+def load_all_long(df_file,save_dir,redo = True, HPC_num = None, raise_err = False):
     
     df = pd.read_csv(df_file)
     
@@ -39,6 +39,7 @@ def load_all_long(df_file,save_dir,redo = True, HPC_num = None):
         
         trial_string = data.trial_string
         trial_save = Path(save_dir,'ratio_stacks',trial_string)
+        print(trial_string)
         
         if not redo and HPC_num is None:
             if idx < redo_from:
@@ -59,14 +60,19 @@ def load_all_long(df_file,save_dir,redo = True, HPC_num = None):
                                                          fs = 5,
                                                          washin = washin)
         except ValueError as err:
-            if HPC_num is not None:
+            
+            if raise_err:
                 raise err
-            print(err)
-            failed.append(data.Index)
-            redo_from += 1
-            fail_df = Path(save_dir,'failed.csv')
-            df.loc[failed].to_csv(fail_df,mode = 'a',header = not fail_df.is_file())
-            continue
+            else:
+                if HPC_num is not None:
+                    raise err
+                print(err)
+                failed.append(data.Index)
+                redo_from += 1
+                fail_df = Path(save_dir,'failed.csv')
+                df.loc[failed].to_csv(fail_df,mode = 'a',header = not fail_df.is_file())
+                
+                continue
             
     
         
