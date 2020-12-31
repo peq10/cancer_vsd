@@ -25,6 +25,24 @@ def t_course_from_roi(nd_stack,roi):
         nd_stack = nd_stack.reshape(sh1[:-3] + tuple(np.ones(j,dtype = int))+sh1[-3:])
         masked = masked.reshape(sh2[:-2]+tuple(np.ones(i,dtype = int))+sh2[-2:])
         return np.mean(np.mean(nd_stack*masked,-1),-1).data
+    
+def t_course_from_roi_loop(stack,roi,chunk = 500):
+    if len(stack.shape) != 3:
+        raise NotImplementedError('Only 3d Stack Implemented')
+        
+    masked = np.ma.masked_less(roi.astype(int),1)
+    res = np.zeros((masked.shape[0],) + stack.shape[:-2])
+    
+    #chunk to ease memory usage
+    n_chnks,rem = np.divmod(stack.shape[0],chunk)
+       
+    for idx,mask in enumerate(masked):
+        for chnk in range(n_chnks):
+            res[idx,chnk*chunk:(chnk+1)*chunk] = np.mean(np.mean(stack[chnk*chunk:(chnk+1)*chunk,...]*mask[None,...],-1),-1).data
+        res[idx,-rem:] = np.mean(np.mean(stack[-rem:,...]*mask[None,...],-1),-1).data
+    return res
+
+
 
 def lab2masks(seg):
     masks = []
@@ -49,7 +67,7 @@ def make_all_tc(df_file,save_dir, redo = True, njobs = 2, HPC_num = None):
             if idx != HPC_num:
                 continue
         
-        
+
         parts = Path(data.tif_file).parts
         trial_string = '_'.join(parts[parts.index('cancer'):-1])
         trial_save = Path(save_dir,'ratio_stacks',trial_string)
@@ -72,7 +90,7 @@ def make_all_tc(df_file,save_dir, redo = True, njobs = 2, HPC_num = None):
         if HPC_num is None:
             try:
                 with Parallel(n_jobs=njobs) as parallel:
-                    tc = parallel(delayed(t_course_from_roi)(stack,mask) for mask in masks)
+                    tc = parallel(delayed(t_course_from_roi_loop)(stack,mask) for mask in masks)
             except Exception as err:
                 print(err)
                 tc = [t_course_from_roi(stack,mask) for mask in masks]
