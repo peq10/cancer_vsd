@@ -212,7 +212,7 @@ for data in df.itertuples():
     
     lin_fit = np.arange(t_courses.shape[-1])[None,None,:]*m[:,:,None] + sta[:,:,None]
     
-    df_t = ((t_courses - lin_fit) / lin_fit)
+    df_t = ((t_courses - lin_fit) / lin_fit) 
     
     np.save(Path(trial_save,f'{trial_string}_df_tc.npy'),df_t)    
     
@@ -222,7 +222,7 @@ for data in df.itertuples():
     
     mean_fs.append(mean_f)
     
-    dr_t = (df_t[:,0,:] + 1)/(df_t[:,1,:] +1)
+    dr_t = (df_t[:,0,:]+1)/(df_t[:,1,:]+1)
     
     mean_r = np.mean(dr_t[...,stim_locs[0]:stim_locs[1]],-1)
     mean_rs.append(mean_r)

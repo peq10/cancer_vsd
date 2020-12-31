@@ -217,6 +217,8 @@ def cam_check(cam,cam_id,times,e_start,fs):
     
     #compare our segment with if we are off by one each direction - are we at a minimum?
     if cam_id+len(times) == len(cam):
+        if cam_id == 0: #exactly 10000 frames
+            return True
         v = [-1,0]
     elif cam_id == 0:
         v = [0,1]
@@ -224,7 +226,10 @@ def cam_check(cam,cam_id,times,e_start,fs):
         v = [-1,0,1]
         
     var = [np.std(cam[cam_id+x:cam_id+x+len(times)]+e_start-times) for x in v]
-    if var[1] != min(var):
+    if var[1] != min(var) and cam_id != 0:
+        print('Bad times?')
+        return False
+    elif var[0] != min(var) and cam_id == 0:
         print('Bad times?')
         return False
 

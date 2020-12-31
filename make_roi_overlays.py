@@ -46,11 +46,16 @@ def make_all_overlay(df_file,save_dir,viewing_dir,HPC_num = None):
         except ValueError:
             continue
         
-        fig,ax = plt.subplots()
-        ax.imshow(norm(im),vmax = 0.6,cmap = 'Greys_r')
-        ax.imshow(overlay)
-        pf.label_roi_centroids(ax, masks, colours)
-        plt.axis('off')
+        fig,ax = plt.subplots(ncols = 3)
+        ax[0].imshow(norm(im),vmax = 0.6,cmap = 'Greys_r')
+        ax[1].imshow(norm(im),vmax = 0.6,cmap = 'Greys_r')
+        ax[1].imshow(overlay)
+        ax[2].imshow(norm(im),vmax = 0.6,cmap = 'Greys_r')
+        ax[2].imshow(overlay)
+        pf.label_roi_centroids(ax[2], masks, colours)
+        for a in ax:
+            a.axis('off')
+        ax[1].set_title(trial_string[:trial_string.find('long_acq')])
         fig.savefig(Path(viewing_dir,f'{trial_string}_rois.png'),bbox_inches = 'tight',dpi = 300)
         plt.show()
         

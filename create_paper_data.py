@@ -12,7 +12,7 @@ import cancer_functions as canf
 import sys
 
 
-redo = True
+redo = False
 
 home = Path.home()
 if 'peq10' in str(home):
@@ -46,31 +46,32 @@ if HPC:
 print('Loading tif...')
 import load_all_long
 processed_df, failed_df = load_all_long.load_all_long(initial_df, data_dir,redo = redo, HPC_num = HPC_num)
-
+#the failed only works when not redoing
 processed_df.to_csv(Path(data_dir,initial_df.stem+'_loaded_long.csv'))
+
+#look at failed
+failed_df = load_all_long.detect_failed(initial_df, data_dir)
 failed_df.to_csv(Path(data_dir,initial_df.stem+'_failed_loaded_long.csv'))
 
+#try to redo failed
+load_all_long.load_failed(Path(data_dir,initial_df.stem+'_failed_loaded_long.csv'), data_dir)
 
-#processed_df, failed_df = load_all_long.load_all_long(Path(data_dir,initial_df.stem+'_failed_loaded_long_backup.csv'), data_dir,redo = True, HPC_num = HPC_num,raise_err = True)
 
-raise NotImplementedError('Must change to load ratio stack as double - saved as single float')
-
-'''
 print('Segmenting...')
 import segment_cellpose
-segment_cellpose.segment_cellpose(initial_df, data_dir, HPC_num = HPC_num)
-
-print('Extracting time series...')
-import make_all_t_courses
-make_all_t_courses.make_all_tc(initial_df, data_dir,redo = redo, njobs = 3, HPC_num = HPC_num)
+#segment_cellpose.segment_cellpose(initial_df, data_dir, HPC_num = HPC_num)
 
 print('Making overlays...')
 import make_roi_overlays
-make_roi_overlays.make_all_overlay(initial_df, data_dir, Path(viewing_dir,'rois'), HPC_num = HPC_num)
+#make_roi_overlays.make_all_overlay(initial_df, data_dir, Path(viewing_dir,'rois'), HPC_num = HPC_num)
+
+
+print('Extracting time series...')
+import make_all_t_courses
+make_all_t_courses.make_all_tc(initial_df, data_dir,redo = False, njobs = 2, HPC_num = HPC_num)
 
 print('Detecting events...')
 import detect_events
-detect_events.detect_all_events(initial_df,data_dir, redo = redo, njobs = 16, debug = False, HPC_num = HPC_num)
+detect_events.detect_all_events(initial_df,data_dir, redo = True, njobs = 16, debug = False, HPC_num = HPC_num)
 
 print('Finished successfully')
-'''

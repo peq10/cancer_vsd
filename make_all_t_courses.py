@@ -67,7 +67,7 @@ def make_all_tc(df_file,save_dir, redo = True, njobs = 2, HPC_num = None):
         
         masks = lab2masks(seg)
         
-        stack = np.load(Path(trial_save,f'{trial_string}_ratio_stack.npy'))
+        stack = np.load(Path(trial_save,f'{trial_string}_ratio_stack.npy')).astype(np.float64)
         
         if HPC_num is None:
             try:
