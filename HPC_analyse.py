@@ -43,7 +43,6 @@ def main(num,df_path,redo_load = True,redo_tc = True):
             
             
         ################# Make ratio ################
-        print('Loading stack')
         
         def local_to_HPC(tif_path):
             if '/home/peter/data/' in str(tif_path):
@@ -51,7 +50,8 @@ def main(num,df_path,redo_load = True,redo_tc = True):
             return new_path
         
         if Path(trial_save,f'{trial_string}_ratio_stack.npy').is_file() and not redo_load:
-            keys = ['ratio_stack','im','tst']
+            print('Loading stack')
+            keys = ['ratio_stack','im']
             result_dict = {}
             for key in keys:
                 if key == 'ratio_stack':
@@ -59,6 +59,7 @@ def main(num,df_path,redo_load = True,redo_tc = True):
                 else:
                     result_dict[key] = np.load(Path(trial_save,f'{trial_string}_{key}.npy'))
         else:
+            print('Calculating stack')
             result_dict = canf.load_and_slice_long_ratio(local_to_HPC(data.tif_file),
                                                              str(local_to_HPC(data.SMR_file)),
                                                              T_approx = 3*10**-3,
@@ -96,9 +97,11 @@ def main(num,df_path,redo_load = True,redo_tc = True):
         masks = lab2masks(np.squeeze(masks))
     
         if Path(trial_save,f'{trial_string}_all_tcs.npy').is_file() and not redo_tc:
+            print('Calculating TCs')
             tc = np.array([t_course_from_roi(result_dict['ratio_stack'],mask) for mask in masks])
             np.save(Path(trial_save,f'{trial_string}_all_tcs.npy'),tc)
         else:
+            print('Loading TCs')
             tc = np.load(Path(trial_save,f'{trial_string}_all_tcs.npy'))
             
             
