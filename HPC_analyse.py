@@ -32,6 +32,9 @@ def main(num,df_path,redo_load = True,redo_tc = True):
         
         trial_string = data.trial_string
         trial_save = Path(save_dir,'ratio_stacks',trial_string)
+        
+        if not trial_save.is_dir():
+            trial_save.mkdir(parents = True)
                 
         if 'washin' in data.expt:
             washin = True #want to use a causal filter 
