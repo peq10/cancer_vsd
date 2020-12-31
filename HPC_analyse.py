@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 import argparse
+import ast
 
 from cellpose import models
 import ruptures as rpt
@@ -144,7 +145,9 @@ if __name__ == '__main__':
     parser.add_argument('--redo_tc',dest = 'redo_tc' ,type = str,  default ='True')
 
     args = parser.parse_args()
-
+    
+    args.redo_load = ast.literal_eval(args.redo_load)
+    args.redo_tc = ast.literal_eval(args.redo_tc)
 
     args.num = int(args.num) # for failed nums
     args.num = args.num - 1 #PBS uses 1 based indexing, convert to 0 base
