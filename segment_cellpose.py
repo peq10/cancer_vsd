@@ -28,8 +28,11 @@ def segment_cellpose(df_file,save_dir, HPC_num = None):
         parts = Path(data.tif_file).parts
         trial_string = '_'.join(parts[parts.index('cancer'):-1])
         trial_save = Path(save_dir,'ratio_stacks',trial_string)
+        im = np.load(Path(trial_save,f'{trial_string}_im.npy'))
+        if len(im.shape) > 2:
+            im = im[...,0,:,:]
+        ims.append(im)
         
-        ims.append(np.load(Path(trial_save,f'{trial_string}_im.npy')))
         savenames.append(Path(trial_save,f'{trial_string}_seg.npy'))
         
         

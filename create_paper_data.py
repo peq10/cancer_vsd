@@ -37,7 +37,7 @@ if not data_dir.is_dir():
 
 
 
-initial_df = Path(top_dir,'analysis',f'long_acqs_20201205{df_str}.csv')
+initial_df = Path(top_dir,'analysis',f'long_acqs_20201230_experiments_correct{df_str}.csv')
 
 if HPC:
     df_ = pd.read_csv(initial_df)
@@ -46,24 +46,32 @@ if HPC:
 print('Loading tif...')
 import load_all_long
 processed_df, failed_df = load_all_long.load_all_long(initial_df, data_dir,redo = redo, HPC_num = HPC_num)
-
+#the failed only works when not redoing
 processed_df.to_csv(Path(data_dir,initial_df.stem+'_loaded_long.csv'))
+
+#look at failed
+failed_df = load_all_long.detect_failed(initial_df, data_dir)
 failed_df.to_csv(Path(data_dir,initial_df.stem+'_failed_loaded_long.csv'))
+
+#try to redo failed
+load_all_long.load_failed(Path(data_dir,initial_df.stem+'_failed_loaded_long.csv'), data_dir)
+
 
 print('Segmenting...')
 import segment_cellpose
-segment_cellpose.segment_cellpose(initial_df, data_dir, HPC_num = HPC_num)
-
-print('Extracting time series...')
-import make_all_t_courses
-make_all_t_courses.make_all_tc(initial_df, data_dir,redo = redo, njobs = 3, HPC_num = HPC_num)
+#segment_cellpose.segment_cellpose(initial_df, data_dir, HPC_num = HPC_num)
 
 print('Making overlays...')
 import make_roi_overlays
-make_roi_overlays.make_all_overlay(initial_df, data_dir, Path(viewing_dir,'rois'), HPC_num = HPC_num)
+#make_roi_overlays.make_all_overlay(initial_df, data_dir, Path(viewing_dir,'rois'), HPC_num = HPC_num)
+
+
+print('Extracting time series...')
+import make_all_t_courses
+make_all_t_courses.make_all_tc(initial_df, data_dir,redo = False, njobs = 2, HPC_num = HPC_num)
 
 print('Detecting events...')
 import detect_events
-detect_events.detect_all_events(initial_df,data_dir, redo = redo, njobs = 16, debug = False, HPC_num = HPC_num)
+detect_events.detect_all_events(initial_df,data_dir, redo = True, njobs = 16, debug = False, HPC_num = HPC_num)
 
 print('Finished successfully')
