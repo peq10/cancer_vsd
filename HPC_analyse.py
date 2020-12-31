@@ -102,13 +102,12 @@ def main(num,df_path,redo_load = True,redo_tc = True):
         print(redo_tc)
     
         if Path(trial_save,f'{trial_string}_all_tcs.npy').is_file() and not redo_tc:
+            print('Loading TCs')
+            tc = np.load(Path(trial_save,f'{trial_string}_all_tcs.npy'))
+        else:
             print('Calculating TCs')
             tc = np.array([t_course_from_roi(result_dict['ratio_stack'],mask) for mask in masks])
             np.save(Path(trial_save,f'{trial_string}_all_tcs.npy'),tc)
-        else:
-            print('Loading TCs')
-            tc = np.load(Path(trial_save,f'{trial_string}_all_tcs.npy'))
-            
             
         ########### Detect events ###############
         print('Detecting Events')
