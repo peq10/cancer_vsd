@@ -97,6 +97,10 @@ def main(num,df_path,redo_load = True,redo_tc = True):
         
         masks = lab2masks(np.squeeze(masks))
     
+        print(Path(trial_save,f'{trial_string}_all_tcs.npy'))
+        print(Path(trial_save,f'{trial_string}_all_tcs.npy').is_file())
+        print(redo_tc)
+    
         if Path(trial_save,f'{trial_string}_all_tcs.npy').is_file() and not redo_tc:
             print('Calculating TCs')
             tc = np.array([t_course_from_roi(result_dict['ratio_stack'],mask) for mask in masks])
