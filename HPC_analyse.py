@@ -130,7 +130,7 @@ def main(num,df_path,redo_load = True,redo_tc = True):
             
             return result
     
-        ev = [get_change_points(t) for t in tc]
+        ev = [get_change_points(t,None) for t in tc]
         
         ev = np.array(ev,dtype = object)
     
