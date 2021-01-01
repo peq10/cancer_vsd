@@ -59,19 +59,19 @@ load_all_long.load_failed(Path(data_dir,initial_df.stem+'_failed_loaded_long.csv
 
 print('Segmenting...')
 import segment_cellpose
-#segment_cellpose.segment_cellpose(initial_df, data_dir, HPC_num = HPC_num)
+segment_cellpose.segment_cellpose(initial_df, data_dir, HPC_num = HPC_num)
 
 print('Making overlays...')
 import make_roi_overlays
-#make_roi_overlays.make_all_overlay(initial_df, data_dir, Path(viewing_dir,'rois'), HPC_num = HPC_num)
+make_roi_overlays.make_all_overlay(initial_df, data_dir, Path(viewing_dir,'rois'), HPC_num = HPC_num)
 
 
 print('Extracting time series...')
 import make_all_t_courses
-make_all_t_courses.make_all_tc(initial_df, data_dir,redo = False, njobs = 16, HPC_num = HPC_num)
+make_all_t_courses.make_all_tc(initial_df, data_dir,redo = True, njobs = 16, HPC_num = HPC_num)
 
 print('Detecting events...')
 import detect_events
 detect_events.detect_all_events(initial_df,data_dir, redo = True, njobs = 16, debug = False, HPC_num = HPC_num)
-
+#
 print('Finished successfully')

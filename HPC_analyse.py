@@ -85,10 +85,11 @@ def main(num,df_path,redo_load = True,redo_tc = True):
         ########### Extract TC #################
         print('Extracting time courses')
         
-        def t_course_from_roi(stack,roi):
-            masked = np.ma.masked_less(roi.astype(int),1)
-            return np.mean(np.mean(stack*masked[None,...],-1),-1).data
-        
+        def t_course_from_roi(nd_stack,roi):
+            if len(roi.shape) != 2:
+                raise NotImplementedError('Only works for 2d ROIs')
+            wh = np.where(roi)
+            return np.mean(nd_stack[...,wh[0],wh[1]],-1)
         def lab2masks(seg):
             masks = []
             for i in range(1,seg.max()):

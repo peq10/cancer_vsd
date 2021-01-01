@@ -14,33 +14,10 @@ from joblib import Parallel, delayed
 
 
 def t_course_from_roi(nd_stack,roi):
-    masked = np.ma.masked_less(roi.astype(int),1)
-    if len(roi.shape) == 2:
-        return np.mean(np.mean(nd_stack*masked[None,...],-1),-1).data
-    else:
-        sh1 = nd_stack.shape #assume [...,t,y,x]
-        sh2 = roi.shape #assume [...,y,x] and want to keep all dims
-        i = len(sh1) - 2
-        j = len(sh2) - 2
-        nd_stack = nd_stack.reshape(sh1[:-3] + tuple(np.ones(j,dtype = int))+sh1[-3:])
-        masked = masked.reshape(sh2[:-2]+tuple(np.ones(i,dtype = int))+sh2[-2:])
-        return np.mean(np.mean(nd_stack*masked,-1),-1).data
-    
-def t_course_from_roi_loop(stack,roi,chunk = 500):
-    if len(stack.shape) != 3:
-        raise NotImplementedError('Only 3d Stack Implemented')
-        
-    masked = np.ma.masked_less(roi.astype(int),1)
-    res = np.zeros((masked.shape[0],) + stack.shape[:-2])
-    
-    #chunk to ease memory usage
-    n_chnks,rem = np.divmod(stack.shape[0],chunk)
-       
-    for idx,mask in enumerate(masked):
-        for chnk in range(n_chnks):
-            res[idx,chnk*chunk:(chnk+1)*chunk] = np.mean(np.mean(stack[chnk*chunk:(chnk+1)*chunk,...]*mask[None,...],-1),-1).data
-        res[idx,-rem:] = np.mean(np.mean(stack[-rem:,...]*mask[None,...],-1),-1).data
-    return res
+    if len(roi.shape) != 2:
+        raise NotImplementedError('Only works for 2d ROIs')
+    wh = np.where(roi)
+    return np.mean(nd_stack[...,wh[0],wh[1]],-1)
 
 
 
@@ -67,7 +44,6 @@ def make_all_tc(df_file,save_dir, redo = True, njobs = 2, HPC_num = None):
             if idx != HPC_num:
                 continue
         
-
         parts = Path(data.tif_file).parts
         trial_string = '_'.join(parts[parts.index('cancer'):-1])
         trial_save = Path(save_dir,'ratio_stacks',trial_string)
@@ -90,7 +66,7 @@ def make_all_tc(df_file,save_dir, redo = True, njobs = 2, HPC_num = None):
         if HPC_num is None:
             try:
                 with Parallel(n_jobs=njobs) as parallel:
-                    tc = parallel(delayed(t_course_from_roi_loop)(stack,mask) for mask in masks)
+                    tc = parallel(delayed(t_course_from_roi)(stack,mask) for mask in masks)
             except Exception as err:
                 print(err)
                 tc = [t_course_from_roi(stack,mask) for mask in masks]
@@ -104,4 +80,5 @@ def make_all_tc(df_file,save_dir, redo = True, njobs = 2, HPC_num = None):
         print(f'Saved {trial_string}')
         redo_from += 1
         np.save(Path(save_dir,f'{df_file.stem}_redo_from_make_all_tc.npy'),redo_from)
+        
         
