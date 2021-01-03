@@ -84,19 +84,8 @@ def main(num,df_path,redo_load = True,redo_tc = True):
     
         ########### Extract TC #################
         print('Extracting time courses')
-        
-        def t_course_from_roi(nd_stack,roi):
-            if len(roi.shape) != 2:
-                raise NotImplementedError('Only works for 2d ROIs')
-            wh = np.where(roi)
-            return np.mean(nd_stack[...,wh[0],wh[1]],-1)
-        def lab2masks(seg):
-            masks = []
-            for i in range(1,seg.max()):
-                masks.append((seg == i).astype(int))
-            return np.array(masks)
-        
-        masks = lab2masks(np.squeeze(masks))
+    
+        masks = canf.lab2masks(np.squeeze(masks))
     
         print(Path(trial_save,f'{trial_string}_all_tcs.npy'))
         print(Path(trial_save,f'{trial_string}_all_tcs.npy').is_file())
@@ -107,7 +96,7 @@ def main(num,df_path,redo_load = True,redo_tc = True):
             tc = np.load(Path(trial_save,f'{trial_string}_all_tcs.npy'))
         else:
             print('Calculating TCs')
-            tc = np.array([t_course_from_roi(result_dict['ratio_stack'],mask) for mask in masks])
+            tc = np.array([canf.t_course_from_roi(result_dict['ratio_stack'],mask) for mask in masks])
             np.save(Path(trial_save,f'{trial_string}_all_tcs.npy'),tc)
             
         ########### Detect events ###############

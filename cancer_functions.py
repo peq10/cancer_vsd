@@ -14,12 +14,108 @@ import tifffile
 import quantities as pq
 import scipy.interpolate as interp
 import scipy.ndimage as ndimage
+import scipy.signal as signal
 import pandas as pd
 import datetime
 import pdb
 
 import f.general_functions as gf
 import f.ephys_functions as ef
+
+
+def get_observation_length(exclude_dict,tc):
+    length = tc.shape[1]
+    lengths = []
+    for i in range(tc.shape[0]):
+        if i in exclude_dict.keys():
+            lengths.append(length - np.sum(exclude_dict[i].T[:,1] - exclude_dict[i].T[:,0]))
+        else:
+            lengths.append(length)
+    
+    return np.array(lengths)
+
+def apply_exclusion(exclude_dict,tc):
+    excluded_tc = np.copy(tc)
+    
+    for roi in exclude_dict.keys():
+        for i in range(exclude_dict[roi].shape[-1]):
+            ids = exclude_dict[roi][:,i]
+            excluded_tc[roi,ids[0]:ids[1]] = 1
+    
+    return excluded_tc
+
+def soft_threshold(arr,thresh,to = 1):
+    #Thresholds towards to value
+    res = np.copy(arr)
+    wh = np.where(np.abs(arr - to) < thresh)
+    wh_pl = np.where(arr - to >= thresh)
+    wh_neg = np.where(arr - to <= -1*thresh)
+    res[wh] = to
+    res[wh_pl] -= thresh
+    res[wh_neg] += thresh
+    
+    return res
+
+
+def detect_events(tc,thresh,filt_params = None,exclude_first = 0):
+    if filt_params is None:
+        tc_filt = signal.medfilt(tc,(1,11))
+    elif filt_params['type'] == 'gaussian':
+        tc_filt = ndimage.gaussian_filter(tc,(0,filt_params['gaussian_sigma']))
+    elif filt_params['type'] == 'median':
+        tc_filt = signal.medfilt(tc,(1,filt_params['med_kernel']))
+    
+    tc_filt[:,:exclude_first] = 0
+    
+    threshed = soft_threshold(tc_filt,thresh)
+    
+    #return ids of active cells and start/end locations of activity
+    active = np.where(np.sum(threshed - 1,-1))[0]
+    
+    result = {}
+    for idx in active:
+        t = threshed[idx,:]
+        locs = np.diff((np.abs(t -1) != 0).astype(int),prepend = 0,append = 0)
+        result[idx] = np.array((np.where(locs == 1)[0],np.where(locs == -1)[0]))
+
+    result['tc_filt'] = tc_filt
+    return result
+
+def get_event_properties(tc,thresh,filt_params,exclude_first = 0):
+    event_dict = detect_events(tc,thresh,filt_params,exclude_first = exclude_first)
+    
+    t = event_dict['tc_filt']
+    
+    result_dict = {}
+
+    for idx in event_dict.keys():
+        result_dict[idx] = event_dict[idx]
+        if idx == 'tc_filt':
+            continue
+        event_properties = []
+        for locs in event_dict[idx].T:
+            event_length = locs[1] - locs[0]
+            event_amplitude = t[idx][np.argmax(np.abs(t[idx][locs[0]:locs[1]]))+locs[0]] - 1 
+            event_integrated = np.sum(t[idx][locs[0]:locs[1]] - 1)
+            event_properties.append([event_length,event_amplitude,event_integrated])
+        
+        result_dict[f'props_{idx}'] = np.array(event_properties)
+        
+    
+    return result_dict
+
+
+def lab2masks(seg):
+    masks = []
+    for i in range(1,seg.max()+1):
+        masks.append((seg == i).astype(int))
+    return np.array(masks)
+
+def t_course_from_roi(nd_stack,roi):
+    if len(roi.shape) != 2:
+        raise NotImplementedError('Only works for 2d ROIs')
+    wh = np.where(roi)
+    return np.mean(nd_stack[...,wh[0],wh[1]],-1)
 
 def load_tif_metadata(fname):
     fname = Path(fname)

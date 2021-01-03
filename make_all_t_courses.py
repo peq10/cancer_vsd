@@ -13,19 +13,10 @@ import pandas as pd
 from joblib import Parallel, delayed
 
 
-def t_course_from_roi(nd_stack,roi):
-    if len(roi.shape) != 2:
-        raise NotImplementedError('Only works for 2d ROIs')
-    wh = np.where(roi)
-    return np.mean(nd_stack[...,wh[0],wh[1]],-1)
+import cancer_functions as canf
 
 
 
-def lab2masks(seg):
-    masks = []
-    for i in range(1,seg.max()):
-        masks.append((seg == i).astype(int))
-    return np.array(masks)
 
 
 def make_all_tc(df_file,save_dir, redo = True, njobs = 2, HPC_num = None):
@@ -59,19 +50,19 @@ def make_all_tc(df_file,save_dir, redo = True, njobs = 2, HPC_num = None):
     
         seg = np.load(Path(trial_save,f'{trial_string}_seg.npy'))
         
-        masks = lab2masks(seg)
+        masks = canf.lab2masks(seg)
         
         stack = np.load(Path(trial_save,f'{trial_string}_ratio_stack.npy')).astype(np.float64)
         
         if HPC_num is None:
             try:
                 with Parallel(n_jobs=njobs) as parallel:
-                    tc = parallel(delayed(t_course_from_roi)(stack,mask) for mask in masks)
+                    tc = parallel(delayed(canf.t_course_from_roi)(stack,mask) for mask in masks)
             except Exception as err:
                 print(err)
-                tc = [t_course_from_roi(stack,mask) for mask in masks]
+                tc = [canf.t_course_from_roi(stack,mask) for mask in masks]
         else:
-            tc = [t_course_from_roi(stack,mask) for mask in masks]
+            tc = [canf.t_course_from_roi(stack,mask) for mask in masks]
     
         tc = np.array(tc)
         

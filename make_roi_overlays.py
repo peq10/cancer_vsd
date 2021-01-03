@@ -12,17 +12,10 @@ import pandas as pd
 from pathlib import Path
 
 import f.plotting_functions as pf
+import f.general_functions as gf
 
+import cancer_functions as canf
 
-def lab2masks(seg):
-    masks = []
-    for i in range(1,seg.max()):
-        masks.append((seg == i).astype(int))
-    return np.array(masks)
-
-
-def norm(arr):
-    return (arr - arr.min())/(arr.max() - arr.min()) 
 
 def make_all_overlay(df_file,save_dir,viewing_dir,HPC_num = None):
     df = pd.read_csv(df_file)
@@ -38,7 +31,7 @@ def make_all_overlay(df_file,save_dir,viewing_dir,HPC_num = None):
         
         seg = np.load(Path(trial_save,f'{trial_string}_seg.npy'))
         
-        masks = lab2masks(seg)
+        masks = canf.lab2masks(seg)
         
         im = np.load(Path(trial_save,f'{trial_string}_im.npy'))
         try:
@@ -47,12 +40,12 @@ def make_all_overlay(df_file,save_dir,viewing_dir,HPC_num = None):
             continue
         
         fig,ax = plt.subplots(ncols = 3)
-        ax[0].imshow(norm(im),vmax = 0.6,cmap = 'Greys_r')
-        ax[1].imshow(norm(im),vmax = 0.6,cmap = 'Greys_r')
+        ax[0].imshow(gf.norm(im),vmax = 0.6,cmap = 'Greys_r')
+        ax[1].imshow(gf.norm(im),vmax = 0.6,cmap = 'Greys_r')
         ax[1].imshow(overlay)
-        ax[2].imshow(norm(im),vmax = 0.6,cmap = 'Greys_r')
+        ax[2].imshow(gf.norm(im),vmax = 0.6,cmap = 'Greys_r')
         ax[2].imshow(overlay)
-        pf.label_roi_centroids(ax[2], masks, colours)
+        pf.label_roi_centroids(ax[2], masks, colours,fontdict = {'fontsize' : 3})
         for a in ax:
             a.axis('off')
         ax[1].set_title(trial_string[:trial_string.find('long_acq')])
