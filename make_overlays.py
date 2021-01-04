@@ -14,7 +14,7 @@ import scipy.signal as signal
 
 import matplotlib.cm
 import tifffile
-
+import time
 
 import f.plotting_functions as pf
 import f.general_functions as gf
@@ -88,11 +88,35 @@ initial_df = Path(top_dir,'analysis',f'long_acqs_20201230_experiments_correct{df
 
 df = pd.read_csv(initial_df)
 
+def make_overlay_events(rat,stack,seg,evs = None,downsample = 5):
+    rat = rat[:,2:-2,2:-2]
+    rat = ndimage.filters.gaussian_filter(rat,(3,2,2))
+    rat = np.pad(rat,((0,0),(2,2),(2,2)),mode = 'edge')
+    
+    ovs = []
+    for e in evs:
+        ovs.append(make_roi_overlay(e,seg,rat.shape)[::downsample,...])
+    
+    display = chunk_overlay(rat[::downsample],stack[::downsample],100,cmap = matplotlib.cm.Spectral,alpha_top=0.2,percent = 50,contrast = [0.5,0.1])
+    
+    colors = np.array([[255,0,0,255],
+                       [0,127,0,127],
+                       [0,0,127,127]])
+    
+    for idx,o in enumerate(ovs):
+        wh = np.where(o)
+        display[wh[0],wh[1],wh[2],:] = colors[idx]
+    
+    return display
 
 downsample = 5
 
-for idx,data in enumerate(df.itertuples()):
+for idx,data in enumerate(df[::-1].itertuples()):
 
+    if idx < 94:
+        continue
+    
+    t0 = time.time()
     
     trial_string = data.trial_string
     trial_save = Path(save_dir,'ratio_stacks',trial_string)
@@ -102,9 +126,7 @@ for idx,data in enumerate(df.itertuples()):
 
 
 
-    rat = np.load(Path(trial_save, f'{data.trial_string}_ratio_stack.npy'))[:,2:-2,2:-2]
-    rat = ndimage.filters.gaussian_filter(rat,(3,2,2))
-    rat = np.pad(rat,((0,0),(2,2),(2,2)),mode = 'edge')
+    rat = np.load(Path(trial_save, f'{data.trial_string}_ratio_stack.npy'))
     
     tc = np.load(Path(trial_save,f'{trial_string}_all_tcs.npy'))
     seg = np.load(Path(trial_save,f'{trial_string}_seg.npy'))
@@ -113,35 +135,29 @@ for idx,data in enumerate(df.itertuples()):
     #exclude_dict = np.load(Path(trial_save,f'{trial_string}_processed_exclusions.npy'),allow_pickle = True).item()
     #add exclusion
     #excluded_tc = canf.apply_exclusion(exclude_dict,tc)
-    surround_tc = np.load(Path(trial_save,f'{trial_string}_all_surround_tcs.npy'))
+    masks = canf.lab2masks(seg)
+    surround_masks = canf.get_surround_masks_cellfree(masks, dilate = True)
+    
+    surround_tc = np.array([canf.t_course_from_roi(rat,m) for m in surround_masks])
     excluded_circle = np.load(Path(trial_save,f'{trial_string}_circle_excluded_rois.npy'))
-    events = canf.get_events_exclude_surround_events(tc,surround_tc,0.002, filt_params, exclude_first=250, excluded_circle = excluded_circle)
+    events = canf.get_events_exclude_surround_events(tc,surround_tc,
+                                                     detection_thresh = 0.002, 
+                                                     surrounds_thresh = 0.001,
+                                                     filt_params = filt_params, 
+                                                     exclude_first=100, 
+                                                     excluded_circle = excluded_circle)
 
     roi_overlay = make_roi_overlay(events,seg,rat.shape)
     exclude_overlay = make_roi_overlay(events['excluded_events'],seg,rat.shape)
     exclude_circle_overlay = make_roi_overlay(events['excluded_circle_events'],seg,rat.shape)
-    
-    rat = rat[::downsample,...]
-    roi_overlay = roi_overlay[::downsample,...]
-    exclude_overlay = exclude_overlay[::downsample,...]
-    exclude_circle_overlay = exclude_circle_overlay[::downsample,...]
-    
-    stack = tifffile.imread(data.tif_file)[::2,...]
-    stack = stack[::downsample,...]
 
-    display = chunk_overlay(rat,stack,100,cmap = matplotlib.cm.Spectral,alpha_top=0.2,percent = 50,contrast = [0.5,0.1])
+
+    stack = tifffile.imread(data.tif_file)[::2,...]
+
+    display = make_overlay_events(rat,stack,seg,evs = [events,events['excluded_events'],events['excluded_circle_events']])
     
-    wh = np.where(roi_overlay)
-    display[wh[0],wh[1],wh[2],:] = np.array([255,0,0,255])
-    
-    #add overlays for exclusions
-    wh = np.where(exclude_overlay)
-    display[wh[0],wh[1],wh[2],:] = np.array([0,128,0,128])
-    
-    wh = np.where(exclude_circle_overlay)
-    display[wh[0],wh[1],wh[2],:] = np.array([0,0,128,128])
     
 
     tifffile.imsave(Path(viewing_dir, f'{data.trial_string}_overlay_2.tif'),display)
     
-    
+    print(time.time() - t0)

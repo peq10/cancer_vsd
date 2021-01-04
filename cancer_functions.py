@@ -27,7 +27,7 @@ def get_events_exclude_surround_events(tc,
                                        surround_tc,
                                        detection_thresh = 0.002,
                                        filt_params = None,
-                                       surrounds_thresh = 0.001,
+                                       surrounds_thresh = 0.002,
                                        exclude_first = 0,
                                        max_overlap = 0.1,
                                        excluded_circle = None):
@@ -121,6 +121,41 @@ def get_surround_masks(masks,surround_rad = 20,dilate = True):
     rs = np.sqrt((x[None,...] - centers[:,0,None,None])**2 + (y[None,...] - centers[:,1,None,None])**2)
 
     surround_roi = np.logical_xor(dilated_masks,rs < roi_rads[:,None,None] + surround_rad)
+    return surround_roi
+
+def get_surround_masks_cellfree(masks,surround_rad = 50,dilate = True):
+
+    
+    all_masks = np.any(masks,axis = 0)
+    
+    #avoid border effects/bleedthrough by dilating existing rois
+    structure = np.ones((3,3,3))
+    structure[0::2,...] = 0
+    dilated_masks = ndimage.binary_dilation(masks,structure = structure,iterations = 4)
+    
+    centers = np.array([ndimage.center_of_mass(m) for m in dilated_masks])
+    x,y = np.indices(masks.shape[-2:])
+    rs = np.sqrt((x[None,...] - centers[:,0,None,None])**2 + (y[None,...] - centers[:,1,None,None])**2)
+
+    surround_roi = np.logical_and(~all_masks,rs < surround_rad)
+    
+    #see if the area is too small
+    areas = np.sum(surround_roi,axis = (-2,-1))
+
+    #check nowhere too small
+    small = areas < 2000
+    if np.any(small):
+        for new_rs in range(surround_rad,2*surround_rad,10):
+            small = areas < 2000
+            surround_roi[small] =  np.logical_and(~all_masks,rs[small,...] < new_rs)
+            if not np.any(small):
+                break
+            
+    small = areas < 2000
+    #revert back to normal behaviour - just take an area around and dont care about cells
+    if np.any(small):
+        surround_roi[small] =  np.logical_and(masks[small],rs[small,...] < new_rs)
+        
     return surround_roi
 
 def get_observation_length(exclude_dict,tc):

@@ -42,6 +42,7 @@ def plot_events(tc,events,offset = 0,div = 100,color = 'r'):
 
 
 
+
 for idx,data in enumerate(df.itertuples()):
     
     if idx != 34:
@@ -56,10 +57,11 @@ for idx,data in enumerate(df.itertuples()):
     seg = np.load(Path(trial_save,f'{trial_string}_seg.npy'))
     
     masks = canf.lab2masks(seg)
-    surround_masks = canf.get_surround_masks(masks, dilate = True)
+    surround_masks = get_surround_masks_cellfree(masks, dilate = True)
     
+    st = np.load(Path(trial_save,f'{trial_string}_ratio_stack.npy'))
     
-    surround_tc = np.load(Path(trial_save,f'{trial_string}_all_surround_tcs.npy'))
+    surround_tc = np.array([canf.t_course_from_roi(st,m) for m in surround_masks])
 
     ev = canf.detect_events(tc,0.002)
     surrounds_ev = canf.detect_events(surround_tc,0.002)
