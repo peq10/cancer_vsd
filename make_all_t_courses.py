@@ -51,6 +51,7 @@ def make_all_tc(df_file,save_dir, redo = True, njobs = 2, HPC_num = None):
         seg = np.load(Path(trial_save,f'{trial_string}_seg.npy'))
         
         masks = canf.lab2masks(seg)
+        surround_masks = canf.get_surround_masks(masks,surround_rad = 20,dilate = True)
         
         stack = np.load(Path(trial_save,f'{trial_string}_ratio_stack.npy')).astype(np.float64)
         
@@ -58,15 +59,20 @@ def make_all_tc(df_file,save_dir, redo = True, njobs = 2, HPC_num = None):
             try:
                 with Parallel(n_jobs=njobs) as parallel:
                     tc = parallel(delayed(canf.t_course_from_roi)(stack,mask) for mask in masks)
+                    surround_tc = parallel(delayed(canf.t_course_from_roi)(stack,mask) for mask in surround_masks)
             except Exception as err:
                 print(err)
                 tc = [canf.t_course_from_roi(stack,mask) for mask in masks]
+                surround_tc = [canf.t_course_from_roi(stack,mask) for mask in surround_masks]
         else:
             tc = [canf.t_course_from_roi(stack,mask) for mask in masks]
+            surround_tc = [canf.t_course_from_roi(stack,mask) for mask in surround_masks]
     
         tc = np.array(tc)
+        surround_tc = np.array(surround_tc)
         
         np.save(Path(trial_save,f'{trial_string}_all_tcs.npy'),tc)
+        np.save(Path(trial_save,f'{trial_string}_all_surround_tcs.npy'),surround_tc)
         
         print(f'Saved {trial_string}')
         redo_from += 1

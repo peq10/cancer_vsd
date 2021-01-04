@@ -9,7 +9,7 @@ import numpy as np
 from pathlib import Path
 import shutil
 import json
-import re
+
 import tifffile
 import quantities as pq
 import scipy.interpolate as interp
@@ -22,6 +22,106 @@ import pdb
 import f.general_functions as gf
 import f.ephys_functions as ef
 
+
+def get_events_exclude_surround_events(tc,
+                                       surround_tc,
+                                       detection_thresh = 0.002,
+                                       filt_params = None,
+                                       surrounds_thresh = 0.001,
+                                       exclude_first = 0,
+                                       max_overlap = 0.1,
+                                       excluded_circle = None):
+    
+    ev = detect_events(tc,detection_thresh,filt_params = filt_params,exclude_first = exclude_first)
+    surrounds_ev = detect_events(surround_tc,surrounds_thresh,filt_params = filt_params,exclude_first = exclude_first)
+    
+    excluded_dict = {}
+    dict_drop = []
+    for key in ev.keys():
+        if key == 'tc_filt':
+            continue
+        
+        if key not in surrounds_ev.keys():
+            continue
+        
+        sur_e = surrounds_ev[key].T
+        e = ev[key].T
+        #if a detected surround event overlaps for more than max_overlap, then remove
+        
+        #detects any overlaps
+        overlapping = np.logical_and(e[:,0,None] < sur_e[None,:,1],e[:,1,None] >= sur_e[None,:,0])
+        
+        if not np.any(overlapping):
+            continue
+        
+        drop = []
+        wh = np.where(overlapping)
+        #now detect size of overlap and delete if proportionally greater than max overlap
+        for idx in range(len(wh[0])):
+            overlap = min(e[wh[0][idx],1],sur_e[wh[1][idx],1]) - max(e[wh[0][idx],0],sur_e[wh[1][idx],0])
+            if overlap > max_overlap*(e[wh[0][idx],1] - e[wh[0][idx],0]) :
+                drop.append(wh[0][idx])
+        
+        #pdb.set_trace()
+        
+        exc_e = np.array([x for ii,x in enumerate(e) if ii in drop])
+        keep_e = np.array([x for ii,x in enumerate(e) if ii not in drop])
+        
+        
+        excluded_dict[key] = exc_e.T
+        
+        if len(e) > 0:
+            ev[key] = keep_e.T
+        else:
+            dict_drop.append(key)
+    
+    #delete empty fields
+    for key in dict_drop:
+        del ev[key]
+        
+    #exclude ROIs on edge of illumination
+    if excluded_circle is not None:
+        circle_dict = {}
+        for idx in excluded_circle:
+            if idx in ev.keys():
+                circle_dict[idx] = ev[idx]
+                del ev[idx]
+            
+        ev['excluded_circle_events'] = circle_dict   
+        
+    #include the surround data
+    ev['surround_events'] = surrounds_ev
+    ev['excluded_events'] = excluded_dict      
+    
+
+    return ev
+
+def get_surround_masks(masks,surround_rad = 20,dilate = True):
+    
+    def get_bounding_circle_radius(masks):
+        rows,cols = np.any(masks,axis=-1),np.any(masks,axis=-2)
+        rs = np.apply_along_axis(first_last,-1,rows)
+        cs = np.apply_along_axis(first_last,-1,cols)
+    
+        centers = np.array([rs[:,0]+(rs[:,1] - rs[:,0])/2,cs[:,0]+(cs[:,1] - cs[:,0])/2]).T
+        #bounding radius is the hypotenuse /2
+        radii = np.sqrt((cs[:,0] - cs[:,0])**2 + (rs[:,1] - rs[:,0])**2)/2
+        return radii,centers
+    
+    def first_last(arr_1d):
+        return np.where(arr_1d)[0][[0, -1]]
+    
+    #avoid border effects/bleedthrough by dilating existing rois
+    structure = np.ones((3,3,3))
+    structure[0::2,...] = 0
+    dilated_masks = ndimage.binary_dilation(masks,structure = structure,iterations = 4)
+    
+    roi_rads,centers = get_bounding_circle_radius(dilated_masks)
+    x,y = np.indices(masks.shape[-2:])
+    rs = np.sqrt((x[None,...] - centers[:,0,None,None])**2 + (y[None,...] - centers[:,1,None,None])**2)
+
+    surround_roi = np.logical_xor(dilated_masks,rs < roi_rads[:,None,None] + surround_rad)
+    return surround_roi
 
 def get_observation_length(exclude_dict,tc):
     length = tc.shape[1]
@@ -59,13 +159,13 @@ def soft_threshold(arr,thresh,to = 1):
 
 def detect_events(tc,thresh,filt_params = None,exclude_first = 0):
     if filt_params is None:
-        tc_filt = signal.medfilt(tc,(1,11))
+        tc_filt = ndimage.gaussian_filter(tc,(0,3))
     elif filt_params['type'] == 'gaussian':
         tc_filt = ndimage.gaussian_filter(tc,(0,filt_params['gaussian_sigma']))
     elif filt_params['type'] == 'median':
         tc_filt = signal.medfilt(tc,(1,filt_params['med_kernel']))
     
-    tc_filt[:,:exclude_first] = 0
+    tc_filt[:,:exclude_first] = 1
     
     threshed = soft_threshold(tc_filt,thresh)
     

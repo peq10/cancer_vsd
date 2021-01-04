@@ -45,7 +45,7 @@ if HPC:
 
 print('Loading tif...')
 import load_all_long
-processed_df, failed_df = load_all_long.load_all_long(initial_df, data_dir,redo = redo, HPC_num = HPC_num)
+processed_df, failed_df = load_all_long.load_all_long(initial_df, data_dir,redo = False, HPC_num = HPC_num)
 #the failed only works when not redoing
 processed_df.to_csv(Path(data_dir,initial_df.stem+'_loaded_long.csv'))
 

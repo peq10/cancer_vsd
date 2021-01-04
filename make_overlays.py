@@ -62,6 +62,8 @@ def chunk_overlay(arr,norm_stack,chunk_size,cmap = matplotlib.cm.hot,alpha_top =
 def make_roi_overlay(events_dict,seg,sz):
     overlay = np.zeros(sz,dtype = int)
     for idx in events_dict.keys():
+        if type(idx) == str:
+            continue
         for idx2 in range(events_dict[idx].shape[-1]):
             ids = events_dict[idx][:,idx2]
             mask = (seg == idx + 1).astype(int)
@@ -95,7 +97,7 @@ for idx,data in enumerate(df.itertuples()):
     trial_string = data.trial_string
     trial_save = Path(save_dir,'ratio_stacks',trial_string)
     
-    if Path(viewing_dir, f'{data.trial_string}_overlay_2.tif').is_file():
+    if Path(viewing_dir, f'{data.trial_string}_overlay_2.tif').is_file() and False:
         continue
 
 
@@ -108,19 +110,21 @@ for idx,data in enumerate(df.itertuples()):
     seg = np.load(Path(trial_save,f'{trial_string}_seg.npy'))
     filt_params = {'type':'gaussian','gaussian_sigma':3}
     
-    exclude_dict = np.load(Path(trial_save,f'{trial_string}_processed_exclusions.npy'),allow_pickle = True).item()
+    #exclude_dict = np.load(Path(trial_save,f'{trial_string}_processed_exclusions.npy'),allow_pickle = True).item()
     #add exclusion
-    excluded_tc = canf.apply_exclusion(exclude_dict,tc)
-    
-    events = canf.detect_events(excluded_tc,0.002,filt_params)
+    #excluded_tc = canf.apply_exclusion(exclude_dict,tc)
+    surround_tc = np.load(Path(trial_save,f'{trial_string}_all_surround_tcs.npy'))
+    excluded_circle = np.load(Path(trial_save,f'{trial_string}_circle_excluded_rois.npy'))
+    events = canf.get_events_exclude_surround_events(tc,surround_tc,0.002, filt_params, exclude_first=250, excluded_circle = excluded_circle)
 
     roi_overlay = make_roi_overlay(events,seg,rat.shape)
-    exclude_overlay = make_roi_overlay(exclude_dict,seg,rat.shape)
+    exclude_overlay = make_roi_overlay(events['excluded_events'],seg,rat.shape)
+    exclude_circle_overlay = make_roi_overlay(events['excluded_circle_events'],seg,rat.shape)
     
     rat = rat[::downsample,...]
     roi_overlay = roi_overlay[::downsample,...]
     exclude_overlay = exclude_overlay[::downsample,...]
-    
+    exclude_circle_overlay = exclude_circle_overlay[::downsample,...]
     
     stack = tifffile.imread(data.tif_file)[::2,...]
     stack = stack[::downsample,...]
@@ -130,10 +134,13 @@ for idx,data in enumerate(df.itertuples()):
     wh = np.where(roi_overlay)
     display[wh[0],wh[1],wh[2],:] = np.array([255,0,0,255])
     
+    #add overlays for exclusions
     wh = np.where(exclude_overlay)
     display[wh[0],wh[1],wh[2],:] = np.array([0,128,0,128])
     
-    #add overlay for exclusions
+    wh = np.where(exclude_circle_overlay)
+    display[wh[0],wh[1],wh[2],:] = np.array([0,0,128,128])
+    
 
     tifffile.imsave(Path(viewing_dir, f'{data.trial_string}_overlay_2.tif'),display)
     
