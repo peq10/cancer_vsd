@@ -158,9 +158,12 @@ def get_surround_masks_cellfree(masks,surround_rad = 50,dilate = True):
         
     return surround_roi
 
-def get_observation_length(exclude_dict,tc):
+def get_observation_length(event_dict):
+    tc = event_dict['tc_filt']
+    exclude_dict = event_dict['surround_events']
     length = tc.shape[1]
     lengths = []
+    #count as non-observed any time during a surround event
     for i in range(tc.shape[0]):
         if i in exclude_dict.keys():
             lengths.append(length - np.sum(exclude_dict[i].T[:,1] - exclude_dict[i].T[:,0]))
@@ -216,29 +219,31 @@ def detect_events(tc,thresh,filt_params = None,exclude_first = 0):
     result['tc_filt'] = tc_filt
     return result
 
-def get_event_properties(tc,thresh,filt_params,exclude_first = 0):
-    event_dict = detect_events(tc,thresh,filt_params,exclude_first = exclude_first)
-    
+def get_event_properties(event_dict):
+
     t = event_dict['tc_filt']
     
     result_dict = {}
 
     for idx in event_dict.keys():
-        result_dict[idx] = event_dict[idx]
-        if idx == 'tc_filt':
+        if type(idx) == str:
             continue
         event_properties = []
         for locs in event_dict[idx].T:
+            if np.logical_and(np.any(t[idx,locs[0]:locs[1]] - 1 > 0),np.any(t[idx,locs[0]:locs[1]] - 1 < 0)):
+                raise NotImplementedError('Need to implement when events are both positive and negative')
+            
             event_length = locs[1] - locs[0]
-            event_amplitude = t[idx][np.argmax(np.abs(t[idx][locs[0]:locs[1]]))+locs[0]] - 1 
-            event_integrated = np.sum(t[idx][locs[0]:locs[1]] - 1)
+            event_amplitude = t[idx,np.argmax(np.abs(t[idx,locs[0]:locs[1]]))+locs[0]] - 1 
+            
+            event_integrated = np.sum(t[idx,locs[0]:locs[1]] - 1)
             event_properties.append([event_length,event_amplitude,event_integrated])
         
-        result_dict[f'props_{idx}'] = np.array(event_properties)
+        result_dict[idx] = np.array(event_properties)
         
-    
+    event_dict['event_props'] = result_dict
+        
     return result_dict
-
 
 def lab2masks(seg):
     masks = []

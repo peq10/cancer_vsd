@@ -68,10 +68,10 @@ import make_roi_overlays
 
 print('Extracting time series...')
 import make_all_t_courses
-make_all_t_courses.make_all_tc(initial_df, data_dir,redo = True, njobs = 10, HPC_num = HPC_num)
+#make_all_t_courses.make_all_tc(initial_df, data_dir,redo = False, njobs = 10, HPC_num = HPC_num)
 
 print('Detecting events...')
-import detect_events
-#detect_events.detect_all_events(initial_df,data_dir, redo = True, njobs = 10, debug = False, HPC_num = HPC_num)
-#
+import get_events
+get_events.get_measure_events(initial_df,data_dir)
+
 print('Finished successfully')

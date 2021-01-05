@@ -113,9 +113,6 @@ downsample = 5
 
 for idx,data in enumerate(df[::-1].itertuples()):
 
-    if idx < 94:
-        continue
-    
     t0 = time.time()
     
     trial_string = data.trial_string

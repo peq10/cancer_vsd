@@ -51,7 +51,7 @@ def make_all_tc(df_file,save_dir, redo = True, njobs = 2, HPC_num = None):
         seg = np.load(Path(trial_save,f'{trial_string}_seg.npy'))
         
         masks = canf.lab2masks(seg)
-        surround_masks = canf.get_surround_masks(masks,surround_rad = 20,dilate = True)
+        surround_masks = canf.get_surround_masks_cellfree(masks, dilate = True)
         
         stack = np.load(Path(trial_save,f'{trial_string}_ratio_stack.npy')).astype(np.float64)
         
