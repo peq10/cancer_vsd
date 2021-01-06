@@ -35,6 +35,7 @@ def get_events_exclude_surround_events(tc,
     ev = detect_events(tc,detection_thresh,filt_params = filt_params,exclude_first = exclude_first)
     surrounds_ev = detect_events(surround_tc,surrounds_thresh,filt_params = filt_params,exclude_first = exclude_first)
     
+
     excluded_dict = {}
     dict_drop = []
     for key in ev.keys():
@@ -70,12 +71,13 @@ def get_events_exclude_surround_events(tc,
         
         excluded_dict[key] = exc_e.T
         
-        if len(e) > 0:
+        if len(keep_e) > 0:
             ev[key] = keep_e.T
         else:
             dict_drop.append(key)
     
     #delete empty fields
+
     for key in dict_drop:
         del ev[key]
         
@@ -194,6 +196,14 @@ def soft_threshold(arr,thresh,to = 1):
     
     return res
 
+def split_event(t,ids):
+    #splits a zero-(actually 1) crossing event into multiple non-zero crossing events recursively
+    #removes one point
+    if not np.logical_and(np.any(t[ids[0]:ids[1]] - 1 > 0),np.any(t[ids[0]:ids[1]] - 1 < 0)):
+        return [tuple(ids)]
+    else:
+        zer_loc = np.argmin(np.abs(t[ids[0]:ids[1]] - 1)) + ids[0]
+        return split_event(t,(ids[0],zer_loc)) + split_event(t,(zer_loc+1,ids[1])) 
 
 def detect_events(tc,thresh,filt_params = None,exclude_first = 0):
     if filt_params is None:
@@ -214,8 +224,26 @@ def detect_events(tc,thresh,filt_params = None,exclude_first = 0):
     for idx in active:
         t = threshed[idx,:]
         locs = np.diff((np.abs(t -1) != 0).astype(int),prepend = 0,append = 0)
-        result[idx] = np.array((np.where(locs == 1)[0],np.where(locs == -1)[0]))
-
+        llocs = np.array((np.where(locs == 1)[0],np.where(locs == -1)[0]))
+        #check if they have both positive and negative going - messes with integration later
+        corr_locs = []
+        for id_idx,ids in enumerate(llocs.T):
+            if np.logical_and(np.any(tc_filt[idx,ids[0]:ids[1]] - 1 > 0),np.any(tc_filt[idx,ids[0]:ids[1]] - 1 < 0)):
+                split_ids = split_event(t,ids)
+                corr_locs.extend(split_ids)
+            else:
+                corr_locs.append(ids)
+          
+        corr_locs = np.array(corr_locs)
+        
+        #if we have split into a zero size (due to boundary issue in split events), remove
+        if np.any((corr_locs[:,1] - corr_locs[:,0])<1):
+            corr_locs = corr_locs[(corr_locs[:,1] - corr_locs[:,0])>0] 
+            
+            
+        result[idx] = corr_locs.T
+        
+        
     result['tc_filt'] = tc_filt
     return result
 
@@ -231,19 +259,24 @@ def get_event_properties(event_dict):
         event_properties = []
         for locs in event_dict[idx].T:
             if np.logical_and(np.any(t[idx,locs[0]:locs[1]] - 1 > 0),np.any(t[idx,locs[0]:locs[1]] - 1 < 0)):
-                raise NotImplementedError('Need to implement when events are both positive and negative')
+                print(idx,locs)
+                raise ValueError('This shouldnt happen')
             
             event_length = locs[1] - locs[0]
             event_amplitude = t[idx,np.argmax(np.abs(t[idx,locs[0]:locs[1]]))+locs[0]] - 1 
             
             event_integrated = np.sum(t[idx,locs[0]:locs[1]] - 1)
             event_properties.append([event_length,event_amplitude,event_integrated])
-        
+            
+            
+        if len(np.array(event_properties)) == 0:
+            pdb.set_trace()
         result_dict[idx] = np.array(event_properties)
+
         
     event_dict['event_props'] = result_dict
         
-    return result_dict
+    return event_dict
 
 def lab2masks(seg):
     masks = []

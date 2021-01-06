@@ -17,7 +17,9 @@ import cancer_functions as canf
 
 
 
-def get_measure_events(initial_df,save_dir):
+def get_measure_events(initial_df,save_dir,thresh_range = np.arange(0.002,0.004,0.0001),
+                       surrounds_thresh = 0.001,
+                       exclude_first = 200):
 
     df = pd.read_csv(initial_df)
     for idx, data in enumerate(df.itertuples()):
@@ -41,20 +43,35 @@ def get_measure_events(initial_df,save_dir):
             tc = tc[:,:observe_to]
             surround_tc = surround_tc[:observe_to]
         
-        events = canf.get_events_exclude_surround_events(tc,
-                                                         surround_tc,
-                                                         detection_thresh = 0.002, 
-                                                         surrounds_thresh = 0.001,
-                                                         filt_params = filt_params, 
-                                                         exclude_first=100, 
-                                                         excluded_circle = excluded_circle)
-    
+        all_events = []
+        all_observation = []
+        for detection_thresh in thresh_range:
+            events = canf.get_events_exclude_surround_events(tc,
+                                                             surround_tc,
+                                                             detection_thresh = detection_thresh, 
+                                                             surrounds_thresh = surrounds_thresh,
+                                                             filt_params = filt_params, 
+                                                             exclude_first=exclude_first, 
+                                                             excluded_circle = excluded_circle)
         
-        event_with_props = canf.get_event_properties(events) 
+    
+            
+            event_with_props = canf.get_event_properties(events) 
+            
+            all_events.append(event_with_props)
+            all_observation.append(canf.get_observation_length(events))
+        
+        
+        detect_params = {'thresh_range':thresh_range,
+                         'surrounds_thresh':surrounds_thresh,
+                         'filt_params': filt_params,
+                         'exclude_first':exclude_first}
         
         result_dict = {'n_cells': tc.shape[0] - len(excluded_circle),
-                      'events': event_with_props,
-                      'observation_length': canf.get_observation_length(events)
+                      'events': all_events,
+                      'observation_length': all_observation,
+                      'excluded_circle': excluded_circle,
+                      'detection_params': detect_params
                       }
         
         #all_props = np.concatenate([event_props[p] for p in event_props.keys() if 'props' in str(p)])

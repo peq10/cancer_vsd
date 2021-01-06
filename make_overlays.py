@@ -117,7 +117,7 @@ for idx,data in enumerate(df[::-1].itertuples()):
     
     trial_string = data.trial_string
     trial_save = Path(save_dir,'ratio_stacks',trial_string)
-    
+    print(trial_string)
     if Path(viewing_dir, f'{data.trial_string}_overlay_2.tif').is_file() and False:
         continue
 
@@ -138,7 +138,7 @@ for idx,data in enumerate(df[::-1].itertuples()):
     surround_tc = np.array([canf.t_course_from_roi(rat,m) for m in surround_masks])
     excluded_circle = np.load(Path(trial_save,f'{trial_string}_circle_excluded_rois.npy'))
     events = canf.get_events_exclude_surround_events(tc,surround_tc,
-                                                     detection_thresh = 0.002, 
+                                                     detection_thresh = 0.003, 
                                                      surrounds_thresh = 0.001,
                                                      filt_params = filt_params, 
                                                      exclude_first=100, 
