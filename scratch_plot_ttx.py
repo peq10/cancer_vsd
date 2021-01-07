@@ -31,7 +31,7 @@ df = pd.read_csv(initial_df)
 
 
 
-df = df[(df.use == 'y') & (df.expt == 'TTX_10um_washout')]
+df = df[(df.use == 'y') & ((df.expt == 'TTX_10um_washout') | (df.expt == 'TTX_10um'))]
 
 
 trial_string = df.iloc[0].trial_string
@@ -102,7 +102,7 @@ idx = 19
 n_bins = 'knuth'
 plt.cla()
 
-density = True
+density = False
 pres_hist = av.hist(pre_current[idx][:, -1], histtype='step', bins=n_bins, density=density ,
                      cumulative=True,color = 'r')
 #pres_hist = av.hist(pre_current[idx][:, -1], histtype='step', bins=n_bins, density=density ,

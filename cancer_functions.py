@@ -188,13 +188,13 @@ def soft_threshold(arr,thresh,to = 1):
     #Thresholds towards to value
     res = np.copy(arr)
     wh = np.where(np.abs(arr - to) < thresh)
-    wh_pl = np.where(arr - to >= thresh)
-    wh_neg = np.where(arr - to <= -1*thresh)
+    n_wh = np.where(np.abs(arr - to) >= thresh)
+    sgn = np.sign(arr - to)
     res[wh] = to
-    res[wh_pl] -= thresh
-    res[wh_neg] += thresh
+    res[n_wh] -= sgn[n_wh]*thresh
     
     return res
+
 
 def split_event(t,ids):
     #splits a zero-(actually 1) crossing event into multiple non-zero crossing events recursively
