@@ -31,9 +31,9 @@ initial_df = Path(top_dir,'analysis',f'long_acqs_20201230_experiments_correct{df
 
 df = pd.read_csv(initial_df)
 
-figsave = Path(Path.home(),'Dropbox/papers/cancer/v1/TTX_washout/')
+figsave = Path(Path.home(),'Dropbox/Papers/cancer/v1/TTX_washout')
 if not figsave.is_dir():
-    figsave.mkdir()
+    figsave.mkdir(parents = True)
 
 df = df[(df.use == 'y') & (df.expt == 'TTX_10um_washout')]
 
@@ -102,7 +102,6 @@ post_adj[idx] /= ma
 wash_adj[idx] /= ma
 
 #first plot the median, IQR of non-zero and proportion of zero current cells
-
 nonzer_curr = [pre_adj[idx][pre_adj[idx]!=0],post_adj[idx][post_adj[idx]!=0],wash_adj[idx][wash_adj[idx]!=0]]
 all_curr = [pre_adj[idx],post_adj[idx],wash_adj[idx]]
 
@@ -115,30 +114,54 @@ num_cells_tot = np.array([len(pre_adj[idx]),len(post_adj[idx]),len(wash_adj[idx]
 proportion_zero = num_zers/num_cells_tot
 
 
-fig1,ax1 = plt.subplots()
-ax1.plot(np.arange(3),medians)
-ax1.fill_between(np.arange(3),IQRs[:,0],IQRs[:,1],alpha = 0.5)
-ax1b = ax1.twinx()
-ax1b.plot(np.arange(3),proportion_zero)
 
-#omp = np.array([tot_pre,tot_post,tot_wash])
-#comp /= comp.max(axis = 0)
-#comp -= comp.mean(axis = 0)
+fig2,ax2 = plt.subplots()
+#ax2.errorbar(np.arange(3),medians,yerr = IQRs.T,color = 'k',marker = 's',mfc = 'k')
+scale = 0.3
+ax2.violinplot(nonzer_curr)
+for i in range(3):
+    ax2.plot(np.linspace(-scale,scale,len(nonzer_curr[i]))+i+1,np.sort(nonzer_curr[i]),'.',color = 'k',alpha = 0.5)
+
+ax2.set_ylabel('Non-zero event size')
+ax2b = ax2.twinx()
+ax2b.plot(np.arange(3)+1,proportion_zero,'-r',marker = '.',markersize = 15)
+ax2b.tick_params(axis='y', labelcolor='r')
+ax2b.set_ylabel('Proportion of inactive cells', color='r')  #
+ax2.set_xticks(np.arange(3)+1)
+ax2.set_xticklabels(['Pre TTX','TTX 10 $\mathrm{\mu}$m','Washout'])
+pf.set_all_fontsize(ax2, 16)
+pf.set_all_fontsize(ax2b, 16)
+fig2.savefig(Path(figsave,'nonzero_violin.png'),bbox_inches = 'tight',dpi = 300)
 
 
-#plt.plot(np.arange(3)[:,None],comp)
-#plt.ylim([0,1])
+#now also just plot the means and standard deviations
+means = np.array([np.mean(x) for x in all_curr])
+std_errs = np.array([np.std(x)/np.sqrt(len(x)) for x in all_curr])
+
+#normalise to 1
+ma = means.max()
+means /= ma
+std_errs /= ma
+
+fig3,ax3 = plt.subplots()
+ax3.errorbar(np.arange(3),means,yerr = std_errs,color = 'k',marker = 's',mfc = 'k',linewidth = 2)
+ax3.set_ylim([0,1.6])
+ax3.set_xticks(np.arange(3))
+ax3.set_xticklabels(['Pre TTX','TTX 10 $\mathrm{\mu}$m','Washout'])
+ax3.set_ylabel('Mean activity per cell\n(normalised)')
+pf.set_all_fontsize(ax3, 16)
+pf.set_thickaxes(ax3, 3)
+fig3.savefig(Path(figsave,'all_mean_stderr.png'),bbox_inches = 'tight',dpi = 300)
 
 
+n_bins = 'blocks'
 
-n_bins = 'knuth'
-plt.cla()
 
 density = True
 cumulative =  True
 log = True
 
-fig,ax1 = plt.subplots()
+fig1,ax1 = plt.subplots()
 
 linewidth = 3
 pres_hist = av.hist(pre_adj[idx], histtype='step', bins=100, density=density ,
@@ -155,14 +178,24 @@ wash_hist = av.hist(wash_adj[idx], histtype='step', bins=100, density=density ,
 #                     cumulative=False,color = 'g')
 plt.legend(loc = (0.5,0.1),frameon = False,fontsize = 14)
 ax1.set_xlabel('Integrated activity activity per cell (a.u.)')
-ax1.set_ylabel('Cell fraction')
+ax1.set_ylabel('(Log) Cell fraction')
 pf.set_all_fontsize(ax1, 14)
 pf.set_thickaxes(ax1, 3)
 ax1.tick_params(which = 'minor',width = 3,length = 3)
-ax1.set_yticks([0.9,1])
-ax1.set_ylim([0.9,1])
+#ax1.set_yticks([0.9,1])
+#ax1.set_ylim([0.9,1])
 ax1.minorticks_off()
-fig.savefig()
+fig1.savefig(Path(figsave,'cumulative_log_histogram.png'),bbox_inches = 'tight',dpi = 300)
+
+
+#finally do tests on full histos
+test1 = stats.anderson_ksamp([all_curr[0],all_curr[1]])
+test2 = stats.anderson_ksamp([all_curr[0],all_curr[2]])
+test3 = stats.anderson_ksamp([all_curr[1],all_curr[2]])
+
+print(f'Pre-post p = {test1.significance_level}')
+print(f'Pre-wash p = {test2.significance_level}')
+print(f'Post-wash p = {test3.significance_level}')
 
 
 '''

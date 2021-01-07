@@ -29,8 +29,8 @@ data_folder = Path(Path.home(),'data/Firefly/cancer/Yilin/')
 ratio_stack = np.load(Path(data_folder,trial_string,f'{trial_string}_ratio_stack.npy'))
 
 #this is saved as a single precision float - need to convert to double before manipulating as otherwise will 
-#get floating point problems 
-ratio_stack = ratio_stack.astype(np.float64)
+#get floating point problems COMMENT OUT IF LOW MEMORY
+#ratio_stack = ratio_stack.astype(np.float64)
 
 print(f'The voltage imaging data is saved in a 3D stack as (t,y,x). The dimensions are {ratio_stack.shape}')
 print('The sampling period is (0.2 ms, 1.04 um, 1.04 um)')

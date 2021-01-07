@@ -17,7 +17,7 @@ import cancer_functions as canf
 
 
 
-def get_measure_events(initial_df,save_dir,thresh_range = np.arange(0.002,0.004,0.0001),
+def get_measure_events(initial_df,save_dir,thresh_range = np.arange(0.002,0.0045,0.0005),
                        surrounds_thresh = 0.001,
                        exclude_first = 200):
 
