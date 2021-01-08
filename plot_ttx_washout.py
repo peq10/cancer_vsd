@@ -15,6 +15,7 @@ from pathlib import Path
 import scipy.stats as stats
 
 import astropy.visualization as av
+import astropy.stats as ass
 
 from pathlib import Path
 
@@ -93,7 +94,7 @@ post_adj = [post_current[i]/post_length[i] for i in range(len(post_current))]
 wash_adj = [wash_current[i]/wash_length[i] for i in range(len(wash_current))]
 
 #threshold level
-idx = 2
+idx = 3
 
 #normalise the integrals to 1 max
 ma = np.max([pre_adj[idx].max(),post_adj[idx].max(),wash_adj[idx].max()])
@@ -136,16 +137,27 @@ fig2.savefig(Path(figsave,'nonzero_violin.png'),bbox_inches = 'tight',dpi = 300)
 
 #now also just plot the means and standard deviations
 means = np.array([np.mean(x) for x in all_curr])
-std_errs = np.array([np.std(x)/np.sqrt(len(x)) for x in all_curr])
+#bootstrap a confidence interval on the mean
+
+boot_samples = np.array([ass.bootstrap(x,bootnum = 1000,bootfunc = np.mean) for x in all_curr])
+boot_range = np.array([np.percentile(boot_samples,25,axis = -1),np.percentile(boot_samples,75,axis = -1)])
+
+
+
+std_errs = np.array([np.std(x) for x in all_curr])
 
 #normalise to 1
 ma = means.max()
 means /= ma
 std_errs /= ma
+boot_range /= ma
+
+boot_err = np.array([means - boot_range[0,:],boot_range[1,:] - means])
 
 fig3,ax3 = plt.subplots()
-ax3.errorbar(np.arange(3),means,yerr = std_errs,color = 'k',marker = 's',mfc = 'k',linewidth = 2)
-ax3.set_ylim([0,1.6])
+ax3.errorbar(np.arange(3),means,yerr = boot_err,color = 'k',marker = 's',mfc = 'k',linewidth = 2,capthick = 2,elinewidth = 2,capsize = 5)
+#ax3.plot(np.arange(3),boot_range.T)
+#ax3.set_ylim([0,1.6])
 ax3.set_xticks(np.arange(3))
 ax3.set_xticklabels(['Pre TTX','TTX 10 $\mathrm{\mu}$m','Washout'])
 ax3.set_ylabel('Mean activity per cell\n(normalised)')
@@ -177,7 +189,7 @@ wash_hist = av.hist(wash_adj[idx], histtype='step', bins=100, density=density ,
 #wash_hist = av.hist(wash_current[idx][:, -1], histtype='step', bins=n_bins, density=density ,
 #                     cumulative=False,color = 'g')
 plt.legend(loc = (0.5,0.1),frameon = False,fontsize = 14)
-ax1.set_xlabel('Integrated activity activity per cell (a.u.)')
+ax1.set_xlabel('Integrated activity per cell (a.u.)')
 ax1.set_ylabel('(Log) Cell fraction')
 pf.set_all_fontsize(ax1, 14)
 pf.set_thickaxes(ax1, 3)
