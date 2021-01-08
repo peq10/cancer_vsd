@@ -306,7 +306,7 @@ def load_tif_metadata(fname):
 def parse_time(metadata_time):
     date = metadata_time.split(' ')[0].split('-')
     time = metadata_time.split(' ')[1].split(':')
-    return date,time
+    return int(''.join(date)),time
     
 def lin_time(time):
     return float(time[0])*60**2 + float(time[1])*60 + float(time[2])
@@ -318,7 +318,8 @@ def get_stack_offset(fname,ephys_start):
     if int(date) != int(ephys_start[0]):
         raise ValueError('Date mismatch!')
 
-    offset = lin_time(time) - lin_time(str(ephys_start[1]))
+    ttime = [str(ephys_start[1])[:2],str(ephys_start[1])[2:4],str(ephys_start[1])[4:6]]
+    offset = lin_time(time) - lin_time(ttime)
     if offset < 0:
         raise ValueError('Time mismatch!')
     
@@ -355,7 +356,7 @@ def slice_all_ephys(analog_signal,sliced_cam):
     return np.array([np.squeeze(all_ephys[i][:sh]) for i in range(len(all_ephys))])
 
 def get_steps_image_ephys(im_dir,ephys_fname):
-    ephys_dict = ef.load_ephys(ephys_fname)
+    ephys_dict = ef.load_ephys_parse(ephys_fname,analog_names=['vcVm','vcIm'],event_names = ['CamDown'])
         
     files = [f for f in Path(im_dir).glob('./**/*.tif')]
     offsets = np.array([get_stack_offset(f,ephys_dict['ephys_start']) for f in files])
@@ -385,7 +386,7 @@ def get_steps_image_ephys(im_dir,ephys_fname):
         raise ValueError('Problemo!')
         
     #now slice the ephys from the cam
-    for key in ['vcVm','ccVm','ccIm','ccVm']:
+    for key in ['vcVm','ccVm','ccIm','vcIm']:
         if key not in ephys_dict.keys():
             continue
         ephys_dict[key + '_sliced'] = slice_all_ephys(ephys_dict[key],sliced_cam)

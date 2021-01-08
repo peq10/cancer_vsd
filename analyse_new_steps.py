@@ -12,11 +12,13 @@ import pandas as pd
 from pathlib import Path
 import tifffile
 import scipy.stats
+import matplotlib.pyplot as plt
+import scipy.ndimage as ndimage
 
 import cancer_functions as canf
 import f.ephys_functions as ef
 import f.general_functions as gf
-
+import f.plotting_functions as pf
 
 
 # =============================================================================
@@ -166,6 +168,7 @@ def cam_check_steps(cam,cam_id,times,n_frames):
 
 mean_fs = []
 mean_vs = []
+mean_is = []
 mean_rs = []
 fits = []
 sens = []
@@ -193,12 +196,14 @@ for data in df.itertuples():
     tifffile.imsave(Path('/home/peter/data/Firefly/cancer/analysis/full','steps_analysis/ims',f'{trial_string}_im.tif'),gf.to_8_bit(result_dict['im']))
     
     _,roi  = gf.read_roi_file(Path('/home/peter/data/Firefly/cancer/analysis/full','steps_analysis/rois',f'{trial_string}_roi.roi'),im_dims = result_dict['im'].shape[-2:])
+    roi2 = np.logical_xor(ndimage.binary_erosion(roi,iterations = 4),roi)
     
     stack = result_dict['stack']
     bl = result_dict['blue_idx']
     print(bl)
     #blue start is high for some reason, exclude
     stack[:,bl,...] = stack[:,bl+2,...]
+    image = np.mean(stack[0,...],axis = 0)
     
     interped_stack = canf.process_ratio_stacks(stack)
     
@@ -229,15 +234,33 @@ for data in df.itertuples():
     
     
     vm = result_dict['vcVm']
+    im = result_dict['vcIm']
     v_locs = np.round((stim_locs/t_courses.shape[-1])*vm.shape[-1]).astype(int)
     
     mean_v = np.mean(vm[:,v_locs[0]:v_locs[1]],-1)
     mean_vs.append(mean_v)
     
+    mean_i = np.mean(im[:,v_locs[0]:v_locs[1]],-1)
+    mean_is.append(mean_i)
+    
+    np.save(Path(trial_save,f'{trial_string}_vm.npy'),vm)
+    np.save(Path(trial_save,f'{trial_string}_im.npy'),result_dict['vcIm'])
     
     fit_blue = scipy.stats.linregress(mean_v,mean_f[:,0])
     fit_green = scipy.stats.linregress(mean_v,mean_f[:,1])
     fit_rat = scipy.stats.linregress(mean_v,mean_r)
+    fit_ephys = scipy.stats.linregress(mean_i,mean_v)
+    
+    plt.figure()
+    plt.imshow(image)
+    over = np.zeros(image.shape + (4,),dtype = np.uint8)
+    wh = np.where(roi2)
+    over[wh] = (255,0,0,128)
+    plt.imshow(over)
+    
+    plt.figure()
+    plt.plot(mean_i,mean_v)
+    plt.show()
     
     fits.append([fit_blue,fit_green,fit_rat])
 
@@ -245,6 +268,7 @@ for data in df.itertuples():
     
 mean_fs = np.array(mean_fs)
 mean_vs = np.array(mean_vs)
+mean_is = np.array(mean_is)
 mean_rs = np.array(mean_rs)
 
 sens = np.array(sens)
