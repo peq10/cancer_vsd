@@ -540,7 +540,7 @@ def get_all_frame_times(metadict):
 
     return np.array(frames),np.array(times)
 
-def load_and_slice_long_ratio(stack_fname,ephys_fname, T_approx = 3*10**-3, fs = 5,washin = False):
+def load_and_slice_long_ratio(stack_fname,ephys_fname, T_approx = 3*10**-3, fs = 5,washin = False, nofilt = False):
     stack = tifffile.imread(stack_fname)
 
     n_frames = len(stack)
@@ -601,7 +601,10 @@ def load_and_slice_long_ratio(stack_fname,ephys_fname, T_approx = 3*10**-3, fs =
         vcVm = None
         ephys_fname = None
         
-    ratio_stack = stack2rat(stack,blue = blue, causal = washin)
+    if nofilt:
+        ratio_stack = stack2rat_nofilt(stack,blue = blue)
+    else:
+        ratio_stack = stack2rat(stack,blue = blue, causal = washin)
     
     result_dict = {'cam':cam,
                    'LED':LED,
@@ -640,6 +643,35 @@ def stack2rat(stack,blue = 0,av_len = 1000,remove_first = True, causal = False):
     rat = blue/green
     
     return rat
+
+def stack2rat_nofilt(stack,blue = 0,remove_first = True):
+    if remove_first:
+        stack = stack[2:,...]
+        
+    if len(stack)%2 == 1:
+        stack = stack[:-1,...]
+        
+    if blue == 0:
+        blue = stack[::2,...].astype(float)
+        green = stack[1::2,...].astype(float)
+    else: #if the leds flipped
+        blue = stack[1::2,...].astype(float)
+        green = stack[::2,...].astype(float)
+    
+    blue = get_lin_norm(blue,2000)
+    green = get_lin_norm(green,2000)
+      
+    rat = blue/green
+    
+    return rat
+    
+    
+def get_lin_norm(st,n):
+    slopes = (st[-1,...] - st[0,...])/st.shape[0]
+    intercept = st[0,...]
+    bck = slopes*np.arange(st.shape[0])[:,None,None] + intercept
+    return st/bck
+
 
 
 def strdate2int(strdate):

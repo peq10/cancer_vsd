@@ -94,7 +94,7 @@ post_adj = [post_current[i]/post_length[i] for i in range(len(post_current))]
 wash_adj = [wash_current[i]/wash_length[i] for i in range(len(wash_current))]
 
 #threshold level
-idx = 3
+idx = 2
 
 #normalise the integrals to 1 max
 ma = np.max([pre_adj[idx].max(),post_adj[idx].max(),wash_adj[idx].max()])
@@ -107,7 +107,7 @@ nonzer_curr = [pre_adj[idx][pre_adj[idx]!=0],post_adj[idx][post_adj[idx]!=0],was
 all_curr = [pre_adj[idx],post_adj[idx],wash_adj[idx]]
 
 medians = np.array([np.median(x) for x in nonzer_curr])
-IQRs = np.array([[np.percentile(x,25),np.percentile(x,75)] for x in nonzer_curr])
+IQRs = np.array([[np.percentile(x,5),np.percentile(x,5)] for x in nonzer_curr])
 
 num_zers = np.array([np.sum(pre_adj[idx]==0),np.sum(post_adj[idx]==0),np.sum(wash_adj[idx]==0)])
 num_cells_tot = np.array([len(pre_adj[idx]),len(post_adj[idx]),len(wash_adj[idx])])
@@ -194,8 +194,8 @@ ax1.set_ylabel('(Log) Cell fraction')
 pf.set_all_fontsize(ax1, 14)
 pf.set_thickaxes(ax1, 3)
 ax1.tick_params(which = 'minor',width = 3,length = 3)
-#ax1.set_yticks([0.9,1])
-#ax1.set_ylim([0.9,1])
+ax1.set_yticks([0.9,1])
+ax1.set_ylim([0.9,1])
 ax1.minorticks_off()
 fig1.savefig(Path(figsave,'cumulative_log_histogram.png'),bbox_inches = 'tight',dpi = 300)
 
@@ -208,6 +208,8 @@ test3 = stats.anderson_ksamp([all_curr[1],all_curr[2]])
 print(f'Pre-post p = {test1.significance_level}')
 print(f'Pre-wash p = {test2.significance_level}')
 print(f'Post-wash p = {test3.significance_level}')
+
+print(f'cells per condition: {[len(x) for x in all_curr]}')
 
 
 '''
