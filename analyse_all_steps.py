@@ -33,7 +33,7 @@ fits = []
 sens = []
 
 example = 'cancer_20201113_slip1_cell1_steps_steps_with_emission_ratio_steps_green_0.125_blue_0.206_1'
-
+T = 1/50
 
 
 for idx,data in enumerate(df.itertuples()):
@@ -83,10 +83,14 @@ for idx,data in enumerate(df.itertuples()):
     sens.append([fit_blue.slope,fit_green.slope,fit_rat.slope])
     
     if trial_string == example:
-        ex_tc = df_t
-        ex_vm = vm
-        ex_im = im
+        end = 65
+        ex_tc = dr_t[:,:-end]
+        end_v = np.round((end/df_t.shape[-1])*vm.shape[-1]).astype(int)
+        vm_T = (df_t.shape[-1]/vm.shape[-1])*T
+        ex_vm = vm[:,:-end_v]
+        ex_im = im[:,:-end_v]
         ii = idx
+        
 
 
 mean_fs = np.array(mean_fs)
@@ -106,11 +110,24 @@ sens = sens*100**2
 #plot an example cell
 fig = plt.figure(constrained_layout = True)
 gs  = fig.add_gridspec(2,2)
-ax1 = fig.add_subplot(gs[0,0])
 
+
+ax1 = fig.add_subplot(gs[0,0])
+ax1.plot(np.arange(ex_vm.shape[-1])*vm_T,ex_vm.T )
+ax1.set_xlabel('Time (s)')
+ax1.set_ylabel('Patch command\nvoltage (mV)')
+#ax1.set_yticks(np.arange(-1,4))
+pf.set_all_fontsize(ax1, 12)
+pf.set_thickaxes(ax1, 3)
 
 
 ax2 = fig.add_subplot(gs[0,1])
+ax2.plot(np.arange(ex_tc.shape[-1])*T,(ex_tc.T -1 )*100)
+ax2.set_xlabel('Time (s)')
+ax2.set_ylabel(r'$\Delta R/R_0$ (%)')
+ax2.set_yticks(np.arange(-1,4))
+pf.set_all_fontsize(ax2, 12)
+pf.set_thickaxes(ax2, 3)
 
 
 
@@ -119,6 +136,8 @@ ax3.plot(mean_vs[ii,:],(fits[ii][-1].slope*mean_vs[ii,:] + fits[ii][-1].intercep
 ax3.plot(mean_vs[ii,:],(mean_rs[ii,:]-1)*100,'.r',markersize = 12)
 ax3.set_xlabel('Membrane Voltage (mV)')
 ax3.set_ylabel(r'$\Delta R/R_0$ (%)')
+ax3.set_yticks(np.arange(-1,4))
+ax3.text(-60,2,f'{fits[ii][-1].slope*100**2:.1f} % per\n100 mV',fontdict = {'fontsize':12})
 pf.set_all_fontsize(ax3, 12)
 pf.set_thickaxes(ax3, 3)
 
