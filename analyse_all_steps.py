@@ -13,6 +13,9 @@ import cancer_functions as canf
 import f.general_functions as gf
 import f.plotting_functions as pf
 import scipy.stats
+import tifffile
+import scipy.ndimage as ndimage
+
 
 df = pd.read_csv('/home/peter/data/Firefly/cancer/analysis/old_steps.csv')
 
@@ -57,6 +60,8 @@ for idx,data in enumerate(df.itertuples()):
     mean_f = np.mean(df_t[...,stim_locs[0]:stim_locs[1]],-1)
     mean_fs.append(mean_f)
     
+    plt.plot(df_t[:,1,:].T)*100
+    
     dr_t = (df_t[:,0,:]+1)/(df_t[:,1,:]+1)
     
     mean_r = np.mean(dr_t[...,stim_locs[0]:stim_locs[1]],-1)
@@ -91,6 +96,11 @@ for idx,data in enumerate(df.itertuples()):
         ex_im = im[:,:-end_v]
         ii = idx
         
+        st = tifffile.imread([f for f in Path(data.directory).glob('./**/*.tif')][0])
+        image = np.mean(st[::2,...],0)
+        _,roi  = gf.read_roi_file(Path('/home/peter/data/Firefly/cancer/analysis/full','steps_analysis/rois',f'{trial_string}.roi'),im_dims = st.shape[-2:])
+        outline = np.logical_xor(roi,ndimage.binary_dilation(roi,iterations = 2))
+
 
 
 mean_fs = np.array(mean_fs)
@@ -103,17 +113,29 @@ sens = np.array(sens)
 sens = sens*100**2 
 
 
+disp = slice(10,140,1),slice(169,222,1)
+image = image[disp[0],disp[1]]
+outline = outline[disp[0],disp[1]]
+over = np.zeros(outline.shape + (4,),dtype = np.uint8)
+over[np.where(outline)] = (255,0,0,255)
 
-
+length = np.round(20/1.04).astype(int)
+over[5:8,-length-5:-5] = (255,255,255,255)
 
 
 #plot an example cell
-fig = plt.figure(constrained_layout = True)
-gs  = fig.add_gridspec(2,2)
+fig = plt.figure(constrained_layout = True,figsize = [7,4.8])
+gs  = fig.add_gridspec(2,3)
+
+ax0 = fig.add_subplot(gs[:,0])
+ax0.imshow(image,cmap = 'Greys_r')
+ax0.imshow(over)
+
+plt.axis('off')
 
 
-ax1 = fig.add_subplot(gs[0,0])
-ax1.plot(np.arange(ex_vm.shape[-1])*vm_T,ex_vm.T )
+ax1 = fig.add_subplot(gs[0,1])
+ax1.plot(np.arange(ex_vm.shape[-1])*vm_T,ex_vm.T,linewidth = 2)
 ax1.set_xlabel('Time (s)')
 ax1.set_ylabel('Patch command\nvoltage (mV)')
 #ax1.set_yticks(np.arange(-1,4))
@@ -121,22 +143,23 @@ pf.set_all_fontsize(ax1, 12)
 pf.set_thickaxes(ax1, 3)
 
 
-ax2 = fig.add_subplot(gs[0,1])
-ax2.plot(np.arange(ex_tc.shape[-1])*T,(ex_tc.T -1 )*100)
+ax2 = fig.add_subplot(gs[0,2])
+ax2.plot(np.arange(ex_tc.shape[-1])*T,(ex_tc.T -1 )*100,linewidth = 2)
 ax2.set_xlabel('Time (s)')
 ax2.set_ylabel(r'$\Delta R/R_0$ (%)')
-ax2.set_yticks(np.arange(-1,4))
+ax2.set_yticks(np.arange(-2,7,2))
 pf.set_all_fontsize(ax2, 12)
 pf.set_thickaxes(ax2, 3)
 
 
 
-ax3 = fig.add_subplot(gs[1,0])
+ax3 = fig.add_subplot(gs[1,1])
 ax3.plot(mean_vs[ii,:],(fits[ii][-1].slope*mean_vs[ii,:] + fits[ii][-1].intercept - 1)*100,'k',linewidth = 3)
 ax3.plot(mean_vs[ii,:],(mean_rs[ii,:]-1)*100,'.r',markersize = 12)
 ax3.set_xlabel('Membrane Voltage (mV)')
 ax3.set_ylabel(r'$\Delta R/R_0$ (%)')
-ax3.set_yticks(np.arange(-1,4))
+ax3.set_yticks(np.arange(-2,7,2))
+ax3.set_xticks([-50,0,50])
 ax3.text(-60,2,f'{fits[ii][-1].slope*100**2:.1f} % per\n100 mV',fontdict = {'fontsize':12})
 pf.set_all_fontsize(ax3, 12)
 pf.set_thickaxes(ax3, 3)
@@ -144,12 +167,12 @@ pf.set_thickaxes(ax3, 3)
 
 
 
-ax4 = fig.add_subplot(gs[1,1])
+ax4 = fig.add_subplot(gs[1,2])
 scale = 0.02
 ax4.violinplot(sens[:,-1])
 ax4.plot(np.random.normal(loc = 1,scale = scale,size = sens.shape[0]),sens[:,-1],'.k',markersize = 12)
 ax4.xaxis.set_visible(False)
-ax4.set_yticks(np.arange(1,6))
+ax4.set_yticks(np.arange(2,11,2))
 ax4.set_ylabel('Ratiometric sensitivity\n(% per 100 mV)')
 pf.set_thickaxes(ax4, 3,remove = ['top','right','bottom'])
 pf.set_all_fontsize(ax4, 12)

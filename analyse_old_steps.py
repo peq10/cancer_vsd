@@ -61,7 +61,9 @@ for idx,data in enumerate(df.itertuples()):
     
     lin_fit = np.arange(t_courses.shape[-1])[None,None,:]*m[:,:,None] + sta[:,:,None]
     
-    df_t = ((t_courses - lin_fit) / lin_fit) 
+    offset = 90*16
+    
+    df_t = (t_courses - lin_fit) / (lin_fit - offset) 
     
     np.save(Path(trial_save,f'{trial_string}_df_tc.npy'),df_t)    
     
