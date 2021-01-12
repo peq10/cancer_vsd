@@ -57,7 +57,7 @@ failed_df.to_csv(Path(data_dir,initial_df.stem+'_failed_loaded_long.csv'))
 load_all_long.load_failed(Path(data_dir,initial_df.stem+'_failed_loaded_long.csv'), data_dir)
 
 #do no filt for wash in 
-_,_ = load_all_long.load_all_long_washin(initial_df, data_dir,redo = True, HPC_num = HPC_num)
+_,_ = load_all_long.load_all_long_washin(initial_df, data_dir,redo = False, HPC_num = HPC_num)
 
 
 print('Segmenting...')

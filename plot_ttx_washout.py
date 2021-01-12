@@ -166,7 +166,7 @@ pf.set_thickaxes(ax3, 3)
 fig3.savefig(Path(figsave,'all_mean_stderr.png'),bbox_inches = 'tight',dpi = 300)
 
 
-n_bins = 'blocks'
+n_bins = 100
 
 
 density = True
@@ -176,15 +176,15 @@ log = True
 fig1,ax1 = plt.subplots()
 
 linewidth = 3
-pres_hist = av.hist(pre_adj[idx], histtype='step', bins=100, density=density ,
+pres_hist = av.hist(pre_adj[idx], histtype='step', bins=n_bins, density=density ,
                      cumulative=cumulative,color = 'r',log = log,linewidth = linewidth,label = 'Pre-TTX')
 #pres_hist = av.hist(pre_current[idx][:, -1], histtype='step', bins=n_bins, density=density ,
 #                     cumulative=False,color = 'r')
-post_hist = av.hist(post_adj[idx], histtype='step', bins=100, density=density ,
+post_hist = av.hist(post_adj[idx], histtype='step', bins=n_bins, density=density ,
                      cumulative=cumulative, color = 'b',log = log,linewidth = linewidth,label = 'TTX 10 $\mathrm{\mu}$M')
 #post_hist = av.hist(post_current[idx][:, -1], histtype='step', bins=n_bins, density=density ,
 #                     cumulative=False, color = 'b')
-wash_hist = av.hist(wash_adj[idx], histtype='step', bins=100, density=density ,
+wash_hist = av.hist(wash_adj[idx], histtype='step', bins=n_bins, density=density ,
                      cumulative=cumulative,color = 'g',log = log,linewidth = linewidth,label = 'Washout')
 #wash_hist = av.hist(wash_current[idx][:, -1], histtype='step', bins=n_bins, density=density ,
 #                     cumulative=False,color = 'g')

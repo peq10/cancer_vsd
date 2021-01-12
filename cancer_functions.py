@@ -263,7 +263,7 @@ def get_event_properties(event_dict):
                 raise ValueError('This shouldnt happen')
             
             event_length = locs[1] - locs[0]
-            event_amplitude = t[idx,np.argmax(np.abs(t[idx,locs[0]:locs[1]]))+locs[0]] - 1 
+            event_amplitude = t[idx,np.argmax(np.abs(t[idx,locs[0]:locs[1]]-1))+locs[0]] - 1 
             
             event_integrated = np.sum(t[idx,locs[0]:locs[1]] - 1)
             event_properties.append([event_length,event_amplitude,event_integrated])
