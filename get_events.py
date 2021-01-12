@@ -60,6 +60,7 @@ def get_measure_events(initial_df,save_dir,thresh_range = np.arange(0.002,0.0045
             
             all_events.append(event_with_props)
             all_observation.append(canf.get_observation_length(events))
+            
         
         
         detect_params = {'thresh_range':thresh_range,
