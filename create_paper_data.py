@@ -71,7 +71,7 @@ import make_roi_overlays
 
 print('Extracting time series...')
 import make_all_t_courses
-#make_all_t_courses.make_all_tc(initial_df, data_dir,redo = False, njobs = 10, HPC_num = HPC_num)
+make_all_t_courses.make_all_tc(initial_df, data_dir,redo = False, njobs = 10, HPC_num = HPC_num)
 
 print('Detecting events...')
 import get_events

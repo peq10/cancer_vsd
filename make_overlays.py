@@ -26,12 +26,15 @@ def make_overlay(arr,stack,mask,cmap = matplotlib.cm.hot,alpha_top = 0.7,percent
     
     overlay = cmap(arr)    
     overlay[...,-1] *= (~mask).astype(int)*alpha_top
-    underlay = gf.to_8_bit(matplotlib.cm.Greys_r(stack))
+    underlay = matplotlib.cm.Greys_r(stack)
     
+    #this does general alpha composite - more efficient below due to specifics 
+    #final = pf.alpha_composite(gf.to_8_bit(overlay), underlay)
     
-    final = pf.alpha_composite(gf.to_8_bit(overlay), underlay)
-    
-    return final
+    overlay[...,:-1] *= overlay[...,-1][...,None] #premultiply for alpha compositing
+    final = np.ones_like(underlay)
+    final[...,:-1] = overlay[...,:-1] + underlay[...,:-1]*(1-overlay[...,-1][...,None])
+    return (final*255).astype(np.uint8)
 
 def chunk_overlay(arr,norm_stack,chunk_size,cmap = matplotlib.cm.hot,alpha_top = 0.7,percent = 5, contrast = [0,0]):
     res = np.zeros(arr.shape + (4,),dtype = np.uint8)
@@ -97,7 +100,7 @@ def make_overlay_events(rat,stack,seg,evs = None,downsample = 5):
     for e in evs:
         ovs.append(make_roi_overlay(e,seg,rat.shape)[::downsample,...])
     
-    display = chunk_overlay(rat[::downsample],stack[::downsample],100,cmap = matplotlib.cm.Spectral,alpha_top=0.2,percent = 50,contrast = [0.5,0.1])
+    display = chunk_overlay(rat[::downsample],stack[::downsample],5000,cmap = matplotlib.cm.Spectral,alpha_top=0.2,percent = 50,contrast = [0.5,0.1])
     
     colors = np.array([[255,0,0,255],
                        [0,127,0,127],
@@ -121,13 +124,21 @@ for idx,data in enumerate(df[::-1].itertuples()):
     if Path(viewing_dir, f'{data.trial_string}_overlay_2.tif').is_file() and False:
         continue
 
+    if data.use == 'n':
+        continue
+    #if trial_string != 'cancer_20201203_slip1_area2_long_acq_corr_corr_long_acqu_blue_0.0551_green_0.0832_heated_to_37_1':
+    #    continue
 
+    #if trial_string != 'cancer_20201215_slip2_area1_long_acq_corr_long_acq_blue_0.0296_green_0.0765_heated_to_37_1':
+    #    continue
 
     rat = np.load(Path(trial_save, f'{data.trial_string}_ratio_stack.npy'))
     
     tc = np.load(Path(trial_save,f'{trial_string}_all_tcs.npy'))
+    tc -= tc.mean(-1)[:,None] - 1
+     
     seg = np.load(Path(trial_save,f'{trial_string}_seg.npy'))
-    filt_params = {'type':'gaussian','gaussian_sigma':3}
+    filt_params = {'type':'TV','TV_weight':0.01,'gaussian_sigma':3}
     
     #exclude_dict = np.load(Path(trial_save,f'{trial_string}_processed_exclusions.npy'),allow_pickle = True).item()
     #add exclusion
@@ -136,10 +147,11 @@ for idx,data in enumerate(df[::-1].itertuples()):
     surround_masks = canf.get_surround_masks_cellfree(masks, dilate = True)
     
     surround_tc = np.array([canf.t_course_from_roi(rat,m) for m in surround_masks])
+    surround_tc -= np.mean(surround_tc,-1)[:,None] - 1
     excluded_circle = np.load(Path(trial_save,f'{trial_string}_circle_excluded_rois.npy'))
     events = canf.get_events_exclude_surround_events(tc,surround_tc,
-                                                     detection_thresh = 0.003, 
-                                                     surrounds_thresh = 0.001,
+                                                     detection_thresh = 0.006, 
+                                                     surrounds_thresh = 0.002,
                                                      filt_params = filt_params, 
                                                      exclude_first=100, 
                                                      excluded_circle = excluded_circle)
@@ -158,3 +170,4 @@ for idx,data in enumerate(df[::-1].itertuples()):
     tifffile.imsave(Path(viewing_dir, f'{data.trial_string}_overlay_2.tif'),display)
     
     print(time.time() - t0)
+    

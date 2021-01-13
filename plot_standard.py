@@ -136,10 +136,10 @@ ax.plot(neg_len,neg_am,'.',mec = (0,0,0,0),mfc = 'b',alpha = 0.5,markersize = 15
 
 thresh = np.arange(0.002,0.0045,0.0005)[idx]
 x_high = plt.gca().get_xlim()[-1]
-ax.plot(np.arange(x_high),np.arange(x_high)/(1000*T) + thresh*100,'--k',linewidth = 3, label = 'Approx. high pass threshold')
+#ax.plot(np.arange(x_high),np.arange(x_high)/(1000*T) + thresh*100,'--k',linewidth = 3, label = 'Approx. high pass threshold')
 ax.set_xlabel('Transient length (s)')
 ax.set_ylabel('Absolute Transient Amplitude (%)')
-plt.legend(frameon = False,fontsize = 12)
+plt.legend(frameon = True,fontsize = 12,loc = (0.5,0.6))
 pf.set_all_fontsize(ax, 12)
 pf.set_thickaxes(ax, 3)
 

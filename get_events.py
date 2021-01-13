@@ -17,8 +17,8 @@ import cancer_functions as canf
 
 
 
-def get_measure_events(initial_df,save_dir,thresh_range = np.arange(0.002,0.0045,0.0005),
-                       surrounds_thresh = 0.001,
+def get_measure_events(initial_df,save_dir,thresh_range = np.arange(0.004,0.009,0.0005),
+                       surrounds_thresh = 0.002,
                        exclude_first = 200):
 
     df = pd.read_csv(initial_df)
@@ -31,12 +31,15 @@ def get_measure_events(initial_df,save_dir,thresh_range = np.arange(0.002,0.0045
         trial_save = Path(save_dir,'ratio_stacks',trial_string)
         
         tc = np.load(Path(trial_save,f'{trial_string}_all_tcs.npy'))
-    
-        filt_params = {'type':'gaussian','gaussian_sigma':3}
+        tc -= np.mean(tc,-1)[:,None] - 1
+
         
         excluded_circle = np.load(Path(trial_save,f'{trial_string}_circle_excluded_rois.npy'))
         #also get circle exclusions
         surround_tc = np.load(Path(trial_save,f'{trial_string}_all_surround_tcs.npy'))
+        #remove any surround offsets 
+        surround_tc -= np.mean(surround_tc,-1)[:,None] - 1
+        
         
         if not np.isnan(data.finish_at):
             observe_to = int(data.finish_at)*5
@@ -46,6 +49,8 @@ def get_measure_events(initial_df,save_dir,thresh_range = np.arange(0.002,0.0045
         all_events = []
         all_observation = []
         for detection_thresh in thresh_range:
+            #CAR
+            filt_params = {'type':'TV','TV_weight': 0.01,'gaussian_sigma':3}
             events = canf.get_events_exclude_surround_events(tc,
                                                              surround_tc,
                                                              detection_thresh = detection_thresh, 
@@ -56,7 +61,7 @@ def get_measure_events(initial_df,save_dir,thresh_range = np.arange(0.002,0.0045
         
     
             
-            event_with_props = canf.get_event_properties(events) 
+            event_with_props = canf.get_event_properties(events,use_filt = False) 
             
             all_events.append(event_with_props)
             all_observation.append(canf.get_observation_length(events))

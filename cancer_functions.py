@@ -18,6 +18,7 @@ import scipy.signal as signal
 import pandas as pd
 import datetime
 import pdb
+import prox_tv
 
 import f.general_functions as gf
 import f.ephys_functions as ef
@@ -27,19 +28,26 @@ def get_events_exclude_surround_events(tc,
                                        surround_tc,
                                        detection_thresh = 0.002,
                                        filt_params = None,
-                                       surrounds_thresh = 0.002,
+                                       surrounds_thresh = 0.001,
                                        exclude_first = 0,
-                                       max_overlap = 0.1,
+                                       max_overlap = 0.75,
                                        excluded_circle = None):
     
     ev = detect_events(tc,detection_thresh,filt_params = filt_params,exclude_first = exclude_first)
-    surrounds_ev = detect_events(surround_tc,surrounds_thresh,filt_params = filt_params,exclude_first = exclude_first)
+    
+    if filt_params['type'] == 'TV':
+        #filt_params = {'type': 'gaussian','gaussian_sigma':3}
+        filt_adj = np.copy(filt_params).item()
+        filt_adj['TV_weight'] *= 5
+        surrounds_ev = detect_events(surround_tc,surrounds_thresh,filt_params = filt_adj,exclude_first = exclude_first)
+    else:
+        surrounds_ev = detect_events(surround_tc,surrounds_thresh,filt_params = filt_params,exclude_first = exclude_first)
     
 
     excluded_dict = {}
     dict_drop = []
     for key in ev.keys():
-        if key == 'tc_filt':
+        if type(key) == str:
             continue
         
         if key not in surrounds_ev.keys():
@@ -212,6 +220,11 @@ def detect_events(tc,thresh,filt_params = None,exclude_first = 0):
         tc_filt = ndimage.gaussian_filter(tc,(0,filt_params['gaussian_sigma']))
     elif filt_params['type'] == 'median':
         tc_filt = signal.medfilt(tc,(1,filt_params['med_kernel']))
+    elif filt_params['type'] == 'TV':
+        tc_filt = np.array([prox_tv.tv1_1d(t,filt_params['TV_weight']) for t in tc])
+
+    else: 
+        raise ValueError('Filter type not recognised')
     
     tc_filt[:,:exclude_first] = 1
     
@@ -245,11 +258,14 @@ def detect_events(tc,thresh,filt_params = None,exclude_first = 0):
         
         
     result['tc_filt'] = tc_filt
+    result['tc'] = tc
     return result
 
-def get_event_properties(event_dict):
-
-    t = event_dict['tc_filt']
+def get_event_properties(event_dict,use_filt = True):
+    if use_filt:
+        t = event_dict['tc']
+    else:
+        t = event_dict['tc_filt']
     
     result_dict = {}
 
@@ -619,7 +635,9 @@ def load_and_slice_long_ratio(stack_fname,ephys_fname, T_approx = 3*10**-3, fs =
     return result_dict
 
 
-def stack2rat(stack,blue = 0,av_len = 1000,remove_first = True, causal = False):
+def stack2rat(stack,blue = 0,av_len = 1000,remove_first = True, causal = False,offset = 90*16):
+    stack -= offset #remove dark offset    
+    
     if remove_first:
         stack = stack[2:,...]
         

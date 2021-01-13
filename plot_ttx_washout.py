@@ -65,6 +65,7 @@ for idx,data in enumerate(df.itertuples()):
         
         if data.stage == 'pre':
             idx2 = 0
+            #raise ValueError()
         elif data.stage == 'post':
             idx2 = 1
         elif data.stage == 'washout':
@@ -147,7 +148,7 @@ boot_range = np.array([np.percentile(boot_samples,25,axis = -1),np.percentile(bo
 std_errs = np.array([np.std(x) for x in all_curr])
 
 #normalise to 1
-ma = means.max()
+ma = means[0]
 means /= ma
 std_errs /= ma
 boot_range /= ma

@@ -27,7 +27,7 @@ df = pd.read_csv(initial_df)
 
 
 center = 246,256
-radius = 225
+radius = 200
 
 rois = []
 for idx,data in enumerate(df.itertuples()):

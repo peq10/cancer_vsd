@@ -69,7 +69,10 @@ def make_all_tc(df_file,save_dir, redo = True, njobs = 2, HPC_num = None):
             surround_tc = [canf.t_course_from_roi(stack,mask) for mask in surround_masks]
     
         tc = np.array(tc)
+        tc -= tc.mean(-1)[:,None] - 1
+        
         surround_tc = np.array(surround_tc)
+        surround_tc -= surround_tc.mean(-1)[:,None] - 1
         
         np.save(Path(trial_save,f'{trial_string}_all_tcs.npy'),tc)
         np.save(Path(trial_save,f'{trial_string}_all_surround_tcs.npy'),surround_tc)
