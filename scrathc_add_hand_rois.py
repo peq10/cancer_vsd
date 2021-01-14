@@ -43,8 +43,21 @@ df = pd.read_csv(initial_df)
 
 
 def add_hand_rois(seg,hand_rois):
+    ma = seg.max()
+    res = np.copy(seg)
+    #add extr rois
+    for idx,roi in enumerate(hand_rois):
+        wh = np.where(roi)
+        res[wh] = ma + idx + 1
     
-    return 
+    #now reorder so they are ordered like before
+    masks = canf.lab2masks(res)
+    locs = np.array([ndimage.measurements.center_of_mass(x) for x in masks])
+    sort = np.argsort(locs[:,0]*seg.shape[1] + locs[:,1])
+    
+    res = np.sum(masks[sort]*np.arange(1,res.max()+1,dtype = int)[:,None,None],0)
+    
+    return res
 
 
 
@@ -55,7 +68,15 @@ for idx,data in enumerate(df.itertuples()):
 trial_string = data.trial_string
 trial_save = Path(save_dir,'ratio_stacks',trial_string)
 
+extra_rois = []
 
 
 im = np.load(Path(trial_save,f'{trial_string}_im.npy'))
 seg =  np.load(Path(trial_save,f'{trial_string}_seg.npy'))
+
+if Path(trial_save,'hand_rois').is_dir():
+    extra_rois.append(np.array([gf.read_roi_file(x,im_dims = im.shape)[1] for x in Path(trial_save,'hand_rois').glob('*.roi')]))
+
+hand_rois = extra_rois[0]
+
+res = add_hand_rois(seg, hand_rois)
