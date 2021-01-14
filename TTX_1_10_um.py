@@ -99,7 +99,7 @@ post_1_adj = [post_1_current[i]/post_1_length[i] for i in range(len(post_1_curre
 pre_1_adj = [pre_1_current[i]/pre_1_length[i] for i in range(len(pre_1_current))]
 
 #threshold level
-idx = 2
+idx = 4
 
 #normalise the integrals to 1 max
 ma_10 = np.max([pre_10_adj[idx].max(),post_10_adj[idx].max()])

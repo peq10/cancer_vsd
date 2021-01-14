@@ -60,7 +60,7 @@ def get_measure_events(initial_df,save_dir,thresh_range = np.arange(0.004,0.009,
                                                              excluded_circle = excluded_circle)
         
     
-            
+            print(surrounds_thresh)
             event_with_props = canf.get_event_properties(events,use_filt = False) 
             
             all_events.append(event_with_props)

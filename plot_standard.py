@@ -104,7 +104,9 @@ for idx,data in enumerate(df.itertuples()):
             #break
             #raise ValueError('testing')
         
-idx = 2
+idx = 0
+T = 0.2
+
 sum_currents = sum_currents[idx]
 tot_lengths = tot_lengths[idx]
 
@@ -113,8 +115,24 @@ trial =trial[idx]
 
 nonzer_ev = np.concatenate([x for x in events if np.all(x != 0)])
 
+#get a cell frequency - cell sum
+freq_props = np.array([(tot_lengths[idx],x.shape[0],np.sum(x[:,-1])) for idx,x in enumerate(events) if np.all(x != 0)])
 
-T = 0.2
+
+
+ev_freq = freq_props[:,1]/(freq_props[:,0]*T)
+ev_mean_size = freq_props[:,2]/freq_props[:,1]
+
+fig,ax = plt.subplots()
+ax.plot(1/ev_freq,ev_mean_size,'.',mec = (0,0,0,0),mfc = 'k',alpha = 0.5,markersize = 15)
+ax.set_xlabel('Average Transient Interval s')
+ax.set_ylabel('Average Transient Amplitude (%)')
+#plt.legend(frameon = True,fontsize = 12,loc = (0.5,0.6))
+pf.set_all_fontsize(ax, 12)
+pf.set_thickaxes(ax, 3)
+
+
+
 #plot the event amplitudes
 lengths = nonzer_ev[:,0]*T
 amplitudes = nonzer_ev[:,1]*100

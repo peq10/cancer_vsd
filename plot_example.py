@@ -164,7 +164,7 @@ offset = -sep
 ax2.plot([0,t.max()],np.array([0,0])+offset,'r',linewidth = 1,alpha = 0.7)
 ax2.plot(t,(tc_filt-1)*100+offset,'k',linewidth = 2)
 #ax2b.plot(t,(tc_test-1)*100,'k',linewidth = 2,alpha = 0.4)
-ax2.plot([0,t.max()],np.array([-1,1])[None,:]*np.array([0.6,0.6])[:,None]+offset,'--r',linewidth = 2)
+ax2.plot([0,t.max()],np.array([-1,1])[None,:]*np.array([thresh*100,thresh*100])[:,None]+offset,'--r',linewidth = 2)
 for l in eve.T:
     ax2.fill_betweenx(np.array([tc_filt.min()-1+offset/(100*1.1),tc.max()-1])*1.1*100,l[0]*T,(l[1]-1)*T,facecolor = 'r',alpha = 0.5)
     

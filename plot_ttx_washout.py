@@ -95,7 +95,7 @@ post_adj = [post_current[i]/post_length[i] for i in range(len(post_current))]
 wash_adj = [wash_current[i]/wash_length[i] for i in range(len(wash_current))]
 
 #threshold level
-idx = 2
+idx = 1
 
 #normalise the integrals to 1 max
 ma = np.max([pre_adj[idx].max(),post_adj[idx].max(),wash_adj[idx].max()])
@@ -195,8 +195,8 @@ ax1.set_ylabel('(Log) Cell fraction')
 pf.set_all_fontsize(ax1, 14)
 pf.set_thickaxes(ax1, 3)
 ax1.tick_params(which = 'minor',width = 3,length = 3)
-ax1.set_yticks([0.9,1])
-ax1.set_ylim([0.9,1])
+#ax1.set_yticks([0.9,1])
+#ax1.set_ylim([0.9,1])
 ax1.minorticks_off()
 fig1.savefig(Path(figsave,'cumulative_log_histogram.png'),bbox_inches = 'tight',dpi = 300)
 
