@@ -60,19 +60,19 @@ def make_all_tc(df_file,save_dir, redo = True, njobs = 2, HPC_num = None):
                 with Parallel(n_jobs=njobs) as parallel:
                     tc = parallel(delayed(canf.t_course_from_roi)(stack,mask) for mask in masks)
                     surround_tc = parallel(delayed(canf.t_course_from_roi)(stack,mask) for mask in surround_masks)
-                    std = parallel(delayed(canf.std_t_course_from_roi)(stack, mask)/np.sqrt(np.sum(mask)) for mask in masks)
-                    surround_std = parallel(delayed(canf.std_t_course_from_roi)(stack, mask)/np.sqrt(np.sum(mask)) for mask in masks)
+                    std = parallel(delayed(canf.std_t_course_from_roi)(stack, mask,True) for mask in masks)
+                    surround_std = parallel(delayed(canf.std_t_course_from_roi)(stack, mask, True) for mask in masks)
             except Exception as err:
                 print(err)
                 tc = [canf.t_course_from_roi(stack,mask) for mask in masks]
                 surround_tc = [canf.t_course_from_roi(stack,mask) for mask in surround_masks]
-                std = [canf.std_t_course_from_roi(stack, mask)/np.sqrt(np.sum(mask)) for mask in masks]
-                surround_std = [canf.std_t_course_from_roi(stack, mask)/np.sqrt(np.sum(mask)) for mask in masks]
+                std = [canf.std_t_course_from_roi(stack, mask, True) for mask in masks]
+                surround_std = [canf.std_t_course_from_roi(stack, mask,True) for mask in masks]
         else:
             tc = [canf.t_course_from_roi(stack,mask) for mask in masks]
             surround_tc = [canf.t_course_from_roi(stack,mask) for mask in surround_masks]
-            std = [canf.std_t_course_from_roi(stack, mask)/np.sqrt(np.sum(mask)) for mask in masks]
-            surround_std = [canf.std_t_course_from_roi(stack, mask)/np.sqrt(np.sum(mask)) for mask in masks]
+            std = [canf.std_t_course_from_roi(stack, mask, True) for mask in masks]
+            surround_std = [canf.std_t_course_from_roi(stack, mask, True) for mask in masks]
     
         tc = np.array(tc)
         tc -= tc.mean(-1)[:,None] - 1

@@ -50,6 +50,14 @@ def segment_cellpose(df_file,save_dir, HPC_num = None):
         parts = Path(data.tif_file).parts
         trial_string = '_'.join(parts[parts.index('cancer'):-1])
         trial_save = Path(save_dir,'ratio_stacks',trial_string)
+        
+        if Path(trial_save,'hand_rois').is_dir():
+            im = np.load(Path(trial_save,f'{trial_string}_im.npy'))
+            extra_rois.append(np.array([gf.read_roi_file(x,im_dims = im.shape)[1] for x in Path(trial_save,'hand_rois').glob('*.roi')]))
+        else:
+            print('Only doing hand rois! ACHTUNG!')
+            continue
+        
         im = np.load(Path(trial_save,f'{trial_string}_im.npy'))
         if len(im.shape) > 2:
             im = im[...,0,:,:]
@@ -57,10 +65,7 @@ def segment_cellpose(df_file,save_dir, HPC_num = None):
         
         savenames.append(Path(trial_save,f'{trial_string}_seg.npy'))
         
-        if Path(trial_save,'hand_rois').is_dir():
-            extra_rois.append(np.array([gf.read_roi_file(x,im_dims = im.shape) for x in Path(trial_save,'hand_rois').glob('*.roi')]))
 
-        
         
     model = models.Cellpose(gpu=False, model_type='cyto')
     masks, flows, styles, diams = model.eval(ims, diameter=30, channels=[0,0])

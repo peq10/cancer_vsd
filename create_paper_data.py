@@ -61,12 +61,12 @@ _,_ = load_all_long.load_all_long_washin(initial_df, data_dir,redo = False, HPC_
 
 
 print('Segmenting...')
-import segment_cellpose
-segment_cellpose.segment_cellpose(initial_df, data_dir, HPC_num = HPC_num)
+#import segment_cellpose
+#segment_cellpose.segment_cellpose(initial_df, data_dir, HPC_num = HPC_num)
 
 print('Making overlays...')
 import make_roi_overlays
-make_roi_overlays.make_all_overlay(initial_df, data_dir, Path(viewing_dir,'rois'), HPC_num = HPC_num)
+#make_roi_overlays.make_all_overlay(initial_df, data_dir, Path(viewing_dir,'rois'), HPC_num = HPC_num)
 
 
 print('Extracting time series...')
