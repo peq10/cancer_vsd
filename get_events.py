@@ -17,9 +17,9 @@ import cancer_functions as canf
 
 
 
-def get_measure_events(initial_df,save_dir,thresh_range = np.arange(0.004,0.009,0.0005),
-                       surrounds_thresh = 0.002,
-                       exclude_first = 200):
+def get_measure_events(initial_df,save_dir,thresh_range = np.arange(2,4.5,0.5),
+                       surrounds_z = 7,
+                       exclude_first = 0):
 
     df = pd.read_csv(initial_df)
     for idx, data in enumerate(df.itertuples()):
@@ -33,6 +33,8 @@ def get_measure_events(initial_df,save_dir,thresh_range = np.arange(0.004,0.009,
         tc = np.load(Path(trial_save,f'{trial_string}_all_tcs.npy'))
         tc -= np.mean(tc,-1)[:,None] - 1
 
+        std = np.load(Path(trial_save,f'{trial_string}_all_stds.npy'))
+        surround_std = np.load(Path(trial_save,f'{trial_string}_all_surround_stds.npy'))
         
         excluded_circle = np.load(Path(trial_save,f'{trial_string}_circle_excluded_rois.npy'))
         #also get circle exclusions
@@ -49,18 +51,17 @@ def get_measure_events(initial_df,save_dir,thresh_range = np.arange(0.004,0.009,
         all_events = []
         all_observation = []
         for detection_thresh in thresh_range:
-            #CAR
-            filt_params = {'type':'TV','TV_weight': 0.01,'gaussian_sigma':3}
+
             events = canf.get_events_exclude_surround_events(tc,
+                                                             std,
                                                              surround_tc,
-                                                             detection_thresh = detection_thresh, 
-                                                             surrounds_thresh = surrounds_thresh,
-                                                             filt_params = filt_params, 
-                                                             exclude_first=exclude_first, 
-                                                             excluded_circle = excluded_circle)
+                                                             surround_std,
+                                                             z_score = detection_thresh, 
+                                                             surround_z = surrounds_z,
+                                                             exclude_first= exclude_first, 
+                                                             excluded_circle = None)
         
-    
-            print(surrounds_thresh)
+
             event_with_props = canf.get_event_properties(events,use_filt = False) 
             
             all_events.append(event_with_props)
@@ -69,8 +70,7 @@ def get_measure_events(initial_df,save_dir,thresh_range = np.arange(0.004,0.009,
         
         
         detect_params = {'thresh_range':thresh_range,
-                         'surrounds_thresh':surrounds_thresh,
-                         'filt_params': filt_params,
+                         'surrounds_thresh':surrounds_z,
                          'exclude_first':exclude_first}
         
         result_dict = {'n_cells': tc.shape[0] - len(excluded_circle),

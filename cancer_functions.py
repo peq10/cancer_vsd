@@ -25,23 +25,18 @@ import f.ephys_functions as ef
 
 
 def get_events_exclude_surround_events(tc,
+                                       std,
                                        surround_tc,
-                                       detection_thresh = 0.002,
-                                       filt_params = None,
-                                       surrounds_thresh = 0.001,
+                                       surround_std,
+                                       z_score = 3,
+                                       surround_z = 7,
                                        exclude_first = 0,
                                        max_overlap = 0.75,
                                        excluded_circle = None):
     
-    ev = detect_events(tc,detection_thresh,filt_params = filt_params,exclude_first = exclude_first)
+    ev = detect_events(tc,std,z_score = z_score,exclude_first = exclude_first)
     
-    if filt_params['type'] == 'TV':
-        #filt_params = {'type': 'gaussian','gaussian_sigma':3}
-        filt_adj = np.copy(filt_params).item()
-        filt_adj['TV_weight'] *= 5
-        surrounds_ev = detect_events(surround_tc,surrounds_thresh,filt_params = filt_adj,exclude_first = exclude_first)
-    else:
-        surrounds_ev = detect_events(surround_tc,surrounds_thresh,filt_params = filt_params,exclude_first = exclude_first)
+    surrounds_ev = detect_events(tc,std,z_score = surround_z,exclude_first = exclude_first)
     
 
     excluded_dict = {}
@@ -230,6 +225,15 @@ def correct_event_signs(t,llocs):
         corr_locs = corr_locs[(corr_locs[:,1] - corr_locs[:,0])>0] 
     return corr_locs
 
+def recursive_split_locs(seq):
+    #splits a sequence into n adjacent sequences
+    diff = np.diff(seq)
+    if not np.any(diff != 1):
+        return [(seq[0],seq[-1])]
+    else:
+        wh = np.where(diff != 1)[0][0]+1
+        return recursive_split_locs(seq[:wh]) + recursive_split_locs(seq[wh:])  
+
 def detect_events(tc,std,z_score = 3,exclude_first = 0):
 
     tc_filt = ndimage.gaussian_filter(tc,(0,3))
@@ -237,26 +241,32 @@ def detect_events(tc,std,z_score = 3,exclude_first = 0):
     
     tc_filt[:,:exclude_first] = 1
     
-    threshed = soft_threshold(tc_filt,thresh)
+    events = np.abs(tc_filt - 1) > z_score*std_filt
     
-    #return ids of active cells and start/end locations of activity
-    active = np.where(np.sum(threshed - 1,-1))[0]
+    #Use closing to join split events and remove small events
+    struc = np.zeros((3,5))
+    struc[1,:] = 1
+    events = ndimage.binary_opening(events,structure = struc,iterations = 2)
+    events = ndimage.binary_closing(events,structure = struc,iterations = 2)
+
+    wh = np.where(events)
+    idxs,locs = np.unique(wh[0],return_index=True)
+    locs = np.append(locs,len(wh[0]))
     
     result = {}
-    for idx in active:
-        t = threshed[idx,:]
-        locs = np.diff((np.abs(t -1) != 0).astype(int),prepend = 0,append = 0)
-        llocs = np.array((np.where(locs == 1)[0],np.where(locs == -1)[0]))
+    for i,idx in enumerate(idxs):
+        llocs = wh[1][locs[i]:locs[i+1]]
+        split_locs = np.array(recursive_split_locs(llocs))
         #check if they have both positive and negative going - messes with integration later
-        corr_locs = correct_event_signs(t,llocs)
-            
-            
+        t = tc_filt[idx,:]
+        corr_locs = correct_event_signs(t,split_locs)        
         result[idx] = corr_locs.T
-        
+
         
     result['tc_filt'] = tc_filt
     result['tc'] = tc
     return result
+
 
 def get_event_properties(event_dict,use_filt = True):
     if use_filt:
@@ -330,7 +340,7 @@ def std_t_course_from_roi(nd_stack,roi,standard_err):
     wh = np.where(roi)
     
     if standard_err:
-        fac = 1/np.sum(roi)
+        fac = 1/np.sqrt(np.sum(roi))
     else:
         fac = 1
         

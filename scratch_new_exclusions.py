@@ -50,7 +50,7 @@ seg = np.load(Path(trial_save, f'{data.trial_string}_seg.npy'))
 
 masks = canf.lab2masks(seg)
 
-#masks = canf.get_surround_masks_cellfree(masks)
+masks = canf.get_surround_masks_cellfree(masks)
 
 roi = seg == 105
 #roi = seg == 76
@@ -72,13 +72,13 @@ std = np.std(tst2,-1)
 
 #try segmenting on the 
 tcs = np.array([canf.t_course_from_roi(rat2, roi) for roi in masks])
-stds = np.array([canf.std_t_course_from_roi(rat2, roi)/np.sqrt(np.sum(roi)) for roi in masks])
+stds = np.array([canf.std_t_course_from_roi(rat2, roi,True) for roi in masks])
 
 tc_filts = ndimage.gaussian_filter(tcs,(0,3))
 std_filts = ndimage.gaussian_filter(stds,(0,3))
 
 
-events = np.abs(tc_filts - 1) > 3*std_filts
+events = np.abs(tc_filts - 1) > 7*std_filts
 struc = np.zeros((3,5))
 struc[1,:] = 1
 events2 = ndimage.binary_opening(events,structure = struc,iterations = 2)
