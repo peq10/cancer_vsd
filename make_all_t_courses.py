@@ -60,13 +60,19 @@ def make_all_tc(df_file,save_dir, redo = True, njobs = 2, HPC_num = None):
                 with Parallel(n_jobs=njobs) as parallel:
                     tc = parallel(delayed(canf.t_course_from_roi)(stack,mask) for mask in masks)
                     surround_tc = parallel(delayed(canf.t_course_from_roi)(stack,mask) for mask in surround_masks)
+                    std = parallel(delayed(canf.std_t_course_from_roi)(stack, mask)/np.sqrt(np.sum(mask)) for mask in masks)
+                    surround_std = parallel(delayed(canf.std_t_course_from_roi)(stack, mask)/np.sqrt(np.sum(mask)) for mask in masks)
             except Exception as err:
                 print(err)
                 tc = [canf.t_course_from_roi(stack,mask) for mask in masks]
                 surround_tc = [canf.t_course_from_roi(stack,mask) for mask in surround_masks]
+                std = [canf.std_t_course_from_roi(stack, mask)/np.sqrt(np.sum(mask)) for mask in masks]
+                surround_std = [canf.std_t_course_from_roi(stack, mask)/np.sqrt(np.sum(mask)) for mask in masks]
         else:
             tc = [canf.t_course_from_roi(stack,mask) for mask in masks]
             surround_tc = [canf.t_course_from_roi(stack,mask) for mask in surround_masks]
+            std = [canf.std_t_course_from_roi(stack, mask)/np.sqrt(np.sum(mask)) for mask in masks]
+            surround_std = [canf.std_t_course_from_roi(stack, mask)/np.sqrt(np.sum(mask)) for mask in masks]
     
         tc = np.array(tc)
         tc -= tc.mean(-1)[:,None] - 1
@@ -74,8 +80,11 @@ def make_all_tc(df_file,save_dir, redo = True, njobs = 2, HPC_num = None):
         surround_tc = np.array(surround_tc)
         surround_tc -= surround_tc.mean(-1)[:,None] - 1
         
+        
         np.save(Path(trial_save,f'{trial_string}_all_tcs.npy'),tc)
         np.save(Path(trial_save,f'{trial_string}_all_surround_tcs.npy'),surround_tc)
+        np.save(Path(trial_save,f'{trial_string}_all_stds.npy'),std)
+        np.save(Path(trial_save,f'{trial_string}_all_surround_stds.npy'),surround_std)
         
         print(f'Saved {trial_string}')
         redo_from += 1

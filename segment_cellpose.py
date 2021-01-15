@@ -13,11 +13,27 @@ from pathlib import Path
 from cellpose import models
 
 import f.general_functions as gf
+import scipy.ndimage as ndimage
+
+import cancer_functions as canf
 
 
 def add_hand_rois(seg,hand_rois):
+    ma = seg.max()
+    res = np.copy(seg)
+    #add extr rois
+    for idx,roi in enumerate(hand_rois):
+        wh = np.where(roi)
+        res[wh] = ma + idx + 1
     
-    return seg2
+    #now reorder so they are ordered like before
+    masks = canf.lab2masks(res)
+    locs = np.array([ndimage.measurements.center_of_mass(x) for x in masks])
+    sort = np.argsort(locs[:,0]*seg.shape[1] + locs[:,1])
+    
+    res = np.sum(masks[sort]*np.arange(1,res.max()+1,dtype = int)[:,None,None],0)
+    
+    return res
 
 def segment_cellpose(df_file,save_dir, HPC_num = None):
 
@@ -53,6 +69,6 @@ def segment_cellpose(df_file,save_dir, HPC_num = None):
     for idx in range(len(ims)):
         if len(extra_rois[idx]) != 0:
             mask = add_hand_rois(masks[idx],extra_rois[idx])
-            np.save(savenames[idx],masks[idx])
+            np.save(savenames[idx],mask)
         else:
             np.save(savenames[idx],masks[idx])

@@ -230,18 +230,10 @@ def correct_event_signs(t,llocs):
         corr_locs = corr_locs[(corr_locs[:,1] - corr_locs[:,0])>0] 
     return corr_locs
 
-def detect_events(tc,thresh,filt_params = None,exclude_first = 0):
-    if filt_params is None:
-        tc_filt = ndimage.gaussian_filter(tc,(0,3))
-    elif filt_params['type'] == 'gaussian':
-        tc_filt = ndimage.gaussian_filter(tc,(0,filt_params['gaussian_sigma']))
-    elif filt_params['type'] == 'median':
-        tc_filt = signal.medfilt(tc,(1,filt_params['med_kernel']))
-    elif filt_params['type'] == 'TV':
-        tc_filt = np.array([prox_tv.tv1_1d(t,filt_params['TV_weight']) for t in tc])
+def detect_events(tc,std,z_score = 3,exclude_first = 0):
 
-    else: 
-        raise ValueError('Filter type not recognised')
+    tc_filt = ndimage.gaussian_filter(tc,(0,3))
+    std_filt = ndimage.gaussian_filter(std,(0,3))
     
     tc_filt[:,:exclude_first] = 1
     
