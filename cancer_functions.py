@@ -213,6 +213,23 @@ def split_event(t,ids):
         zer_loc = np.argmin(np.abs(t[ids[0]:ids[1]] - 1)) + ids[0]
         return split_event(t,(ids[0],zer_loc)) + split_event(t,(zer_loc+1,ids[1])) 
 
+
+def correct_event_signs(t,llocs):
+    corr_locs = []
+    for id_idx,ids in enumerate(llocs.T):
+        if np.logical_and(np.any(t[ids[0]:ids[1]] - 1 > 0),np.any(t[ids[0]:ids[1]] - 1 < 0)):
+            split_ids = split_event(t,ids)
+            corr_locs.extend(split_ids)
+        else:
+            corr_locs.append(ids)
+      
+    corr_locs = np.array(corr_locs)
+    
+    #if we have split into a zero size (due to boundary issue in split events), remove
+    if np.any((corr_locs[:,1] - corr_locs[:,0])<1):
+        corr_locs = corr_locs[(corr_locs[:,1] - corr_locs[:,0])>0] 
+    return corr_locs
+
 def detect_events(tc,thresh,filt_params = None,exclude_first = 0):
     if filt_params is None:
         tc_filt = ndimage.gaussian_filter(tc,(0,3))
@@ -239,19 +256,7 @@ def detect_events(tc,thresh,filt_params = None,exclude_first = 0):
         locs = np.diff((np.abs(t -1) != 0).astype(int),prepend = 0,append = 0)
         llocs = np.array((np.where(locs == 1)[0],np.where(locs == -1)[0]))
         #check if they have both positive and negative going - messes with integration later
-        corr_locs = []
-        for id_idx,ids in enumerate(llocs.T):
-            if np.logical_and(np.any(tc_filt[idx,ids[0]:ids[1]] - 1 > 0),np.any(tc_filt[idx,ids[0]:ids[1]] - 1 < 0)):
-                split_ids = split_event(t,ids)
-                corr_locs.extend(split_ids)
-            else:
-                corr_locs.append(ids)
-          
-        corr_locs = np.array(corr_locs)
-        
-        #if we have split into a zero size (due to boundary issue in split events), remove
-        if np.any((corr_locs[:,1] - corr_locs[:,0])<1):
-            corr_locs = corr_locs[(corr_locs[:,1] - corr_locs[:,0])>0] 
+        corr_locs = correct_event_signs(t,llocs)
             
             
         result[idx] = corr_locs.T
@@ -305,6 +310,33 @@ def t_course_from_roi(nd_stack,roi):
         raise NotImplementedError('Only works for 2d ROIs')
     wh = np.where(roi)
     return np.mean(nd_stack[...,wh[0],wh[1]],-1)
+
+def std_t_course_from_roi(nd_stack,roi):
+    '''
+    Gets the standard deviation of the pixels in the roi at each time point
+
+    Parameters
+    ----------
+    nd_stack : TYPE
+        DESCRIPTION.
+    roi : TYPE
+        DESCRIPTION.
+
+    Raises
+    ------
+    NotImplementedError
+        DESCRIPTION.
+
+    Returns
+    -------
+    TYPE
+        DESCRIPTION.
+
+    '''
+    if len(roi.shape) != 2:
+        raise NotImplementedError('Only works for 2d ROIs')
+    wh = np.where(roi)
+    return np.std(nd_stack[...,wh[0],wh[1]],-1)
 
 def load_tif_metadata(fname):
     fname = Path(fname)
