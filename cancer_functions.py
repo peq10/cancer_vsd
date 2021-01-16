@@ -211,7 +211,7 @@ def split_event(t,ids):
 
 def correct_event_signs(t,llocs):
     corr_locs = []
-    for id_idx,ids in enumerate(llocs.T):
+    for id_idx,ids in enumerate(llocs):
         if np.logical_and(np.any(t[ids[0]:ids[1]] - 1 > 0),np.any(t[ids[0]:ids[1]] - 1 < 0)):
             split_ids = split_event(t,ids)
             corr_locs.extend(split_ids)

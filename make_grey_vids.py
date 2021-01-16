@@ -77,6 +77,7 @@ for idx,data in enumerate(df.itertuples()):
     rat2 =ndimage.gaussian_filter(rat2,(3,2,2))
     
     tc = np.load(Path(trial_save,f'{trial_string}_all_tcs.npy'))[:finish_at]
+    std= np.load(Path(trial_save,f'{trial_string}_all_stds.npy'))[:finish_at]
     tc -= tc.mean(-1)[:,None] - 1
      
     seg = np.load(Path(trial_save,f'{trial_string}_seg.npy'))
@@ -89,18 +90,21 @@ for idx,data in enumerate(df.itertuples()):
 
     
     surround_tc = np.load(Path(trial_save,f'{trial_string}_all_surround_tcs.npy'))[:finish_at]
+    surround_std = np.load(Path(trial_save,f'{trial_string}_all_surround_stds.npy'))[:finish_at]
     surround_tc -= np.mean(surround_tc,-1)[:,None] - 1
     excluded_circle = np.load(Path(trial_save,f'{trial_string}_circle_excluded_rois.npy'))
     
     
 
-    events = canf.get_events_exclude_surround_events(tc,surround_tc,
-                                                     detection_thresh = 0.006, 
-                                                     surrounds_thresh = 0.002,
-                                                     filt_params = filt_params, 
-                                                     exclude_first=100, 
-                                                     excluded_circle = excluded_circle)
-    
+    events = canf.get_events_exclude_surround_events(tc,
+                                                     std,
+                                                     surround_tc,
+                                                     surround_std,
+                                                     z_score = 3,
+                                                     surround_z = 5,
+                                                     exclude_first= 0, 
+                                                     excluded_circle = None)
+
     
     roi_overlay = make_roi_overlay(events,seg,rat2.shape)
     #exclude_overlay = make_roi_overlay(events['excluded_events'],seg,rat2.shape)

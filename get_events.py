@@ -46,12 +46,14 @@ def get_measure_events(initial_df,save_dir,thresh_range = np.arange(2,4.5,0.5),
         if not np.isnan(data.finish_at):
             observe_to = int(data.finish_at)*5
             tc = tc[:,:observe_to]
+            std = std[:,:observe_to]
             surround_tc = surround_tc[:observe_to]
+            surround_std = surround_std[:,:observe_to]
         
         all_events = []
         all_observation = []
         for detection_thresh in thresh_range:
-
+            
             events = canf.get_events_exclude_surround_events(tc,
                                                              std,
                                                              surround_tc,

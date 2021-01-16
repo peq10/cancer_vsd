@@ -36,7 +36,7 @@ initial_df = Path(top_dir,'analysis',f'long_acqs_20201230_experiments_correct{df
 
 df = pd.read_csv(initial_df)
 
-trial_string = '20201203_slip1_area2'
+trial_string = '20201207_slip1_area1'
 
 for data in df.itertuples():
     if trial_string in data.trial_string:
@@ -48,12 +48,17 @@ trial_save = Path(save_dir,'ratio_stacks',trial_string)
 rat2 = np.load(Path(trial_save, f'{data.trial_string}_ratio_stack.npy'))
 seg = np.load(Path(trial_save, f'{data.trial_string}_seg.npy'))
 
+
+
 masks = canf.lab2masks(seg)
 
 masks = canf.get_surround_masks_cellfree(masks)
+cellfree = seg == 0
+cellfree_t = ndimage.gaussian_filter1d(canf.t_course_from_roi(rat2,cellfree),3)
+cellfree_t -= cellfree_t.mean()
 
-roi = seg == 105
-#roi = seg == 76
+#roi = seg == 105
+roi = seg == 100
 b = 10
 
 w = np.where(roi)
