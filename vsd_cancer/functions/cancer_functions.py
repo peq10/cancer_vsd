@@ -32,7 +32,8 @@ def get_events_exclude_surround_events(tc,
                                        surround_z = 7,
                                        exclude_first = 0,
                                        max_overlap = 0.75,
-                                       excluded_circle = None):
+                                       excluded_circle = None,
+                                       excluded_dead = None):
     
     ev = detect_events(tc,std,z_score = z_score,exclude_first = exclude_first)
     
@@ -93,6 +94,20 @@ def get_events_exclude_surround_events(tc,
                 del ev[idx]
             
         ev['excluded_circle_events'] = circle_dict   
+    
+    #exclude ROIs on edge of illumination
+    if excluded_dead is not None:
+        dead_dict = {}
+        if len(excluded_dead)>0:
+            for idx in excluded_dead:
+                if idx in ev.keys():
+                    dead_dict[idx] = ev[idx]
+                    del ev[idx]
+            
+        else:
+            pass
+        ev['excluded_dead_events'] = dead_dict   
+        
         
     #include the surround data
     ev['surround_events'] = surrounds_ev

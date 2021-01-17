@@ -14,7 +14,11 @@ from pathlib import Path
 
 from vsd_cancer.functions import cancer_functions as canf
 
-
+import matplotlib.pyplot as plt
+def get_dead_cells(raw_tc):
+    raw_tc /= raw_tc[:,0][:,None]
+    dead = np.where(raw_tc[:,-1] > 1.25)[0]
+    return dead
 
 
 def get_measure_events(initial_df,save_dir,thresh_range = np.arange(2,4.5,0.5),
@@ -42,13 +46,20 @@ def get_measure_events(initial_df,save_dir,thresh_range = np.arange(2,4.5,0.5),
         #remove any surround offsets 
         surround_tc -= np.mean(surround_tc,-1)[:,None] - 1
         
-        
+        raw_tc = np.load(Path(trial_save,f'{trial_string}_raw_tc.npy'))
+
         if not np.isnan(data.finish_at):
             observe_to = int(data.finish_at)*5
             tc = tc[:,:observe_to]
             std = std[:,:observe_to]
             surround_tc = surround_tc[:observe_to]
             surround_std = surround_std[:,:observe_to]
+            raw_tc = raw_tc[:,:observe_to]
+            
+
+        dead_idx = get_dead_cells(raw_tc)
+        np.save(Path(trial_save,f'{trial_string}_excluded_dead_rois.npy'),dead_idx)
+       
         
         all_events = []
         all_observation = []
@@ -61,7 +72,8 @@ def get_measure_events(initial_df,save_dir,thresh_range = np.arange(2,4.5,0.5),
                                                              z_score = detection_thresh, 
                                                              surround_z = surrounds_z,
                                                              exclude_first= exclude_first, 
-                                                             excluded_circle = None)
+                                                             excluded_circle = excluded_circle,
+                                                             excluded_dead = dead_idx)
         
 
             event_with_props = canf.get_event_properties(events,use_filt = False) 

@@ -12,7 +12,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from pathlib import Path
 
-import cancer_functions as canf
+from vsd_cancer.functions import cancer_functions as canf
+
 
 top_dir = Path('/home/peter/data/Firefly/cancer')
 df_str = ''

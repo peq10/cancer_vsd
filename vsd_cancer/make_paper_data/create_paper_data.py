@@ -76,6 +76,10 @@ make_all_t_courses.make_all_tc(initial_df, data_dir,redo = False, njobs = 10, HP
 import make_all_cell_free_t_courses
 make_all_cell_free_t_courses.make_all_cellfree_tc(initial_df, data_dir, redo = False,HPC_num=HPC_num)
 
+print('Extracting FOV time series...')
+import make_full_fov_t_courses
+make_full_fov_t_courses.make_all_FOV_tc(initial_df, data_dir, redo = False,HPC_num=HPC_num)
+
 import get_dead_cells
 get_dead_cells.make_all_raw_tc(initial_df, data_dir,redo = False, njobs = 10,HPC_num=HPC_num)
 

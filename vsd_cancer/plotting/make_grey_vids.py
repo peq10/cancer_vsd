@@ -18,7 +18,8 @@ import f.general_functions as gf
 import prox_tv
 import pyqtgraph as pg
 
-import cancer_functions as canf
+from vsd_cancer.functions import cancer_functions as canf
+
 
 def make_roi_overlay(events_dict,seg,sz):
     overlay = np.zeros(sz,dtype = int)
@@ -46,7 +47,7 @@ viewing_dir = Path(top_dir,'analysis','full','tif_viewing','grey_videos')
 initial_df = Path(top_dir,'analysis',f'long_acqs_20201230_experiments_correct{df_str}.csv')
 
 df = pd.read_csv(initial_df)
-
+roi_df = pd.read_csv(Path(save_dir,'roi_df.csv'))
 
 downsample = 5
 
@@ -57,12 +58,12 @@ for idx,data in enumerate(df.itertuples()):
     trial_string = data.trial_string
     trial_save = Path(save_dir,'ratio_stacks',trial_string)
     print(trial_string)
-    
+
 
     if Path(viewing_dir, f'{data.trial_string}_overlay_2.tif').is_file() and False:
         continue
 
-    if data.use == 'n':
+    if data.thresh_use == 'n':
         continue
     #if trial_string != 'cancer_20201203_slip1_area2_long_acq_corr_corr_long_acqu_blue_0.0551_green_0.0832_heated_to_37_1':
     #    continue
@@ -71,6 +72,7 @@ for idx,data in enumerate(df.itertuples()):
         finish_at = int(data.finish_at)*5
     except ValueError:
         finish_at = None
+        
 
 
     rat2 = np.load(Path(trial_save, f'{data.trial_string}_ratio_stack.npy'))[:finish_at]
@@ -94,24 +96,40 @@ for idx,data in enumerate(df.itertuples()):
     surround_tc -= np.mean(surround_tc,-1)[:,None] - 1
     excluded_circle = np.load(Path(trial_save,f'{trial_string}_circle_excluded_rois.npy'))
     
+    excluded_die = np.load(Path(trial_save,f'{trial_string}_excluded_dead_rois.npy'))
     
-
+    
+    
     events = canf.get_events_exclude_surround_events(tc,
                                                      std,
                                                      surround_tc,
                                                      surround_std,
-                                                     z_score = 3,
+                                                     z_score = 2.5,
                                                      surround_z = 5,
                                                      exclude_first= 0, 
-                                                     excluded_circle = None)
+                                                     excluded_circle = excluded_circle,
+                                                     excluded_dead = excluded_die)
 
     
     roi_overlay = make_roi_overlay(events,seg,rat2.shape)
-    #exclude_overlay = make_roi_overlay(events['excluded_events'],seg,rat2.shape)
+    
+    exclude_overlay = make_roi_overlay(events['excluded_events'],seg,rat2.shape)
     #exclude_circle_overlay = make_roi_overlay(events['excluded_circle_events'],seg,rat2.shape)
     downsample = 2
     alpha = 0.65
-
+    
+    
+    #visualise circle exclusion
+    circle_data = roi_df[roi_df.trial_string == data.trial_string]
+    y,x = np.indices(seg.shape)
+        
+    y -= circle_data.circle_roi_center_y.values[0]
+    x -= circle_data.circle_roi_center_x.values[0]
+    
+    r = np.sqrt(x**2 + y**2)
+    exc = r > circle_data.circle_roi_radius.values[0]
+    exc_outline = np.logical_xor(~exc,ndimage.binary_dilation(~exc,iterations = 3))
+    out_wh = np.where(exc_outline)
     
     #color balance
     cmin = np.percentile(rat2,0.1)
@@ -123,7 +141,11 @@ for idx,data in enumerate(df.itertuples()):
     wh = np.where(roi_overlay[::downsample])
     rat2[wh] = rat2[wh]*(1-alpha) + alpha
     
-    tifffile.imsave(Path(viewing_dir, f'{data.trial_string}_overlay_2.tif'),gf.to_8_bit(rat2))
+    wh = np.where(exclude_overlay[::downsample])
+    rat2[wh] = rat2[wh]*(1-alpha) 
+    
+    rat2[:,out_wh[0],out_wh[1]] = 0
+    tifffile.imsave(Path(viewing_dir,data.thresh_use, f'{data.trial_string}_overlay_2.tif'),gf.to_8_bit(rat2))
 
     '''
     rat = rat2[:,2:-2,2:-2]
