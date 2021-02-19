@@ -22,11 +22,11 @@ else:
     savestr = ''
 
 
-save_file = Path(top_dir,'analysis',f'long_acqs_{datetime.datetime.now().year}{datetime.datetime.now().month:02}{datetime.datetime.now().day:02}{savestr}.csv')
+save_file = Path(top_dir,'analysis',f'long_acqs_10A_{datetime.datetime.now().year}{datetime.datetime.now().month:02}{datetime.datetime.now().day:02}{savestr}.csv')
 prev_sorted = Path(top_dir,'analysis','long_acqs_20201230_sorted.csv')
     
 
-df = canf.get_tif_smr(top_dir,save_file,'20201116',None,prev_sorted = prev_sorted,only_long = True)
+df = canf.get_tif_smr(top_dir,save_file,'20210101',None,prev_sorted = None,only_long = True)
 
 dates = []
 slips = []

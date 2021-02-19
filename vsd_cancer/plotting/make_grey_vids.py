@@ -44,7 +44,7 @@ HPC_num = None
 
 save_dir = Path(top_dir,'analysis','full')
 viewing_dir = Path(top_dir,'analysis','full','tif_viewing','grey_videos')
-initial_df = Path(top_dir,'analysis',f'long_acqs_20201230_experiments_correct{df_str}.csv')
+initial_df = Path(top_dir,'analysis',f'long_acqs_20210216_experiments_correct{df_str}.csv')
 
 df = pd.read_csv(initial_df)
 roi_df = pd.read_csv(Path(save_dir,'roi_df.csv'))
@@ -60,7 +60,7 @@ for idx,data in enumerate(df.itertuples()):
     print(trial_string)
 
 
-    if Path(viewing_dir, f'{data.trial_string}_overlay_2.tif').is_file() and False:
+    if Path(viewing_dir, data.thresh_use,f'{data.trial_string}_overlay_2.tif').is_file() and True:
         continue
 
     if data.thresh_use == 'n':

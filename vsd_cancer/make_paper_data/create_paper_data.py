@@ -37,7 +37,7 @@ if not data_dir.is_dir():
 
 
 
-initial_df = Path(top_dir,'analysis',f'long_acqs_20201230_experiments_correct{df_str}.csv')
+initial_df = Path(top_dir,'analysis',f'long_acqs_20210216_experiments_correct{df_str}.csv')
 
 if HPC:
     df_ = pd.read_csv(initial_df)
@@ -82,6 +82,9 @@ make_full_fov_t_courses.make_all_FOV_tc(initial_df, data_dir, redo = False,HPC_n
 
 import get_dead_cells
 get_dead_cells.make_all_raw_tc(initial_df, data_dir,redo = False, njobs = 10,HPC_num=HPC_num)
+
+#import define_circle_rois
+#import apply_circle_rois
 
 print('Detecting events...')
 import get_events

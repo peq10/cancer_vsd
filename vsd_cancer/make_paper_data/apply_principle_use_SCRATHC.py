@@ -79,7 +79,7 @@ ats = np.array(ats)
 atss = np.array(atss)
 
 use = np.array(use)
-d = {'y':0,'m':1,'n':1}
+d = {'y':0,'m':1,'n':1,'nan':0}
 use2 = np.array([float(d[x]) for x in use])
 use2 /= np.sum(use2)
 

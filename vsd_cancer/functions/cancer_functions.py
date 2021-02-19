@@ -540,6 +540,8 @@ def get_LED_powers(LED,cam,T_approx,cam_edge = 'falling'):
 
     return led1,led2
 
+
+
 def cam_check(cam,cam_id,times,e_start,fs):
     if cam_id+len(times) > len(cam):
         print('length issue')
