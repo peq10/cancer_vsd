@@ -23,7 +23,7 @@ import elephant
 import f.general_functions as gf
 import scipy.ndimage as ndimage
 
-import cancer_functions as canf
+from vsd_cancer.functions import cancer_functions as canf
 
 top_dir = Path('/home/peter/data/Firefly/cancer')
 df_str = ''
@@ -36,7 +36,7 @@ initial_df = Path(top_dir,'analysis',f'long_acqs_20201230_experiments_correct{df
 
 df = pd.read_csv(initial_df)
 
-trial_string = '20201207_slip1_area1'
+trial_string = '20201215_slip1_area2'
 
 for data in df.itertuples():
     if trial_string in data.trial_string:
@@ -46,6 +46,10 @@ for data in df.itertuples():
 trial_save = Path(save_dir,'ratio_stacks',trial_string)
     
 rat2 = np.load(Path(trial_save, f'{data.trial_string}_ratio_stack.npy'))
+
+rat2_filt = ndimage.gaussian_filter(rat2,(3,2,2))
+
+
 seg = np.load(Path(trial_save, f'{data.trial_string}_seg.npy'))
 
 
@@ -58,7 +62,7 @@ cellfree_t = ndimage.gaussian_filter1d(canf.t_course_from_roi(rat2,cellfree),3)
 cellfree_t -= cellfree_t.mean()
 
 #roi = seg == 105
-roi = seg == 100
+roi = seg == 140
 b = 10
 
 w = np.where(roi)
@@ -74,10 +78,19 @@ std = np.std(tst2,-1)
 
 #plt.plot(np.abs(ndimage.gaussian_filter1d(mean,3) -1) > 3*ndimage.gaussian_filter1d(std,3)/np.sqrt(np.sum(roi)))
 
+def func_t_course_from_roi(nd_stack,roi,func ):
+
+    wh = np.where(roi)
+    
+    return func(nd_stack[...,wh[0],wh[1]],axis = -1)
+
+
 
 #try segmenting on the 
 tcs = np.array([canf.t_course_from_roi(rat2, roi) for roi in masks])
 stds = np.array([canf.std_t_course_from_roi(rat2, roi,True) for roi in masks])
+skew = np.array([func_t_course_from_roi(rat2, roi,stats.skew) for roi in masks])
+kurtosis = np.array([func_t_course_from_roi(rat2, roi,stats.kurtosis) for roi in masks])
 
 tc_filts = ndimage.gaussian_filter(tcs,(0,3))
 std_filts = ndimage.gaussian_filter(stds,(0,3))

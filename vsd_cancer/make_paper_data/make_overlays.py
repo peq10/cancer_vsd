@@ -87,7 +87,7 @@ HPC_num = None
 
 save_dir = Path(top_dir,'analysis','full')
 viewing_dir = Path(top_dir,'analysis','full','tif_viewing','videos')
-initial_df = Path(top_dir,'analysis',f'long_acqs_20201230_experiments_correct{df_str}.csv')
+initial_df = Path(top_dir,'analysis',f'long_acqs_20210216_experiments_correct{df_str}.csv')
 
 df = pd.read_csv(initial_df)
 
@@ -121,7 +121,7 @@ for idx,data in enumerate(df[::-1].itertuples()):
     trial_string = data.trial_string
     trial_save = Path(save_dir,'ratio_stacks',trial_string)
     print(trial_string)
-    if Path(viewing_dir, f'{data.trial_string}_overlay_2.tif').is_file() and False:
+    if Path(viewing_dir, f'{data.trial_string}_overlay_2.tif').is_file() and True:
         continue
 
     if data.use == 'n':
@@ -132,9 +132,18 @@ for idx,data in enumerate(df[::-1].itertuples()):
     #if trial_string != 'cancer_20201215_slip2_area1_long_acq_corr_long_acq_blue_0.0296_green_0.0765_heated_to_37_1':
     #    continue
 
-    rat = np.load(Path(trial_save, f'{data.trial_string}_ratio_stack.npy'))
+    try:
+        finish_at = int(data.finish_at)*5
+    except ValueError:
+        finish_at = None
+        
+
+
+    rat2 = np.load(Path(trial_save, f'{data.trial_string}_ratio_stack.npy'))[:finish_at]
+    rat2 =ndimage.gaussian_filter(rat2,(3,2,2))
     
-    tc = np.load(Path(trial_save,f'{trial_string}_all_tcs.npy'))
+    tc = np.load(Path(trial_save,f'{trial_string}_all_tcs.npy'))[:finish_at]
+    std= np.load(Path(trial_save,f'{trial_string}_all_stds.npy'))[:finish_at]
     tc -= tc.mean(-1)[:,None] - 1
      
     seg = np.load(Path(trial_save,f'{trial_string}_seg.npy'))
@@ -144,26 +153,33 @@ for idx,data in enumerate(df[::-1].itertuples()):
     #add exclusion
     #excluded_tc = canf.apply_exclusion(exclude_dict,tc)
     masks = canf.lab2masks(seg)
-    surround_masks = canf.get_surround_masks_cellfree(masks, dilate = True)
+
     
-    surround_tc = np.array([canf.t_course_from_roi(rat,m) for m in surround_masks])
+    surround_tc = np.load(Path(trial_save,f'{trial_string}_all_surround_tcs.npy'))[:finish_at]
+    surround_std = np.load(Path(trial_save,f'{trial_string}_all_surround_stds.npy'))[:finish_at]
     surround_tc -= np.mean(surround_tc,-1)[:,None] - 1
     excluded_circle = np.load(Path(trial_save,f'{trial_string}_circle_excluded_rois.npy'))
-    events = canf.get_events_exclude_surround_events(tc,surround_tc,
-                                                     detection_thresh = 0.006, 
-                                                     surrounds_thresh = 0.002,
-                                                     filt_params = filt_params, 
-                                                     exclude_first=100, 
-                                                     excluded_circle = excluded_circle)
+    
+    excluded_die = np.load(Path(trial_save,f'{trial_string}_excluded_dead_rois.npy'))
+    
+    events = canf.get_events_exclude_surround_events(tc,
+                                                     std,
+                                                     surround_tc,
+                                                     surround_std,
+                                                     z_score = 2.5,
+                                                     surround_z = 5,
+                                                     exclude_first= 0, 
+                                                     excluded_circle = excluded_circle,
+                                                     excluded_dead = excluded_die)
 
-    roi_overlay = make_roi_overlay(events,seg,rat.shape)
-    exclude_overlay = make_roi_overlay(events['excluded_events'],seg,rat.shape)
-    exclude_circle_overlay = make_roi_overlay(events['excluded_circle_events'],seg,rat.shape)
+    roi_overlay = make_roi_overlay(events,seg,rat2.shape)
+    exclude_overlay = make_roi_overlay(events['excluded_events'],seg,rat2.shape)
+    exclude_circle_overlay = make_roi_overlay(events['excluded_circle_events'],seg,rat2.shape)
 
 
     stack = tifffile.imread(data.tif_file)[::2,...]
 
-    display = make_overlay_events(rat,stack,seg,evs = [events,events['excluded_events'],events['excluded_circle_events']])
+    display = make_overlay_events(rat2,stack,seg,evs = [events,events['excluded_events'],events['excluded_circle_events']])
     
     
 

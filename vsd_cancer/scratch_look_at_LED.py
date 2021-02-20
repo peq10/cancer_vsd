@@ -9,6 +9,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
+import tifffile
+
 from pathlib import Path
 
 from vsd_cancer.functions import cancer_functions as canf
@@ -56,9 +58,9 @@ def get_LED_frame_locs(LED,LED_times,cam,T_approx,cam_edge = 'falling'):
         
     
     #now get accurate values 
-    ids1 = np.array([time_to_idx(LED_times, cam[::2] - 3*T/4),time_to_idx(LED_times, cam[::2] - T/4)]).T
+    ids1 = np.array([time_to_idx(LED_times, cam[::2] - 9*T/10),time_to_idx(LED_times, cam[::2])]).T
     
-    ids2 = np.array([time_to_idx(LED_times, cam[1::2] - 3*T/4),time_to_idx(LED_times, cam[1::2] - T/4)]).T
+    ids2 = np.array([time_to_idx(LED_times, cam[1::2] - 4*T/5),time_to_idx(LED_times, cam[1::2] - T/5)]).T
     
     ids3 = np.array([time_to_idx(LED_times, cam[1:-1:2] + T),time_to_idx(LED_times, cam[2::2] - 5*T)]).T
 
@@ -66,6 +68,14 @@ def get_LED_frame_locs(LED,LED_times,cam,T_approx,cam_edge = 'falling'):
     return ids1,ids2,ids3
 
 for data in df.itertuples():
+    if data.thresh_use != 'y':
+        continue
+    
+    if data.trial_string != 'cancer_20210122_slip3_area3_long_acq_MCF10A_tgfbeta_long_acq_blue_0.02909_green_0.0672_1':
+        continue
+    else:
+        break
+    
     trial_save = Path(save_dir,'ratio_stacks',data.trial_string)
     
     cam =  np.load(Path(trial_save, f'{data.trial_string}_cam.npy'))
@@ -75,4 +85,32 @@ for data in df.itertuples():
     
     
     ids = get_LED_frame_locs(LED,LED_times, cam, 3*10**-3)
-    break
+    blue = np.array([np.median(LED[x[0]:x[1]]) for x in ids[0]])
+    green = np.array([np.median(LED[x[0]:x[1]]) for x in ids[1]])
+    zer =  np.array([np.median(LED[x[0]:x[1]]) for x in ids[2]])
+    #append last as measuring between
+    zer = np.append(zer,zer[-1])
+
+
+    blue -= zer
+    green -= zer
+    
+    
+    plt.plot(blue)
+    plt.plot(green)
+    plt.plot(zer + 0.04)
+    plt.show()
+    
+    print(f'Blue var: {np.std(blue)/np.mean(blue)*100:0.2f}%')
+    print(f'Green var: {np.std(green)/np.mean(green)*100:0.2f}%')
+    print(data.trial_string)
+    
+    st = tifffile.imread(data.tif_file)
+    
+    st_norm = np.copy(st).astype(np.float32)
+    st_norm[::2] /= (blue/np.mean(blue))[:,None,None]
+    st_norm[1::2] /= (green/np.mean(green))[:,None,None]
+    
+    tst1 = canf.stack2rat(st)
+    tst2 = canf.stack2rat(st_norm)
+    
