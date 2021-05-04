@@ -26,7 +26,7 @@ save_file = Path(top_dir,'analysis',f'long_acqs_10A_{datetime.datetime.now().yea
 prev_sorted = Path(top_dir,'analysis','long_acqs_20201230_sorted.csv')
     
 
-df = canf.get_tif_smr(top_dir,save_file,'20210101',None,prev_sorted = None,only_long = True)
+df = canf.get_tif_smr(top_dir,save_file,'20210301',None,prev_sorted = None,only_long = True)
 
 dates = []
 slips = []
@@ -37,6 +37,8 @@ trial_string = []
 n_frames = []
 for data in df.itertuples():
     s = data.tif_file
+    
+
 
     dates.append(s[s.find('/cancer/')+len('/cancer/'):s.find('/cancer/')+len('/cancer/')+8])  
     slips.append(s[s.find('slip')+len('slip'):s.find('slip')+len('slip')+1])
@@ -58,9 +60,13 @@ for data in df.itertuples():
 
     trial_string.append('_'.join(Path(s).parts[Path(s).parts.index('cancer'):-1]))
     
-    meta = canf.load_tif_metadata(s)
-    n_fr = len(meta) - 1
-    n_frames.append(n_fr)
+    try:
+        meta = canf.load_tif_metadata(s)
+        n_fr = len(meta) - 1
+        n_frames.append(n_fr)
+    except FileNotFoundError:
+        nf_fr = -1
+        n_frames.append(n_fr)
     
     if n_fr != 10000:
         print(s)

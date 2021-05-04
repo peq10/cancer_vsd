@@ -50,7 +50,12 @@ def make_all_raw_tc(df_file,save_dir, redo = True,njobs = 10, HPC_num = None):
         seg = np.load(Path(trial_save,f'{trial_string}_seg.npy'))
         masks = canf.lab2masks(seg)
         
-        LED = np.load(Path(trial_save,f'{trial_string}_LED_powers.npy'))
+        try:
+            LED = np.load(Path(trial_save,f'{trial_string}_LED_powers.npy'))
+        except Exception as err:
+            print(Path(trial_save,f'{trial_string}_LED_powers.npy'))
+            raise err
+            
         if LED[0] < LED[1]:
             blue = 0
         else:

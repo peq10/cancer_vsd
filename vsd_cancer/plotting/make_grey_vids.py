@@ -44,7 +44,7 @@ HPC_num = None
 
 save_dir = Path(top_dir,'analysis','full')
 viewing_dir = Path(top_dir,'analysis','full','tif_viewing','grey_videos')
-initial_df = Path(top_dir,'analysis',f'long_acqs_20210216_experiments_correct{df_str}.csv')
+initial_df = Path(top_dir,'analysis',f'long_acqs_20210428_experiments_correct{df_str}.csv')
 
 df = pd.read_csv(initial_df)
 roi_df = pd.read_csv(Path(save_dir,'roi_df.csv'))
@@ -63,7 +63,7 @@ for idx,data in enumerate(df.itertuples()):
     if Path(viewing_dir, data.thresh_use,f'{data.trial_string}_overlay_2.tif').is_file() and True:
         continue
 
-    if data.thresh_use == 'n':
+    if data.thresh_use == 'n' and data.use != 'new':
         continue
     #if trial_string != 'cancer_20201203_slip1_area2_long_acq_corr_corr_long_acqu_blue_0.0551_green_0.0832_heated_to_37_1':
     #    continue
@@ -73,7 +73,7 @@ for idx,data in enumerate(df.itertuples()):
     except ValueError:
         finish_at = None
         
-
+    excluded_die = np.load(Path(trial_save,f'{trial_string}_excluded_dead_rois.npy'))
 
     rat2 = np.load(Path(trial_save, f'{data.trial_string}_ratio_stack.npy'))[:finish_at]
     rat2 =ndimage.gaussian_filter(rat2,(3,2,2))
@@ -96,7 +96,7 @@ for idx,data in enumerate(df.itertuples()):
     surround_tc -= np.mean(surround_tc,-1)[:,None] - 1
     excluded_circle = np.load(Path(trial_save,f'{trial_string}_circle_excluded_rois.npy'))
     
-    excluded_die = np.load(Path(trial_save,f'{trial_string}_excluded_dead_rois.npy'))
+    
     
     
     
@@ -145,7 +145,7 @@ for idx,data in enumerate(df.itertuples()):
     rat2[wh] = rat2[wh]*(1-alpha) 
     
     rat2[:,out_wh[0],out_wh[1]] = 0
-    tifffile.imsave(Path(viewing_dir,data.thresh_use, f'{data.trial_string}_overlay_2.tif'),gf.to_8_bit(rat2))
+    tifffile.imsave(Path(viewing_dir,data.use, f'{data.trial_string}_overlay_2.tif'),gf.to_8_bit(rat2))
 
     '''
     rat = rat2[:,2:-2,2:-2]

@@ -41,6 +41,10 @@ all_tcs = []
 cell_id = []
 lens = []
 
+segs = []
+ims = []
+names = []
+
 for data in df.itertuples():
     if data.use != 'y':
         continue
@@ -58,6 +62,10 @@ for data in df.itertuples():
     results = np.load(Path(trial_save,f'{trial_string}_event_properties.npy'),allow_pickle = True).item()
     tcs = np.load(Path(trial_save,f'{trial_string}_all_tcs.npy'))[:,:observe_to]
     
+    segs.append(np.load(Path(trial_save,f'{trial_string}_seg.npy')))
+    ims.append(np.load(Path(trial_save,f'{trial_string}_im.npy')))
+    names.append(data.trial_string)
+    
     events = results['events'][1]
     ids = [x for x in events.keys() if type(x) != str]
     
@@ -70,5 +78,9 @@ for data in df.itertuples():
 all_tcs = np.array(all_tcs)
 np.save(Path(top_dir,'analysis','yilin_tcs.npy'),all_tcs)
 np.save(Path(top_dir,'analysis','yilin_tc_ids.npy'),cell_id)
+
+np.save(Path(top_dir,'analysis','yilin_segs.npy'),segs)
+np.save(Path(top_dir,'analysis','yilin_ims.npy'),ims)
+np.save(Path(top_dir,'analysis','yilin_names.npy'),names)
     
     

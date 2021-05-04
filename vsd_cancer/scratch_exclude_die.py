@@ -30,7 +30,7 @@ HPC_num = None
 
 save_dir = Path(top_dir,'analysis','full')
 viewing_dir = Path(top_dir,'analysis','full','tif_viewing','videos')
-initial_df = Path(top_dir,'analysis',f'long_acqs_20201230_experiments_correct{df_str}.csv')
+initial_df = Path(top_dir,'analysis',f'long_acqs_20210128_experiments_correct{df_str}.csv')
 
 df = pd.read_csv(initial_df)
 

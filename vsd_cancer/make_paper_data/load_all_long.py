@@ -40,7 +40,7 @@ def load_all_long(df_file,save_dir,redo = True, HPC_num = None, raise_err = Fals
         trial_string = data.trial_string
         trial_save = Path(save_dir,'ratio_stacks',trial_string)
         print(trial_string)
-        
+        print('hello')
         if not redo and HPC_num is None:
             if idx < redo_from:
                 continue
@@ -52,7 +52,8 @@ def load_all_long(df_file,save_dir,redo = True, HPC_num = None, raise_err = Fals
             washin = True #want to use a causal filter 
         else:
             washin = False
-            
+        
+        
         try:
             result_dict = canf.load_and_slice_long_ratio(data.tif_file,
                                                          str(data.SMR_file),

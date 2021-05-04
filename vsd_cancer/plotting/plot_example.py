@@ -13,15 +13,15 @@ import matplotlib.pyplot as plt
 import scipy.ndimage as ndimage
 import pyqtgraph as pg
 
-import catch22
+#import catch22
 
-import prox_tv
+#import prox_tv
 
 from pathlib import Path
 
 import pandas as pd
 
-import cancer_functions as canf
+from vsd_cancer.functions import cancer_functions as canf
 
 import f.image_functions as imf
 
@@ -49,7 +49,7 @@ for idx,data in enumerate(df.itertuples()):
     if data.trial_string == trial_string:
         break
     
-idx = 4
+idx = 2
 
 
 trial_save = Path(save_dir,'ratio_stacks',trial_string)
@@ -82,7 +82,7 @@ tcs = tcs[sort_order,:]
 masks = masks[sort_order,:]
 so = np.array(keep)[sort_order]
 
-num = 13
+num = 5
 
 tcs = tcs[:num,...]
 so = so[:num]

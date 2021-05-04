@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from pathlib import Path
-import cancer_functions as canf
+from vsd_cancer.functions import cancer_functions as canf
 import f.general_functions as gf
 import f.plotting_functions as pf
 import scipy.stats
