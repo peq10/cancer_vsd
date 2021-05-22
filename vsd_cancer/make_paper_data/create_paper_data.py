@@ -84,6 +84,10 @@ import get_dead_cells
 get_dead_cells.make_all_raw_tc(initial_df, data_dir,redo = False, njobs = 10,HPC_num=HPC_num)
 
 
+print('Getting mean brightnesses')
+import get_all_brightness
+get_all_brightness.get_mean_brightness(initial_df, data_dir)
+
 #THESE NEED TO BE MADE SO AUTOMATICALLY UPDATE DATAFRAME
 #import define_circle_rois
 #import apply_circle_rois

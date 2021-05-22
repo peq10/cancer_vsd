@@ -5,7 +5,7 @@ Created on Tue Dec  1 08:47:43 2020
 
 @author: peter
 """
-import pywt
+#import pywt
 
 import pandas as pd
 
@@ -15,17 +15,17 @@ import numpy as np
 import scipy.ndimage as ndimage
 import time
 
-import ruptures as rpt
+#import ruptures as rpt
 
-df = pd.read_csv('/home/peter/data/Firefly/cancer/analysis/long_acqs_20201129_sorted.csv')
+df = pd.read_csv('/home/peter/data/Firefly/cancer/analysis/full/long_acqs_20210428_experiments_correct_loaded_long.csv')
 save_dir = Path('/home/peter/data/Firefly/cancer/analysis/full')
 
-corr = 11
+corr = 30
 for idx,data in enumerate(df.itertuples()):
     
     if idx!= corr:
         continue
-
+    print(data.trial_string)
     parts = Path(data.tif_file).parts
     trial_string = '_'.join(parts[parts.index('cancer'):-1])
     trial_save = Path(save_dir,'ratio_stacks',trial_string)

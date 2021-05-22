@@ -44,7 +44,7 @@ HPC_num = None
 
 save_dir = Path(top_dir,'analysis','full')
 viewing_dir = Path(top_dir,'analysis','full','tif_viewing','grey_videos')
-initial_df = Path(top_dir,'analysis',f'long_acqs_20210428_experiments_correct{df_str}.csv')
+initial_df = Path(top_dir,'analysis','full',f'long_acqs_20210428_experiments_correct_loaded_long.csv')
 
 df = pd.read_csv(initial_df)
 roi_df = pd.read_csv(Path(save_dir,'roi_df.csv'))
@@ -59,12 +59,15 @@ for idx,data in enumerate(df.itertuples()):
     trial_save = Path(save_dir,'ratio_stacks',trial_string)
     print(trial_string)
 
-
-    if Path(viewing_dir, data.thresh_use,f'{data.trial_string}_overlay_2.tif').is_file() and True:
+ 
+    if Path(viewing_dir, data.use,f'{data.trial_string}_overlay_2.tif').is_file() and True:
         continue
-
-    if data.thresh_use == 'n' and data.use != 'new':
+    
+    if data.use != 'new':
         continue
+    
+
+    
     #if trial_string != 'cancer_20201203_slip1_area2_long_acq_corr_corr_long_acqu_blue_0.0551_green_0.0832_heated_to_37_1':
     #    continue
     
