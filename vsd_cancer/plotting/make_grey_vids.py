@@ -60,16 +60,22 @@ for idx,data in enumerate(df.itertuples()):
     print(trial_string)
 
  
-    if Path(viewing_dir, data.use,f'{data.trial_string}_overlay_2.tif').is_file() and True:
+    if not Path(trial_save,'hand_rois').is_dir():
+        continue
+
+    if Path(viewing_dir, data.use,f'{data.trial_string}_overlay_2.tif').is_file() and False:
         continue
     
-    if data.use != 'new':
+    if 'MCF' not in data.expt:
+        pass
+    else:
         continue
     
 
     
-    #if trial_string != 'cancer_20201203_slip1_area2_long_acq_corr_corr_long_acqu_blue_0.0551_green_0.0832_heated_to_37_1':
+    #if 'cancer_20201215_slip2_area1_long_acq_corr' not in trial_string:
     #    continue
+    
     
     try:
         finish_at = int(data.finish_at)*5
@@ -81,7 +87,9 @@ for idx,data in enumerate(df.itertuples()):
     rat2 = np.load(Path(trial_save, f'{data.trial_string}_ratio_stack.npy'))[:finish_at]
     rat2 =ndimage.gaussian_filter(rat2,(3,2,2))
     
-    tc = np.load(Path(trial_save,f'{trial_string}_all_tcs.npy'))[:finish_at]
+    #tc = np.load(Path(trial_save,f'{trial_string}_all_tcs.npy'))[:finish_at]
+    tc = np.load(Path(trial_save,f'{trial_string}_all_eroded_median_tcs.npy'))[:finish_at]
+    
     std= np.load(Path(trial_save,f'{trial_string}_all_stds.npy'))[:finish_at]
     tc -= tc.mean(-1)[:,None] - 1
      
@@ -100,17 +108,20 @@ for idx,data in enumerate(df.itertuples()):
     excluded_circle = np.load(Path(trial_save,f'{trial_string}_circle_excluded_rois.npy'))
     
     
-    
-    
+     
+    surrounds_z = 10
+    exclude_first = 0
+    tc_type = 'median'
+    exclude_circle = False
     
     events = canf.get_events_exclude_surround_events(tc,
                                                      std,
                                                      surround_tc,
                                                      surround_std,
                                                      z_score = 2.5,
-                                                     surround_z = 5,
+                                                     surround_z = surrounds_z,
                                                      exclude_first= 0, 
-                                                     excluded_circle = excluded_circle,
+                                                     excluded_circle = None,#excluded_circle,
                                                      excluded_dead = excluded_die)
 
     

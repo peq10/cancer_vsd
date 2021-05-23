@@ -27,7 +27,7 @@ viewing_dir = Path(top_dir,'analysis','full','tif_viewing','videos')
 initial_df = Path(top_dir,'analysis',f'long_acqs_20210428_experiments_correct{df_str}.csv')
 
 df = pd.read_csv(initial_df)
-
+df = df[(df.use == 'y') & ((df.expt == 'MCF10A')|(df.expt == 'MCF10A_TGFB'))]
 
 trial_string = df.iloc[0].trial_string
 n_thresh = len(np.load(Path(Path(save_dir,'ratio_stacks',trial_string),f'{trial_string}_event_properties.npy'),allow_pickle = True).item()['events'])
@@ -82,7 +82,7 @@ for idx,data in enumerate(df.itertuples()):
                     if Path(trial_save,f'{trial_string}_good_detection_cell_{ce}.npy').is_file() and False:
                         detection_real = np.load(Path(trial_save,f'{trial_string}_good_detection_cell_{ce}.npy'))
                     else:
-                        raise ValueError('Have to do ONE PER DETECTION')
+                        #raise ValueError('Have to do ONE PER DETECTION')
                         event_vid = vid[max(times[idxxx][0,0]//2-20,0):times[idxxx][1,-1]//2+20,max(locs[idxxx][0]-100,0):locs[idxxx][0]+100,max(locs[idxxx][1]-100,0):locs[idxxx][1]+100]
                         #label events with red spot in top left
                         for evv in times[idxxx].T:

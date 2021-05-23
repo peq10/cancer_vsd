@@ -35,7 +35,7 @@ def add_hand_rois(seg,hand_rois):
     
     return res
 
-def segment_cellpose(df_file,save_dir, HPC_num = None):
+def segment_cellpose(df_file,save_dir, HPC_num = None,only_hand_rois = False):
 
     df = pd.read_csv(df_file)
     
@@ -46,20 +46,29 @@ def segment_cellpose(df_file,save_dir, HPC_num = None):
         if HPC_num is not None: #allows running in parallel on HPC
             if idx != HPC_num:
                 continue
-        
+            
+            
         parts = Path(data.tif_file).parts
         trial_string = '_'.join(parts[parts.index('cancer'):-1])
         trial_save = Path(save_dir,'ratio_stacks',trial_string)
         
         im = np.load(Path(trial_save,f'{trial_string}_im.npy'))
-        if len(im.shape) > 2:
-            im = im[...,0,:,:]
-        ims.append(im)
         
         if Path(trial_save,'hand_rois').is_dir():
             extra_rois.append(np.array([gf.read_roi_file(x,im_dims = im.shape)[1] for x in Path(trial_save,'hand_rois').glob('*.roi')]))
         else:
-            extra_rois.append([])
+            if only_hand_rois:
+                continue
+            else:
+                extra_rois.append([])
+        
+        
+        
+        if len(im.shape) > 2:
+            im = im[...,0,:,:]
+        ims.append(im)
+        
+
 
                 
         savenames.append(Path(trial_save,f'{trial_string}_seg.npy'))

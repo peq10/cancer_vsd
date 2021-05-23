@@ -12,6 +12,7 @@ import pandas as pd
 
 from joblib import Parallel, delayed
 
+import scipy.ndimage as ndimage
 
 from vsd_cancer.functions import cancer_functions as canf
 
@@ -52,36 +53,70 @@ def make_all_tc(df_file,save_dir, redo = True, njobs = 2, HPC_num = None):
         masks = canf.lab2masks(seg)
         surround_masks = canf.get_surround_masks_cellfree(masks, dilate = True)
         
+        structure = np.zeros((3,3,3))
+        structure[1,:,:] = 1
+        eroded_masks = ndimage.binary_erosion(masks,structure)
+        #also make eroded masks to avoid movement artefacts around outside
+        
+        
         stack = np.load(Path(trial_save,f'{trial_string}_ratio_stack.npy')).astype(np.float64)
         
         if HPC_num is None:
             try:
                 with Parallel(n_jobs=njobs) as parallel:
                     tc = parallel(delayed(canf.t_course_from_roi)(stack,mask) for mask in masks)
+                    eroded_tc = parallel(delayed(canf.t_course_from_roi)(stack,mask) for mask in eroded_masks)
+                    median_tc = parallel(delayed(canf.median_t_course_from_roi)(stack,mask) for mask in masks)
+                    eroded_median_tc = parallel(delayed(canf.median_t_course_from_roi)(stack,mask) for mask in eroded_masks)
                     surround_tc = parallel(delayed(canf.t_course_from_roi)(stack,mask) for mask in surround_masks)
+                    median_surround_tc = parallel(delayed(canf.median_t_course_from_roi)(stack,mask) for mask in surround_masks)
                     std = parallel(delayed(canf.std_t_course_from_roi)(stack, mask,True) for mask in masks)
                     surround_std = parallel(delayed(canf.std_t_course_from_roi)(stack, mask, True) for mask in masks)
             except Exception as err:
                 print(err)
                 tc = [canf.t_course_from_roi(stack,mask) for mask in masks]
+                eroded_tc = [canf.t_course_from_roi(stack,mask) for mask in eroded_masks]
+                median_tc = [canf.median_t_course_from_roi(stack,mask) for mask in masks]
+                eroded_median_tc = [canf.median_t_course_from_roi(stack,mask) for mask in eroded_masks]
                 surround_tc = [canf.t_course_from_roi(stack,mask) for mask in surround_masks]
+                median_surround_tc = [canf.median_t_course_from_roi(stack,mask) for mask in surround_masks]
                 std = [canf.std_t_course_from_roi(stack, mask, True) for mask in masks]
                 surround_std = [canf.std_t_course_from_roi(stack, mask,True) for mask in masks]
         else:
             tc = [canf.t_course_from_roi(stack,mask) for mask in masks]
+            eroded_tc = [canf.t_course_from_roi(stack,mask) for mask in eroded_masks]
+            median_tc = [canf.median_t_course_from_roi(stack,mask) for mask in masks]
+            eroded_median_tc = [canf.median_t_course_from_roi(stack,mask) for mask in eroded_masks]
             surround_tc = [canf.t_course_from_roi(stack,mask) for mask in surround_masks]
+            median_surround_tc = [canf.median_t_course_from_roi(stack,mask) for mask in surround_masks]
             std = [canf.std_t_course_from_roi(stack, mask, True) for mask in masks]
             surround_std = [canf.std_t_course_from_roi(stack, mask, True) for mask in masks]
     
         tc = np.array(tc)
         tc -= tc.mean(-1)[:,None] - 1
         
+        eroded_tc = np.array(eroded_tc)
+        eroded_tc -= eroded_tc.mean(-1)[:,None] - 1
+        
+        median_tc = np.array(median_tc)
+        median_tc -= median_tc.mean(-1)[:,None] - 1
+        
+        eroded_median_tc = np.array(eroded_median_tc)
+        eroded_median_tc -= eroded_median_tc.mean(-1)[:,None] - 1
+        
         surround_tc = np.array(surround_tc)
         surround_tc -= surround_tc.mean(-1)[:,None] - 1
         
+        median_surround_tc = np.array(median_surround_tc)
+        median_surround_tc -= median_surround_tc.mean(-1)[:,None] - 1
+        
         
         np.save(Path(trial_save,f'{trial_string}_all_tcs.npy'),tc)
+        np.save(Path(trial_save,f'{trial_string}_all_eroded_tcs.npy'),eroded_tc)
+        np.save(Path(trial_save,f'{trial_string}_all_median_tcs.npy'),median_tc)
+        np.save(Path(trial_save,f'{trial_string}_all_eroded_median_tcs.npy'),eroded_median_tc)
         np.save(Path(trial_save,f'{trial_string}_all_surround_tcs.npy'),surround_tc)
+        np.save(Path(trial_save,f'{trial_string}_all_median_surround_tcs.npy'),median_surround_tc)
         np.save(Path(trial_save,f'{trial_string}_all_stds.npy'),std)
         np.save(Path(trial_save,f'{trial_string}_all_surround_stds.npy'),surround_std)
         

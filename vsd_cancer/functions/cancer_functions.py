@@ -328,6 +328,12 @@ def t_course_from_roi(nd_stack,roi):
     wh = np.where(roi)
     return np.mean(nd_stack[...,wh[0],wh[1]],-1)
 
+def median_t_course_from_roi(nd_stack,roi):
+    if len(roi.shape) != 2:
+        raise NotImplementedError('Only works for 2d ROIs')
+    wh = np.where(roi)
+    return np.median(nd_stack[...,wh[0],wh[1]],-1)
+
 def std_t_course_from_roi(nd_stack,roi,standard_err):
     '''
     Gets the standard deviation of the pixels in the roi at each time point

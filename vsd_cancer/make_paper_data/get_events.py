@@ -22,8 +22,10 @@ def get_dead_cells(raw_tc):
 
 
 def get_measure_events(initial_df,save_dir,thresh_range = np.arange(2,4.5,0.5),
-                       surrounds_z = 7,
-                       exclude_first = 0):
+                       surrounds_z = 10,
+                       exclude_first = 0,
+                       tc_type = 'median',
+                       exclude_circle = False):
 
     df = pd.read_csv(initial_df)
     for idx, data in enumerate(df.itertuples()):
@@ -34,13 +36,21 @@ def get_measure_events(initial_df,save_dir,thresh_range = np.arange(2,4.5,0.5),
         print(trial_string)
         trial_save = Path(save_dir,'ratio_stacks',trial_string)
         
-        tc = np.load(Path(trial_save,f'{trial_string}_all_tcs.npy'))
+        if tc_type == 'median':
+            tc = np.load(Path(trial_save,f'{trial_string}_all_eroded_median_tcs.npy'))
+        else:
+            tc = np.load(Path(trial_save,f'{trial_string}_all_eroded_tcs.npy'))
+            
         tc -= np.mean(tc,-1)[:,None] - 1
 
         std = np.load(Path(trial_save,f'{trial_string}_all_stds.npy'))
         surround_std = np.load(Path(trial_save,f'{trial_string}_all_surround_stds.npy'))
         
-        excluded_circle = np.load(Path(trial_save,f'{trial_string}_circle_excluded_rois.npy'))
+        if exclude_circle:
+            excluded_circle = np.load(Path(trial_save,f'{trial_string}_circle_excluded_rois.npy'))
+        else:
+            excluded_circle = None
+            
         #also get circle exclusions
         surround_tc = np.load(Path(trial_save,f'{trial_string}_all_surround_tcs.npy'))
         #remove any surround offsets 
@@ -87,13 +97,21 @@ def get_measure_events(initial_df,save_dir,thresh_range = np.arange(2,4.5,0.5),
                          'surrounds_thresh':surrounds_z,
                          'exclude_first':exclude_first}
         
-        result_dict = {'n_cells': tc.shape[0] - len(excluded_circle),
-                      'events': all_events,
-                      'observation_length': all_observation,
-                      'excluded_circle': excluded_circle,
-                      'detection_params': detect_params
-                      }
-        
+        if exclude_circle == False:
+            result_dict = {'n_cells': tc.shape[0],
+                          'events': all_events,
+                          'observation_length': all_observation,
+                          'excluded_circle': excluded_circle,
+                          'detection_params': detect_params
+                          }
+        else:
+            result_dict = {'n_cells': tc.shape[0] - len(excluded_circle),
+              'events': all_events,
+              'observation_length': all_observation,
+              'excluded_circle': excluded_circle,
+              'detection_params': detect_params
+              }
+
         #all_props = np.concatenate([event_props[p] for p in event_props.keys() if 'props' in str(p)])
         
         np.save(Path(trial_save,f'{trial_string}_event_properties.npy'),result_dict)

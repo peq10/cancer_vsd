@@ -10,7 +10,7 @@ from pathlib import Path
 import pandas as pd
 from vsd_cancer.functions import cancer_functions as canf
 import sys
-
+import numpy as np
 
 redo = False
 
@@ -61,12 +61,12 @@ _,_ = load_all_long.load_all_long_washin(initial_df, data_dir,redo = False, HPC_
 
 
 print('Segmenting...')
-#import segment_cellpose
-#segment_cellpose.segment_cellpose(initial_df, data_dir, HPC_num = HPC_num)
+import segment_cellpose
+segment_cellpose.segment_cellpose(initial_df, data_dir, HPC_num = HPC_num, only_hand_rois = True)
 
 print('Making overlays...')
-#import make_roi_overlays
-#make_roi_overlays.make_all_overlay(initial_df, data_dir, Path(viewing_dir,'rois'), HPC_num = HPC_num)
+import make_roi_overlays
+make_roi_overlays.make_all_overlay(initial_df, data_dir, Path(viewing_dir,'rois'), HPC_num = HPC_num)
 
 
 print('Extracting time series...')
@@ -95,6 +95,21 @@ get_all_brightness.get_mean_brightness(initial_df, data_dir)
 
 print('Detecting events...')
 import get_events
-get_events.get_measure_events(initial_df,data_dir)
+get_events.get_measure_events(initial_df,data_dir,
+                              thresh_range = np.arange(2,4.5,0.5),
+                              surrounds_z = 10,
+                              exclude_first = 150,
+                              tc_type = 'median',
+                              exclude_circle = False)
+
+print('Getting user input for good detections')
+import get_all_good_detections
+thresh_idx = 1
+#get_all_good_detections.get_user_event_input(initial_df,data_dir,thresh_idx, redo = True)
+
+print('Applying user input')
+raise NotImplementedError('Do')
+
+raise NotImplementedError('CHECK THE DEAD CELLS IN MCF10A DATA')
 
 print('Finished successfully')

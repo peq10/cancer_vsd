@@ -47,6 +47,9 @@ def detect_all_events(df_file,save_dir, redo = True, njobs = 2, debug = False, m
             if idx != HPC_num:
                 continue
     
+        if '20201215_slip2_area1_long_acq_corr' in data.trial_string:
+            break
+    
         parts = Path(data.tif_file).parts
         trial_string = '_'.join(parts[parts.index('cancer'):-1])
         trial_save = Path(save_dir,'ratio_stacks',trial_string)
@@ -59,6 +62,10 @@ def detect_all_events(df_file,save_dir, redo = True, njobs = 2, debug = False, m
                 continue    
 
         tc = np.load(Path(trial_save,f'{trial_string}_all_tcs.npy'),allow_pickle = True)
+        median_tc = np.load(Path(trial_save,f'{trial_string}_all_median_tcs.npy'),allow_pickle = True)
+        
+        eroded_tc = np.load(Path(trial_save,f'{trial_string}_all_eroded_tcs.npy'),allow_pickle = True)
+        eroded_median_tc = np.load(Path(trial_save,f'{trial_string}_all_eroded_median_tcs.npy'),allow_pickle = True)
         
         if debug:
             tc = tc[:10,:]
