@@ -11,7 +11,7 @@ import pandas as pd
 
 import scipy.ndimage as ndimage
 
-
+import os
 import tifffile
 import time
 import f.general_functions as gf 
@@ -60,17 +60,16 @@ for idx,data in enumerate(df.itertuples()):
     print(trial_string)
 
  
-    if not Path(trial_save,'hand_rois').is_dir():
-        continue
+    #if not Path(trial_save,'hand_rois').is_dir():
+    #    continue
 
     if Path(viewing_dir, data.use,f'{data.trial_string}_overlay_2.tif').is_file() and False:
         continue
     
     if 'MCF' not in data.expt:
-        pass
-    else:
         continue
-    
+    #else:
+    #    pass
 
     
     #if 'cancer_20201215_slip2_area1_long_acq_corr' not in trial_string:
@@ -84,8 +83,7 @@ for idx,data in enumerate(df.itertuples()):
         
     excluded_die = np.load(Path(trial_save,f'{trial_string}_excluded_dead_rois.npy'))
 
-    rat2 = np.load(Path(trial_save, f'{data.trial_string}_ratio_stack.npy'))[:finish_at]
-    rat2 =ndimage.gaussian_filter(rat2,(3,2,2))
+
     
     #tc = np.load(Path(trial_save,f'{trial_string}_all_tcs.npy'))[:finish_at]
     tc = np.load(Path(trial_save,f'{trial_string}_all_eroded_median_tcs.npy'))[:finish_at]
@@ -114,17 +112,24 @@ for idx,data in enumerate(df.itertuples()):
     tc_type = 'median'
     exclude_circle = False
     
-    events = canf.get_events_exclude_surround_events(tc,
+    events = canf.get_events_exclude_simultaneous_events(tc,
                                                      std,
-                                                     surround_tc,
-                                                     surround_std,
                                                      z_score = 2.5,
-                                                     surround_z = surrounds_z,
+                                                     max_events = 3,
+                                                     overlap = 0.3,
                                                      exclude_first= 0, 
                                                      excluded_circle = None,#excluded_circle,
                                                      excluded_dead = excluded_die)
 
+    #only redo if there are events
+    if np.all([type(x) == str for x in events.keys()]) and np.all([type(x) == str for x in events['excluded_events'].keys()]) and True:
+        continue
     
+    if time.time() - os.path.getmtime(Path(viewing_dir,data.use, f'{data.trial_string}_overlay_2.tif')) < 10*60 and False:
+        continue
+    
+    rat2 = np.load(Path(trial_save, f'{data.trial_string}_ratio_stack.npy'))[:finish_at]
+    rat2 =ndimage.gaussian_filter(rat2,(3,2,2))
     roi_overlay = make_roi_overlay(events,seg,rat2.shape)
     
     exclude_overlay = make_roi_overlay(events['excluded_events'],seg,rat2.shape)

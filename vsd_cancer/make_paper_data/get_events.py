@@ -25,7 +25,11 @@ def get_measure_events(initial_df,save_dir,thresh_range = np.arange(2,4.5,0.5),
                        surrounds_z = 10,
                        exclude_first = 0,
                        tc_type = 'median',
-                       exclude_circle = False):
+                       exclude_circle = False,
+                       overlap = 0.7,
+                       simultaneous = 5,
+                       MCF_overlap = 0.3,
+                       MCF_simultaneous = 3):
 
     df = pd.read_csv(initial_df)
     for idx, data in enumerate(df.itertuples()):
@@ -75,15 +79,25 @@ def get_measure_events(initial_df,save_dir,thresh_range = np.arange(2,4.5,0.5),
         all_observation = []
         for detection_thresh in thresh_range:
             
-            events = canf.get_events_exclude_surround_events(tc,
-                                                             std,
-                                                             surround_tc,
-                                                             surround_std,
-                                                             z_score = detection_thresh, 
-                                                             surround_z = surrounds_z,
-                                                             exclude_first= exclude_first, 
-                                                             excluded_circle = excluded_circle,
-                                                             excluded_dead = dead_idx)
+            if 'MCF' in data.expt:
+                events = canf.get_events_exclude_simultaneous_events(tc,
+                                                         std,
+                                                         z_score = detection_thresh,
+                                                         max_events = MCF_simultaneous,
+                                                         overlap = MCF_overlap,
+                                                         exclude_first= exclude_first, 
+                                                         excluded_circle = excluded_circle,
+                                                         excluded_dead = dead_idx)
+            
+            else:
+                events = canf.get_events_exclude_simultaneous_events(tc,
+                                                                     std,
+                                                                     z_score = detection_thresh,
+                                                                     max_events = simultaneous,
+                                                                     overlap = overlap,
+                                                                     exclude_first= exclude_first, 
+                                                                     excluded_circle = excluded_circle,
+                                                                     excluded_dead = dead_idx)
         
 
             event_with_props = canf.get_event_properties(events,use_filt = False) 

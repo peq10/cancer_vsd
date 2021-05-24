@@ -61,17 +61,17 @@ _,_ = load_all_long.load_all_long_washin(initial_df, data_dir,redo = False, HPC_
 
 
 print('Segmenting...')
-import segment_cellpose
-segment_cellpose.segment_cellpose(initial_df, data_dir, HPC_num = HPC_num, only_hand_rois = True)
+#import segment_cellpose
+#segment_cellpose.segment_cellpose(initial_df, data_dir, HPC_num = HPC_num, only_hand_rois = False)
 
 print('Making overlays...')
-import make_roi_overlays
-make_roi_overlays.make_all_overlay(initial_df, data_dir, Path(viewing_dir,'rois'), HPC_num = HPC_num)
+#import make_roi_overlays
+#make_roi_overlays.make_all_overlay(initial_df, data_dir, Path(viewing_dir,'rois'), HPC_num = HPC_num)
 
 
 print('Extracting time series...')
 import make_all_t_courses
-make_all_t_courses.make_all_tc(initial_df, data_dir,redo = False, njobs = 10, HPC_num = HPC_num)
+make_all_t_courses.make_all_tc(initial_df, data_dir,redo = False, njobs = 10, HPC_num = HPC_num, only_hand_rois = False)
 
 import make_all_cell_free_t_courses
 make_all_cell_free_t_courses.make_all_cellfree_tc(initial_df, data_dir, redo = False,HPC_num=HPC_num)
@@ -86,7 +86,7 @@ get_dead_cells.make_all_raw_tc(initial_df, data_dir,redo = False, njobs = 10,HPC
 
 print('Getting mean brightnesses')
 import get_all_brightness
-get_all_brightness.get_mean_brightness(initial_df, data_dir)
+#yget_all_brightness.get_mean_brightness(initial_df, data_dir)
 
 #THESE NEED TO BE MADE SO AUTOMATICALLY UPDATE DATAFRAME
 #import define_circle_rois
@@ -95,20 +95,22 @@ get_all_brightness.get_mean_brightness(initial_df, data_dir)
 
 print('Detecting events...')
 import get_events
-get_events.get_measure_events(initial_df,data_dir,
-                              thresh_range = np.arange(2,4.5,0.5),
-                              surrounds_z = 10,
-                              exclude_first = 150,
-                              tc_type = 'median',
-                              exclude_circle = False)
+if True:
+    get_events.get_measure_events(initial_df,data_dir,
+                                  thresh_range = np.arange(2,4.5,0.5),
+                                  surrounds_z = 10,
+                                  exclude_first = 0,
+                                  tc_type = 'median',
+                                  exclude_circle = False)
 
 print('Getting user input for good detections')
 import get_all_good_detections
 thresh_idx = 1
-#get_all_good_detections.get_user_event_input(initial_df,data_dir,thresh_idx, redo = True)
+#get_all_good_detections.get_user_event_input(initial_df,data_dir,thresh_idx, redo = False)
 
 print('Applying user input')
-raise NotImplementedError('Do')
+import include_user_input
+include_user_input.include_user_input(initial_df, data_dir, thresh_idx)
 
 raise NotImplementedError('CHECK THE DEAD CELLS IN MCF10A DATA')
 

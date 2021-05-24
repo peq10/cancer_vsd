@@ -47,7 +47,9 @@ for idx,data in enumerate(df.itertuples()):
     results = np.load(Path(trial_save,f'{trial_string}_event_properties.npy'),allow_pickle = True).item()
     seg = np.load(Path(trial_save,f'{trial_string}_seg.npy'))
     cell_ids = np.arange(results['events'][0]['tc_filt'].shape[0])
-    cell_ids = [x for x in cell_ids if x not in results['excluded_circle']]
+    
+    if results['excluded_circle'] is not None:
+        cell_ids = [x for x in cell_ids if x not in results['excluded_circle']]
 
     if data.use == 'n':
         continue
@@ -83,11 +85,20 @@ for idx,data in enumerate(df.itertuples()):
                         detection_real = np.load(Path(trial_save,f'{trial_string}_good_detection_cell_{ce}.npy'))
                     else:
                         #raise ValueError('Have to do ONE PER DETECTION')
-                        event_vid = vid[max(times[idxxx][0,0]//2-20,0):times[idxxx][1,-1]//2+20,max(locs[idxxx][0]-100,0):locs[idxxx][0]+100,max(locs[idxxx][1]-100,0):locs[idxxx][1]+100]
+                        event_vid = vid[max(times[idxxx][0,0]//2-40,0):times[idxxx][1,-1]//2+40,:,:]
                         #label events with red spot in top left
                         for evv in times[idxxx].T:
                             t0 = times[idxxx][0,0]
                             event_vid[evv[0]-t0:evv[1]-t0,:10,:10] = 0
+                        
+                        
+                        #label the cell location
+                        rad = 20
+                        r = np.sqrt(np.sum((np.indices(event_vid.shape[1:]) - locs[idxxx][:,None,None])**2,0))
+                        r = np.logical_and(r<rad+3,r>rad)
+                        rwh = np.where(r)
+                        
+                        
                         
                         ii = 0
                         windowname = f'{trial_string} Cell {ce}'
@@ -99,7 +110,9 @@ for idx,data in enumerate(df.itertuples()):
                             
                             # Display the resulting frame
                             
-                            cv2.imshow(windowname, event_vid[ii%event_vid.shape[0]])
+                            fr = cv2.cvtColor(event_vid[ii%event_vid.shape[0]],cv2.COLOR_GRAY2RGB)
+                            fr[rwh[0],rwh[1],:] = [0,0,255]
+                            cv2.imshow(windowname,fr)
                             
                             # Press Q on keyboard to  exit
                             if cv2.waitKey(10) & 0xFF == ord('y'):  

@@ -23,6 +23,7 @@ def get_user_event_input(initial_df,save_dir,thresh_idx,redo = True):
 
     df = pd.read_csv(initial_df)
     df = df[(df.use == 'y') & ((df.expt == 'MCF10A')|(df.expt == 'MCF10A_TGFB'))]
+    print('ONLY DOING 10As')
     
     trial_string = df.iloc[0].trial_string
     
@@ -38,7 +39,10 @@ def get_user_event_input(initial_df,save_dir,thresh_idx,redo = True):
         results = np.load(Path(trial_save,f'{trial_string}_event_properties.npy'),allow_pickle = True).item()
         seg = np.load(Path(trial_save,f'{trial_string}_seg.npy'))
         cell_ids = np.arange(results['events'][0]['tc_filt'].shape[0])
-        cell_ids = [x for x in cell_ids if x not in results['excluded_circle']]
+        
+        if results['excluded_circle'] is not None:
+            cell_ids = [x for x in cell_ids if x not in results['excluded_circle']]
+            
     
         if data.use == 'n':
             continue
@@ -58,7 +62,7 @@ def get_user_event_input(initial_df,save_dir,thresh_idx,redo = True):
                 if np.any(np.array(sum_current)!=0):
                     vidpath = [x for x in Path('/media/peter/bigdata/Firefly/cancer/analysis/full/tif_viewing/grey_videos/').glob(f'./**/*{trial_string}*')][0]
                     vid = tifffile.imread(vidpath)
-                    
+                    print(trial_string)
                     active_cells = [x for x in results['events'][idx] if type(x)!= str]
                     locs = np.round([ndimage.center_of_mass(seg == x+1) for x in active_cells]).astype(int)
                     times = [results['events'][idx][x] for x in active_cells]
@@ -69,15 +73,27 @@ def get_user_event_input(initial_df,save_dir,thresh_idx,redo = True):
                         detected_frame.loc[detections,'starts'] = str(times[idxxx][0,:]/2)
                         detections+=1
                         #also make a small video around cell
-                        if Path(trial_save,f'{trial_string}_good_detection_cell_{ce}.npy').is_file() and redo:
+                        if Path(trial_save,f'{trial_string}_good_detection_cell_{ce}.npy').is_file() and not redo:
                             detection_real = np.load(Path(trial_save,f'{trial_string}_good_detection_cell_{ce}.npy'))
                         else:
                             #raise ValueError('Have to do ONE PER DETECTION')
-                            event_vid = vid[max(times[idxxx][0,0]//2-20,0):times[idxxx][1,-1]//2+20,max(locs[idxxx][0]-200,0):locs[idxxx][0]+200,max(locs[idxxx][1]-100,0):locs[idxxx][1]+100]
+                            event_vid = []
+                            for timeee in times[idxxx].T:
+                                event_vid.append(vid[max(timeee[0]//2-20,0):timeee[1]//2+20,:,:])
+                            
+                            event_vid = np.concatenate(event_vid)
+                            
                             #label events with red spot in top left
                             for evv in times[idxxx].T:
                                 t0 = times[idxxx][0,0]
                                 event_vid[evv[0]-t0:evv[1]-t0,:10,:10] = 0
+                            
+                                                    #label the cell location
+                            rad = 20
+                            r = np.sqrt(np.sum((np.indices(event_vid.shape[1:]) - locs[idxxx][:,None,None])**2,0))
+                            r = np.logical_and(r<rad+3,r>rad)
+                            rwh = np.where(r)
+                            
                             
                             ii = 0
                             windowname = f'{trial_string} Cell {ce}'
@@ -89,7 +105,9 @@ def get_user_event_input(initial_df,save_dir,thresh_idx,redo = True):
                                 
                                 # Display the resulting frame
                                 
-                                cv2.imshow(windowname, event_vid[ii%event_vid.shape[0]])
+                                fr = cv2.cvtColor(event_vid[ii%event_vid.shape[0]],cv2.COLOR_GRAY2RGB)
+                                fr[rwh[0],rwh[1],:] = [0,0,255]
+                                cv2.imshow(windowname,fr)
                                 
                                 # Press Q on keyboard to  exit
                                 if cv2.waitKey(10) & 0xFF == ord('y'):  
@@ -103,6 +121,8 @@ def get_user_event_input(initial_df,save_dir,thresh_idx,redo = True):
                                 ii += 1
                             
                             cv2.destroyAllWindows()
-                            np.save(Path(trial_save,f'{trial_string}_good_detection_cell_{ce}.npy'),detection_real)
+                            ffiile = Path(trial_save,f'{trial_string}_good_detection_cell_{ce}.npy')
+                            np.save(ffiile,detection_real)
+                            print(f'Done {ffiile}')
                             
                         detected_frame.loc[detections,'correct'] = str(detection_real)

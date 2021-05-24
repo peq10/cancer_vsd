@@ -19,7 +19,7 @@ from vsd_cancer.functions import cancer_functions as canf
 
 
 
-def make_all_tc(df_file,save_dir, redo = True, njobs = 2, HPC_num = None):
+def make_all_tc(df_file,save_dir, redo = True, njobs = 2, HPC_num = None,only_hand_rois = False):
     df = pd.read_csv(df_file)
     
     if redo:
@@ -40,7 +40,10 @@ def make_all_tc(df_file,save_dir, redo = True, njobs = 2, HPC_num = None):
         trial_save = Path(save_dir,'ratio_stacks',trial_string)
         
         
-        
+        if only_hand_rois: #just faster when doing hand rois
+            if not Path(trial_save,'hand_rois').is_dir():
+                continue
+            
         if not redo and HPC_num is None:
             if idx < redo_from:
                 continue
@@ -122,6 +125,7 @@ def make_all_tc(df_file,save_dir, redo = True, njobs = 2, HPC_num = None):
         
         print(f'Saved {trial_string}')
         redo_from += 1
-        np.save(Path(save_dir,f'{df_file.stem}_redo_from_make_all_tc.npy'),redo_from)
+        if not only_hand_rois:
+            np.save(Path(save_dir,f'{df_file.stem}_redo_from_make_all_tc.npy'),redo_from)
         
         

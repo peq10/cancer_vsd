@@ -116,6 +116,93 @@ def get_events_exclude_surround_events(tc,
 
     return ev
 
+
+def get_events_exclude_simultaneous_events(tc,
+                                       std,
+                                       z_score = 3,
+                                       exclude_first = 0,
+                                       max_events = 5,
+                                       overlap = 0.75,
+                                       excluded_circle = None,
+                                       excluded_dead = None):
+    
+    ev,excluded_dict = detect_events_remove_simultaneous(tc,std,z_score = z_score,exclude_first = exclude_first,max_overlap= overlap,max_events = max_events)
+        
+    #exclude ROIs on edge of illumination
+    if excluded_circle is not None:
+        circle_dict = {}
+        for idx in excluded_circle:
+            if idx in ev.keys():
+                circle_dict[idx] = ev[idx]
+                del ev[idx]
+            
+        ev['excluded_circle_events'] = circle_dict   
+    
+    #exclude ROIs on edge of illumination
+    if excluded_dead is not None:
+        dead_dict = {}
+        if len(excluded_dead)>0:
+            for idx in excluded_dead:
+                if idx in ev.keys():
+                    dead_dict[idx] = ev[idx]
+                    del ev[idx]
+            
+        else:
+            pass
+        ev['excluded_dead_events'] = dead_dict   
+        
+    ev['excluded_events'] = excluded_dict      
+    ev['surround_events'] = excluded_dict
+    print('Check this - surrounds and exclude the same')
+    
+
+    return ev
+
+
+def detect_events_remove_simultaneous(tc,std,z_score = 3,exclude_first = 0,max_events = 5,max_overlap = 0.5):
+
+    tc_filt = ndimage.gaussian_filter(tc,(0,3))
+    std_filt = ndimage.gaussian_filter(std,(0,3))
+    
+    tc_filt[:,:exclude_first] = 1
+    
+    events = np.abs(tc_filt - 1) > z_score*std_filt
+    
+    #Use closing to join split events and remove small events
+    struc = np.zeros((3,5))
+    struc[1,:] = 1
+    events = ndimage.binary_opening(events,structure = struc,iterations = 2)
+    events = ndimage.binary_closing(events,structure = struc,iterations = 2)
+    
+    #now count simultaneous events and remove those where they are
+    num_events = np.sum(events,0)
+    excluded_events = num_events > max_events
+    excluded_time = np.where(excluded_events)[0]
+
+    wh = np.where(events)
+    idxs,locs = np.unique(wh[0],return_index=True)
+    locs = np.append(locs,len(wh[0]))
+    
+    excluded_result = {}
+    result = {}
+    for i,idx in enumerate(idxs):
+        llocs = wh[1][locs[i]:locs[i+1]]   
+        split_locs = np.array(recursive_split_locs(llocs))
+        #check if they have both positive and negative going - messes with integration later
+        t = tc_filt[idx,:]
+        corr_locs = correct_event_signs(t,split_locs)        
+        
+        overlap = np.sum(np.isin(llocs,excluded_time).astype(int))/len(llocs)
+        if overlap > max_overlap:
+            excluded_result[idx] = corr_locs.T
+        else:
+            result[idx] = corr_locs.T 
+    
+
+    result['tc_filt'] = tc_filt
+    result['tc'] = tc
+    return result,excluded_result
+
 def get_surround_masks(masks,surround_rad = 20,dilate = True):
     
     def get_bounding_circle_radius(masks):
