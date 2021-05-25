@@ -95,7 +95,7 @@ import get_all_brightness
 
 print('Detecting events...')
 import get_events
-if True:
+if False:
     get_events.get_measure_events(initial_df,data_dir,
                                   thresh_range = np.arange(2,4.5,0.5),
                                   surrounds_z = 10,
@@ -112,6 +112,9 @@ print('Applying user input')
 import include_user_input
 include_user_input.include_user_input(initial_df, data_dir, thresh_idx)
 
+
+import get_shape_params
+get_shape_params.get_all_shape_params(initial_df, data_dir)
 raise NotImplementedError('CHECK THE DEAD CELLS IN MCF10A DATA')
 
 print('Finished successfully')
