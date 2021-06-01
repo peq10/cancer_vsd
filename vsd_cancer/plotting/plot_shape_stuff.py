@@ -123,3 +123,15 @@ ax.set_ylim([ymin, ymax])
 
 plt.show()
 plt.violinplot([inactive_circ,active_circ])
+
+
+fig,ax = plt.subplots()
+ax.plot(circs,currents,'o',markersize = 7,mfc = 'k',mew = 0,alpha = 0.7)
+ax.set_xlabel('Circularity')
+ax.set_ylabel('Single Cell Vm activity (a.u.)')
+
+pf.make_square_plot(ax)
+pf.set_all_fontsize(ax, 16)
+pf.set_thickaxes(ax, 3)
+
+fig.savefig(Path(Path.home(),'Dropbox/Papers/cancer/Wellcome/circularity.png'),bbox_inches = 'tight',dpi = 300)

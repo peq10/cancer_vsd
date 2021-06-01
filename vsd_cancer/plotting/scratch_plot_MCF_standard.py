@@ -58,7 +58,7 @@ day_slip = []
 #here we do not differentiate buy slip, just using all cells
 for idx,data in enumerate(df.itertuples()):
     trial_string = data.trial_string
-    #print(trial_string)
+    print(trial_string)
     trial_save = Path(save_dir,'ratio_stacks',trial_string)
 
     if data.expt != 'standard':
@@ -69,39 +69,39 @@ for idx,data in enumerate(df.itertuples()):
     
     active_cells = [x for x in results['events'].keys() if type(x) != str]
     
-    slip_num_events.append(np.sum([results['events'][x].shape[-1] for x in active_cells]))
+    #slip_num_events.append(np.sum([results['events'][x].shape[-1] for x in active_cells]))
     
-    slip_currents.append(np.sum([np.sum(np.abs(results['events']['event_props'][x][:,-1])) for x in active_cells]))
+    slip_currents+=[np.sum(np.abs(results['events']['event_props'][x][:,-1])) for x in active_cells]
     
-    n_cells.append(np.nonzero(results['observation_length'])[0].shape[0])
+    #n_cells.append(np.nonzero(results['observation_length'])[0].shape[0])
     
-    observation_length.append(np.sum(results['observation_length']))
+    #observation_length.append(np.sum(results['observation_length']))
     
-    slips.append(data.slip)
+    slips += [data.slip for x in active_cells]
     
-    days.append(data.date)
+    days+=[data.date for x in active_cells]
     
-    expt.append(data.expt)
+    expt+=[data.expt for x in active_cells]
     
-    area.append(data.area)
+
     
+    print('somethign very strange going on - look into!')
+    #day_slip.append(f'{data.date}{data.slip}')
     
-    day_slip.append(f'{data.date}{data.slip}')
-    
-res = pd.DataFrame({'day':days,'slips':slips,'day_slip':day_slip,'currents':slip_currents,'n_events':slip_num_events,'obs_len':observation_length,'n_cells':n_cells,'expt':expt})
-    
-#calculate mean current per cell time point
-res['norm_curr'] = res['currents']/res['obs_len']
+#res = pd.DataFrame({'day':days,'slips':slips,'day_slip':day_slip,'currents':slip_currents,'n_events':slip_num_events,'obs_len':observation_length,'n_cells':n_cells,'expt':expt})
+
+res = pd.DataFrame({'day':days,'slips':slips,'currents':slip_currents,'expt':expt})
 
 
-means = res.groupby(['expt','day'], as_index=False).agg({'norm_curr': "mean"})
+
+means = res.groupby(['expt','day'], as_index=False).agg({'currents': "mean"})
 #make a superplot of 
-sns.swarmplot(x = 'expt',y = 'norm_curr',data = res,hue = 'day')
-ax = sns.swarmplot(x = 'expt',y = 'norm_curr',data = means,hue = 'day',size=10, edgecolor="k", linewidth=2)
+sns.swarmplot(x = 'expt',y = 'currents',data = res,hue = 'day')
+ax = sns.swarmplot(x = 'expt',y = 'currents',data = means,hue = 'day',size=10, edgecolor="k", linewidth=2)
 ax.legend_.remove()
 
-mean_mcf = means['norm_curr'].values[:4]
-mean_tgb = means['norm_curr'].values[4:]
+mean_mcf = means['currents'].values[:4]
+mean_tgb = means['currents'].values[4:]
 
 stat_res = stats.ttest_ind(mean_mcf,mean_tgb)
 
@@ -112,22 +112,13 @@ plt.plot([x1, x1, x2, x2], [y, y+h, y+h, y], lw=1.5, c=col);
 plt.text((x1+x2)*.5, y+h*1.4, f"p = {stat_res.pvalue:.3f}", ha='center', va='bottom', color=col)
 
 
-slips = res.groupby(['expt','day_slip','day'], as_index=False).agg({'norm_curr': "mean"})
+#slips = res.groupby(['expt','day_slip','day'], as_index=False).agg({'norm_curr': "mean"})
 
 plt.show()
-ax2 = sns.swarmplot(x = 'expt',y = 'norm_curr',data = slips,hue =None,color = 'k',size = 8,order = ['standard','MCF10A','MCF10A_TGFB'])
-ax2.set_xticklabels(['MDA MB\n231', 'MCF10A', 'MCF10A+\n'+r'TGF$\mathrm{\beta}$'],rotation = 45)
-ax2.set_xlabel('Cell Type')
-ax2.set_ylabel('Mean Vm Activity (a.u.)')
+ax2 = sns.swarmplot(x = 'expt',y = 'current',data = slips,hue =None,color = 'k',markersize = 10,order = ['standard','MCF10A','MCF10A_TGFB'])
+ax2.legend_.remove()
 
-pf.set_all_fontsize(ax2, 16)
 
-pf.set_thickaxes(ax2, 3)
-ax2.set_xticklabels(['MDA MB\n231', 'MCF10A', 'MCF10A+\n'+r'TGF$\mathrm{\beta}$'],rotation = 45,fontsize = 12)
-pf.make_square_plot(ax2)
-plt.savefig(Path(Path.home(),'Dropbox/Papers/cancer/Wellcome/standard_vs_mda.png'),bbox_inches = 'tight',dpi = 300)
-
-'''
 slip_mcf = slips['norm_curr'].values[slips['expt'] == 'MCF10A']
 slip_tgb = slips['norm_curr'].values[slips['expt'] == 'MCF10A_TGFB']
 slip_standard = slips['norm_curr'].values[slips['expt'] == 'standard']
@@ -138,4 +129,3 @@ x1, x2 = 0, 1
 y, h, col = slip_tgb.max()*1.1, res['norm_curr'].max()/10, 'k'
 plt.plot([x1, x1, x2, x2], [y, y+h, y+h, y], lw=1.5, c=col);
 plt.text((x1+x2)*.5, y+h*1.4, f"p = {stats2.pvalue:.3f}", ha='center', va='bottom', color=col)
-'''
