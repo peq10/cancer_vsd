@@ -12,7 +12,7 @@ import pandas as pd
 import tifffile
 
 from joblib import Parallel, delayed
-from vsd_cancer.functions import cancer_functions as canf
+from cancer_vsd.functions import cancer_functions as canf
 
 
 
