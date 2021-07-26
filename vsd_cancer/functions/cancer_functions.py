@@ -18,7 +18,7 @@ import scipy.signal as signal
 import pandas as pd
 import datetime
 import pdb
-import prox_tv
+
 
 import f.general_functions as gf
 import f.ephys_functions as ef
