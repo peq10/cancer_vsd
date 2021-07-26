@@ -123,7 +123,7 @@ ax2.set_ylabel('Mean Vm Activity (a.u.)')
 pf.set_all_fontsize(ax2, 16)
 
 pf.set_thickaxes(ax2, 3)
-ax2.set_xticklabels(['MDA MB\n231', 'MCF10A', 'MCF10A+\n'+r'TGF$\mathrm{\beta}$'],rotation = 45,fontsize = 12)
+ax2.set_xticklabels(['MDA MB\n231', 'MCF10A', 'MCF10A+\n'+r'TGF$\mathrm{\beta}$'],rotation = 45,fontsize = 16)
 pf.make_square_plot(ax2)
 plt.savefig(Path(Path.home(),'Dropbox/Papers/cancer/Wellcome/standard_vs_mda.png'),bbox_inches = 'tight',dpi = 300,transparent = True)
 
