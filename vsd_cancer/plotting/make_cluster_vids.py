@@ -51,13 +51,12 @@ def make_type_mask_overlay(type_masks,masks):
         ma = np.logical_xor(ma,ndimage.binary_dilation(ma,iterations = 4)).astype(int)
         ma = ma[:,:,None]*color[None,:]
         
-        print(color)
         
         overlay += ma
         
         txt = np.zeros(ma.shape[:2] +(4,),dtype = np.uint8)
         font                   = cv2.FONT_HERSHEY_SIMPLEX
-        bottomLeftCornerOfText = (10 + colors[t[0]]*40,ma.shape[1]-20)
+        bottomLeftCornerOfText = (10 + colors[t[0]]*40,ma.shape[0]-20)
         fontScale              = 1
         fontColor              = [int(x) for x in color]
         lineType               = 2
@@ -99,7 +98,6 @@ for idx,data in enumerate(df.itertuples()):
 
 
     trial_save = Path(save_dir,'ratio_stacks',trial_string)
-    print(trial_string)
 
 
     
@@ -122,6 +120,8 @@ for idx,data in enumerate(df.itertuples()):
         ids = curr_labels[curr_labels.type == t]['id']
         type_masks.append((t,ids.values))
     
+    if len(type_masks) == 1 and type_masks[0][0] == 8:
+        continue
 
     
     rat2 = np.load(Path(trial_save, f'{data.trial_string}_ratio_stack.npy'))[:finish_at]
@@ -146,12 +146,6 @@ for idx,data in enumerate(df.itertuples()):
     
     wh = np.where(type_overlay[...,-1] > 0)
     rat2[:,wh[0],wh[1],:] = type_overlay[wh[0],wh[1],:]
-    break
+
     tifffile.imsave(Path(viewing_dir,data.use, f'{data.trial_string}_overlay_type.tif'),gf.to_8_bit(rat2))
 
-    '''
-    rat = rat2[:,2:-2,2:-2]
-    rat = ndimage.filters.gaussian_filter(rat,(3,2,2))
-    rat = np.pad(rat,((0,0),(2,2),(2,2)),mode = 'edge')[::2,...]
-    tifffile.imsave(Path(viewing_dir, f'{data.trial_string}_overlay_2.tif'),gf.to_8_bit(rat))
-    '''
