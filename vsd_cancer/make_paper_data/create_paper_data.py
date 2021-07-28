@@ -95,14 +95,15 @@ import get_all_brightness
 
 print('Detecting events...')
 import get_events
-if False:
+if True:
     get_events.get_measure_events(initial_df,data_dir,
                                   thresh_range = np.arange(2,4.5,0.5),
                                   surrounds_z = 10,
-                                  exclude_first = 0,
+                                  exclude_first = 400,
                                   tc_type = 'median',
                                   exclude_circle = False)
 
+raise NotImplementedError('')
 print('Getting user input for good detections')
 import get_all_good_detections
 thresh_idx = 1

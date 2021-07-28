@@ -19,7 +19,7 @@ import scipy.stats as stats
 import astropy.visualization as av
 import astropy.stats as ass
 
-import cancer_functions as canf
+from vsd_cancer.functions import cancer_functions as canf
 
 from pathlib import Path
 

@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-from cancer_vsd.functions import cancer_functions as canf
+from vsd_cancer.functions import cancer_functions as canf
 
 import matplotlib.pyplot as plt
 def get_dead_cells(raw_tc):

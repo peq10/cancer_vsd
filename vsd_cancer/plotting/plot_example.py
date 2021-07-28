@@ -69,7 +69,7 @@ exc_circ = event_dict['excluded_circle']
 events = event_dict['events'][idx]
 thresh = event_dict['detection_params']['thresh_range'][idx]
 
-keep = [x for x in np.arange(tcs.shape[0]) if x not in exc_circ]
+keep = [x for x in np.arange(tcs.shape[0])]
 
 #sort by event amounts 
 sort_order = np.array([np.sum(np.abs(events['event_props'][x][:,-1])) if x in events.keys() else 0 for x in range(tcs.shape[0])])
@@ -150,7 +150,7 @@ print([x for x in so if x in events['surround_events'].keys()])
 cell = 91
 sep = 3
 tc = np.load(Path(trial_save,f'{trial_string}_all_tcs.npy'))[cell,...]
-surround_tc = events['surround_events']['tc_filt'][cell,:]
+#surround_tc = events['surround_events']['tc_filt'][cell,:]
 eve = events[cell]
 tc_test = ndimage.gaussian_filter(tc,3)
 

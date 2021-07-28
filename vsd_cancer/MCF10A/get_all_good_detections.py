@@ -27,7 +27,7 @@ viewing_dir = Path(top_dir,'analysis','full','tif_viewing','videos')
 initial_df = Path(top_dir,'analysis',f'long_acqs_20210428_experiments_correct{df_str}.csv')
 
 df = pd.read_csv(initial_df)
-df = df[(df.use == 'y') & ((df.expt == 'MCF10A')|(df.expt == 'MCF10A_TGFB'))]
+df = df[(df.use == 'y') & ((df.expt == 'standard'))]
 
 trial_string = df.iloc[0].trial_string
 n_thresh = len(np.load(Path(Path(save_dir,'ratio_stacks',trial_string),f'{trial_string}_event_properties.npy'),allow_pickle = True).item()['events'])

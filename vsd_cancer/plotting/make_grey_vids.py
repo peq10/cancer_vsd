@@ -67,9 +67,9 @@ for idx,data in enumerate(df.itertuples()):
         continue
     
     if 'MCF' not in data.expt:
+        pass
+    else:
         continue
-    #else:
-    #    pass
 
     
     #if 'cancer_20201215_slip2_area1_long_acq_corr' not in trial_string:
@@ -115,8 +115,8 @@ for idx,data in enumerate(df.itertuples()):
     events = canf.get_events_exclude_simultaneous_events(tc,
                                                      std,
                                                      z_score = 2.5,
-                                                     max_events = 3,
-                                                     overlap = 0.3,
+                                                     max_events = 5,
+                                                     overlap = 0.7,
                                                      exclude_first= 0, 
                                                      excluded_circle = None,#excluded_circle,
                                                      excluded_dead = excluded_die)

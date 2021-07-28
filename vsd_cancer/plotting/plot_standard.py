@@ -67,7 +67,7 @@ for idx,data in enumerate(df.itertuples()):
     results = np.load(Path(trial_save,f'{trial_string}_event_properties.npy'),allow_pickle = True).item()
 
     cell_ids = np.arange(results['events'][0]['tc_filt'].shape[0])
-    cell_ids = [x for x in cell_ids if x not in results['excluded_circle']]
+    cell_ids = [x for x in cell_ids]
 
     for idx,thresh_level_dict in enumerate(results['events']):
 
