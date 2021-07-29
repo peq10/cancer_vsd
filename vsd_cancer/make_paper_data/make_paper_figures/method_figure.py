@@ -9,6 +9,7 @@ Created on Wed Jul 28 17:47:33 2021
 from pathlib import Path
 import numpy as np
 import scipy.ndimage as ndimage
+import pandas as pd
 
 import matplotlib.markers
 import matplotlib.pyplot as plt
@@ -21,6 +22,79 @@ def make_figures(initial_df,save_dir,figure_dir,filetype = '.png'):
     if not figsave.is_dir():
         figsave.mkdir()
     
+    make_example_trace(initial_df,save_dir,figsave,filetype)
+    
+    make_spectral_shift_trace(figsave,save_dir,filetype)
+    
+    
+def make_spectral_shift_trace(figsave,save_dir,filetype,delta = 20,exc1 = 405,exc2 = 530):
+    ex = pd.read_csv(Path(save_dir,'spectra_data/excitation.csv'),names = ['wl','ex'])
+    ex = np.array([ex['wl'],ex['ex']]).T
+    ex = ex[ex[:,1]<1.1,:]
+    ex = ex[ex[:,0]<640,:]
+    ex = ex[::2,:]
+    
+    em = pd.read_csv(Path(save_dir,'spectra_data/Emission.csv'),names = ['wl','em'])
+    em = np.array([em['wl'],em['em']]).T
+    em = em[em[:,1]<1.1,:]
+    em = em[~np.logical_and(em[:,1]>0.47,em[:,0]>713),:]
+    em = em[em[:,0]<798,:]
+    em = em[::2,:]
+    
+    
+    ex_plus = np.copy(ex)
+    em_plus = np.copy(em)
+    
+    ex_plus[:,0] += delta
+    em_plus[:,0] += delta
+    
+    ex_minus = np.copy(ex)
+    em_minus = np.copy(em)
+    
+    ex_minus[:,0] -= delta
+    em_minus[:,0] -= delta
+    
+    def plot_spec(ax,spec,lab,*args,**kwargs):
+        return ax.plot(spec[:,0],spec[:,1],*args,label = lab,**kwargs)
+
+    fig,ax = plt.subplots()
+    plot_spec(ax,ex,'Exc. Spectrum','-b',linewidth = 3)
+    plot_spec(ax,em,'Em. Spectrum','-r',linewidth = 3)
+    #plot_spec(ax,f_650_150,'Em. Filter','-k',linewidth = 3)
+    
+    ax.plot([exc1,exc1],[0,1],'--k',linewidth = 3)
+    ax.plot([exc2,exc2],[0,1],'--k',linewidth = 3)
+    
+    ax.plot()
+    
+    ax.set_xlabel('Wavelength (nm)')
+    ax.set_ylabel('Rel. Absorption/Emission')
+    ax.set_xlim([380,800])
+    
+    #ax.legend(frameon = False,loc = 1,fontsize=16)
+    
+    pf.set_thickaxes(ax, 3)
+    pf.set_all_fontsize(ax, 16)
+    
+    fig.savefig(Path(figsave,f'regular_spectrum{filetype}'),bbox_inches = 'tight',transparent=True)
+    #pf.make_square_plot(ax)
+    
+    l1 = plot_spec(ax, ex_minus, 'Ex plus', '--b', linewidth = 3)
+    l2 = plot_spec(ax, em_minus, 'Em plus', '--r', linewidth = 3)
+    
+    fig.savefig(Path(figsave,f'depol_spectrum{filetype}'),bbox_inches = 'tight',transparent=True)
+    
+    l1[0].remove()
+    l2[0].remove()
+    
+    l1 = plot_spec(ax, ex_plus, 'Ex plus', '--b', linewidth = 3)
+    l2 = plot_spec(ax, em_plus, 'Em plus', '--r', linewidth = 3)
+    
+    fig.savefig(Path(figsave,f'hyperpol_spectrum{filetype}'),bbox_inches = 'tight',transparent=True)
+
+
+    
+def make_example_trace(initial_df,save_dir,figsave,filetype):
     trial_string = 'cancer_20201215_slip2_area1_long_acq_corr_long_acq_blue_0.0296_green_0.0765_heated_to_37_1'
     trial_save = Path(save_dir,'ratio_stacks',trial_string)
     
@@ -66,7 +140,6 @@ def make_figures(initial_df,save_dir,figure_dir,filetype = '.png'):
     
     fig.savefig(Path(figsave,f'example_tc{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
     
-
 
 
 

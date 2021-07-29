@@ -7,14 +7,135 @@ Created on Thu Jul 29 18:33:36 2021
 """
 from pathlib import Path
 
+from vsd_cancer.functions import cancer_functions as canf
+
+import numpy as np
+import pandas as pd
+import scipy.ndimage as ndimage
+import matplotlib.pyplot as plt
+import f.plotting_functions as pf
+
+import matplotlib.cm
 
 def make_figures(initial_df,save_dir,figure_dir,filetype = '.png'):
     figsave = Path(figure_dir,'231_figure')
     if not figsave.is_dir():
         figsave.mkdir()
+        
+        
+    trial_string_use = 'cancer_20201207_slip1_area1_long_acq_corr_corr_long_acqu_blue_0.03465_green_0.07063_heated_to_37_1'
+    
+    df = pd.read_csv(initial_df)
     
     
-    pass
+    num_traces = 15
+    sep = 25
+    make_example_trace_fig(trial_string_use,num_traces,sep,df,save_dir,figsave,filetype)
+    
+    
+def make_example_trace_fig(trial_string_use,num_traces,sep,df,save_dir,figsave,filetype):
+    T = 0.2
+
+    im_scalebar_length_um = 100
+    
+    for idx,data in enumerate(df.itertuples()):
+        trial_string = data.trial_string
+        #print(trial_string)
+        trial_save = Path(save_dir,'ratio_stacks',trial_string)
+        
+        if trial_string != trial_string_use:
+            continue
+        else:
+            break
+
+    im = np.load(Path(trial_save,f'{trial_string}_im.npy'))
+    seg = np.load(Path(trial_save,f'{trial_string}_seg.npy'))
+      
+    masks = canf.lab2masks(seg)
+    
+    tcs = np.load(Path(trial_save,f'{trial_string}_all_tcs.npy'))
+    
+    event_dict = np.load(Path(trial_save,f'{trial_string}_event_properties.npy'),allow_pickle = True).item()
+
+    idx = 0
+    events = event_dict['events'][idx]
+    
+    keep = [x for x in np.arange(tcs.shape[0])]
+
+    #sort by event amounts 
+    sort_order = np.array([np.sum(np.abs(events['event_props'][x][:,-1])) if x in events.keys() else 0 for x in range(tcs.shape[0])])
+    
+    tcs = tcs[keep,:]
+    masks = masks[keep,...]
+    sort_order = np.argsort(sort_order[keep])[::-1]
+    
+    tcs = tcs[sort_order,:]
+    masks = masks[sort_order,:]
+    so = np.array(keep)[sort_order]
+    
+
+    
+    tcs = tcs[:num_traces,...]
+    so = so[:num_traces]
+    masks = masks[:num_traces,...]
+    
+    #now sort back in position
+    llocs = np.array([ndimage.measurements.center_of_mass(x) for x in masks])
+    llocs = llocs[:,0]*masks.shape[-2] + llocs[:,1]
+    order2 = np.argsort(llocs)[::-1]
+
+
+    tcs = tcs[order2,...]
+    so = so[order2,...]
+    masks = masks[order2,...]
+    
+    tc_filt = ndimage.gaussian_filter(tcs,(0,3))#np.array([prox_tv.tv1_1d(t,0.01) for t in tcs])
+    
+
+
+    cmap = matplotlib.cm.viridis
+    
+    
+    
+    
+    fig = plt.figure(constrained_layout = True)
+    gs  = fig.add_gridspec(2,5)
+    ax = fig.add_subplot(gs[:,-2:])
+    colors = []
+    for i in range(num_traces):
+        ax.plot([0,tcs.shape[-1]*T],np.ones(2)*i*100/sep,'k',alpha = 0.5)
+        line = ax.plot(np.arange(tcs.shape[-1])*T,(tcs[i]-1)*100 + i*100/sep, color = cmap(i/num_traces))
+        _ = ax.plot(np.arange(tcs.shape[-1])*T,(tc_filt[i]-1)*100 + i*100/sep, color = 'k')
+        colors.append(line[0].get_c())
+        ev = events[so[i]]
+        ax.text(-10,(i-0.15)*100/sep,f'{i}',fontdict = {'fontsize':14},color = colors[i],ha = 'right',va = 'center')
+        if False:
+            for l in ev.T:
+                ax.fill_betweenx([(i-0.5*0.9)*100/sep,(i+0.5*0.9)*100/sep],l[0]*T,l[1]*T,facecolor = 'r',alpha = 0.5)
+    
+    plt.axis('off')
+    pf.plot_scalebar(ax, 0, (tcs[:num_traces].min()-1)*100, 200,3,thickness = 3)
+    
+    colors = (np.array(colors)*255).astype(np.uint8)
+    #colors = np.hstack([colors,np.ones((colors.shape[0],1))])
+    
+    over = masks[:num_traces]
+    struct = np.zeros((3,3,3))
+    struct[1,...] = 1
+    over = np.logical_xor(ndimage.binary_dilation(over,structure = struct,iterations = 3),over).astype(int)
+    over = np.sum(over[...,None]*colors[:,None,None,:],0).astype(np.uint8)
+    length = int(im_scalebar_length_um/1.04)
+    
+    over[-20:-15,-length-10:-10] = np.ones(4,dtype = np.uint8)*255
+    
+    ax1 = fig.add_subplot(gs[:,:-2])
+    ax1.imshow(im,cmap = 'Greys_r')
+    ax1.imshow(over)
+    plt.axis('off')
+    pf.label_roi_centroids(ax1, masks[:num_traces,...], colors/255,fontdict = {'fontsize':8})
+    
+    fig.savefig(Path(figsave,f'example_tcs{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
+    
 
 
 
