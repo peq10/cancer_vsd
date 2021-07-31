@@ -105,7 +105,7 @@ if False:
 
 thresh_idx = 1
 import export_events
-export_events.export_events(initial_df, data_dir, thresh_idx)
+export_events.export_events(initial_df, data_dir, thresh_idx,min_ttx_amp = 1)
 
 
 raise NotImplementedError('')

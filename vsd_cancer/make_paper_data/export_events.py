@@ -17,7 +17,7 @@ import scipy.ndimage as ndimage
 
 
 
-def export_events(initial_df,save_dir,thresh_idx):
+def export_events(initial_df,save_dir,thresh_idx,min_ttx_amp = 1):
 
     df = pd.read_csv(initial_df)
     
@@ -100,3 +100,85 @@ def export_events(initial_df,save_dir,thresh_idx):
     
     
     event_df.to_csv(Path(save_dir,'all_events_df.csv'))
+    
+    
+    #now get the number of active cells for TTX
+    
+    all_only_pos_active = []
+    all_neg_active = []
+    all_tot_active = []
+    tot_cells = []
+    trial = []
+    day = []
+    slip = []
+    expts = []
+    stage = []
+    tot_cells = []
+    tot_time = []
+    obs_length = []
+    
+    for idx,data in enumerate(df.itertuples()):
+        if 'TTX' not in data.expt:
+            continue
+        
+        if data.use == 'n':
+            continue
+        
+        if 'washin' in data.expt:
+            continue
+        
+        trial_string = data.trial_string
+        trial_save = Path(save_dir,'ratio_stacks',trial_string)
+        
+        results = np.load(Path(trial_save,f'{trial_string}_event_properties.npy'),allow_pickle = True).item()
+        events = results['events'][thresh_idx]
+        
+        active_cell_ids = [x for x in events.keys() if type(x) != str]
+        
+        #exclude under minimum amplitude
+        active_cell_ids = [x for x in active_cell_ids if np.max(np.abs(events['event_props'][x][:,1]))>min_ttx_amp/100]
+        
+        
+        only_pos = [x for x in active_cell_ids if np.all(events['event_props'][x][:,1]>0)]
+        
+        num_active = len(active_cell_ids)
+        only_pos_active = len(only_pos)
+        neg_active = num_active - only_pos_active
+        
+        all_only_pos_active.append(only_pos_active)
+        all_neg_active.append(neg_active)
+        all_tot_active.append(num_active)
+        
+        trial.append(trial_string)
+        day.append(data.date)
+        slip.append(data.slip)
+        expts.append(data.expt)
+        stage.append(data.stage)
+        
+        tot_cells.append(events['tc'].shape[0])
+        tot_time.append(events['tc'].shape[1])
+
+        obs_length.append(np.sum(results['observation_length'][thresh_idx]))
+        
+
+    TTX_df = pd.DataFrame({'trial':trial,
+                           'day':day,    
+                           'pos_active':all_only_pos_active,
+                           'neg_active':all_neg_active,
+                           'total_active':all_tot_active,
+                           'slip':slip,
+                           'expts':expts,
+                           'stage':stage,
+                           'num_cells':tot_cells,
+                           'imaging_length':tot_time,
+                           'obs_length':obs_length})
+
+
+    TTX_df.to_csv(Path(save_dir,'TTX_active_df.csv'))
+        
+        
+        
+
+        
+        
+        
