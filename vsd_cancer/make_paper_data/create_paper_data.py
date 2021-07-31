@@ -95,23 +95,30 @@ import get_all_brightness
 
 print('Detecting events...')
 import get_events
-if True:
+if False:
     get_events.get_measure_events(initial_df,data_dir,
                                   thresh_range = np.arange(2,4.5,0.5),
                                   surrounds_z = 10,
                                   exclude_first = 400,
                                   tc_type = 'median',
-                                  exclude_circle = False)
+                                  exclude_circle = True)
+
+thresh_idx = 1
+import export_events
+export_events.export_events(initial_df, data_dir, thresh_idx)
+
 
 raise NotImplementedError('')
 print('Getting user input for good detections')
 import get_all_good_detections
-thresh_idx = 1
+
 #get_all_good_detections.get_user_event_input(initial_df,data_dir,thresh_idx, redo = False)
 
 print('Applying user input')
 import include_user_input
 include_user_input.include_user_input(initial_df, data_dir, thresh_idx)
+
+
 
 
 import get_shape_params

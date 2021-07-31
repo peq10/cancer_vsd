@@ -112,14 +112,16 @@ for idx,data in enumerate(df.itertuples()):
     tc_type = 'median'
     exclude_circle = False
     
-    events = canf.get_events_exclude_simultaneous_events(tc,
-                                                     std,
-                                                     z_score = 2.5,
-                                                     max_events = 5,
-                                                     overlap = 0.7,
-                                                     exclude_first= 0, 
-                                                     excluded_circle = None,#excluded_circle,
-                                                     excluded_dead = excluded_die)
+    events = canf.get_events_exclude_surround_events(tc,
+                                                       std,
+                                                       surround_tc,
+                                                       surround_std,
+                                                       z_score = 2.5,
+                                                       surround_z = 10,
+                                                       exclude_first = 400,
+                                                       max_overlap = 0.75,
+                                                       excluded_circle = None,
+                                                       excluded_dead = excluded_die)
 
     #only redo if there are events
     if np.all([type(x) == str for x in events.keys()]) and np.all([type(x) == str for x in events['excluded_events'].keys()]) and True:
