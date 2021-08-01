@@ -61,7 +61,7 @@ _,_ = load_all_long.load_all_long_washin(initial_df, data_dir,redo = False, HPC_
 
 
 print('Segmenting...')
-if redo:
+if True:
     import segment_cellpose
     segment_cellpose.segment_cellpose(initial_df, data_dir, HPC_num = HPC_num, only_hand_rois = False)
 
@@ -73,7 +73,7 @@ if redo:
 
 print('Extracting time series...')
 import make_all_t_courses
-#make_all_t_courses.make_all_tc(initial_df, data_dir,redo = False, njobs = 10, HPC_num = HPC_num, only_hand_rois = False)
+make_all_t_courses.make_all_tc(initial_df, data_dir,redo = False, njobs = 10, HPC_num = HPC_num, only_hand_rois = False)
 
 import make_all_cell_free_t_courses
 make_all_cell_free_t_courses.make_all_cellfree_tc(initial_df, data_dir, redo = False,HPC_num=HPC_num)

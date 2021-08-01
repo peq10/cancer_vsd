@@ -55,6 +55,7 @@ def segment_cellpose(df_file,save_dir, HPC_num = None,only_hand_rois = False):
         im = np.load(Path(trial_save,f'{trial_string}_im.npy'))
         
         if Path(trial_save,'hand_rois').is_dir():
+            print(trial_save)
             extra_rois.append(np.array([gf.read_roi_file(x,im_dims = im.shape)[1] for x in Path(trial_save,'hand_rois').glob('*.roi')]))
         else:
             if only_hand_rois:
