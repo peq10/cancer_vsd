@@ -36,7 +36,7 @@ if not data_dir.is_dir():
     data_dir.mkdir()
 
 
-
+print('Hello world')
 initial_df = Path(top_dir,'analysis',f'long_acqs_20210428_experiments_correct{df_str}.csv')
 
 if HPC:
