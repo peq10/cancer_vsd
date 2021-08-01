@@ -11,7 +11,7 @@ import pandas as pd
 from vsd_cancer.functions import cancer_functions as canf
 import sys
 import numpy as np
-
+import os
 redo = False
 
 home = Path.home()
@@ -21,11 +21,22 @@ if 'peq10' in str(home):
     df_str = '_HPC'
     HPC_num = int(sys.argv[1]) - 1 # allows running on HPC with data parallelism
     redo = bool(sys.argv[2])
+elif os.name == 'nt':
+    HPC = False
+    top_dir = Path('G:/')
+    df_str = ''
+    HPC_num = None 
+    yilin_save = True
+    yilins_computer = True
+    njobs = 6
 else:
     HPC = False
     top_dir = Path('/home/peter/data/Firefly/cancer')
     df_str = ''
     HPC_num = None
+    yilin_save = False
+    yilins_computer = False
+    njobs = 10
 
 
 data_dir = Path(top_dir,'analysis','full')
@@ -44,20 +55,21 @@ if HPC:
     print(f'Doing {df_.iloc[HPC_num].tif_file}')
 
 print('Loading tif...')
-import load_all_long
-processed_df, failed_df = load_all_long.load_all_long(initial_df, data_dir,redo = False, HPC_num = HPC_num)
-#the failed only works when not redoing
-processed_df.to_csv(Path(data_dir,initial_df.stem+'_loaded_long.csv'))
-
-#look at failed
-failed_df = load_all_long.detect_failed(initial_df, data_dir)
-failed_df.to_csv(Path(data_dir,initial_df.stem+'_failed_loaded_long.csv'))
-
-#try to redo failed
-load_all_long.load_failed(Path(data_dir,initial_df.stem+'_failed_loaded_long.csv'), data_dir)
-
-#do no filt for wash in 
-_,_ = load_all_long.load_all_long_washin(initial_df, data_dir,redo = False, HPC_num = HPC_num)
+if not yilins_computer:
+    import load_all_long
+    processed_df, failed_df = load_all_long.load_all_long(initial_df, data_dir,redo = False, HPC_num = HPC_num)
+    #the failed only works when not redoing
+    processed_df.to_csv(Path(data_dir,initial_df.stem+'_loaded_long.csv'))
+    
+    #look at failed
+    failed_df = load_all_long.detect_failed(initial_df, data_dir)
+    failed_df.to_csv(Path(data_dir,initial_df.stem+'_failed_loaded_long.csv'))
+    
+    #try to redo failed
+    load_all_long.load_failed(Path(data_dir,initial_df.stem+'_failed_loaded_long.csv'), data_dir)
+    
+    #do no filt for wash in 
+    _,_ = load_all_long.load_all_long_washin(initial_df, data_dir,redo = False, HPC_num = HPC_num)
 
 
 print('Segmenting...')
@@ -73,17 +85,17 @@ if redo:
 
 print('Extracting time series...')
 import make_all_t_courses
-#make_all_t_courses.make_all_tc(initial_df, data_dir,redo = False, njobs = 10, HPC_num = HPC_num, only_hand_rois = False)
+make_all_t_courses.make_all_tc(initial_df, data_dir,redo = True, njobs = njobs, HPC_num = HPC_num, only_hand_rois = False)
 
 import make_all_cell_free_t_courses
-make_all_cell_free_t_courses.make_all_cellfree_tc(initial_df, data_dir, redo = False,HPC_num=HPC_num)
+make_all_cell_free_t_courses.make_all_cellfree_tc(initial_df, data_dir, redo = True,HPC_num=HPC_num)
 
 print('Extracting FOV time series...')
 import make_full_fov_t_courses
-make_full_fov_t_courses.make_all_FOV_tc(initial_df, data_dir, redo = False,HPC_num=HPC_num)
+make_full_fov_t_courses.make_all_FOV_tc(initial_df, data_dir, redo = True,HPC_num=HPC_num)
 
 import get_dead_cells
-get_dead_cells.make_all_raw_tc(initial_df, data_dir,redo = False, njobs = 10,HPC_num=HPC_num)
+get_dead_cells.make_all_raw_tc(initial_df, data_dir,redo = True, njobs = njobs,HPC_num=HPC_num)
 
 
 print('Getting mean brightnesses')
@@ -104,7 +116,7 @@ if True:
                                   exclude_first = 400,
                                   tc_type = 'median',
                                   exclude_circle = True,
-                                  yilin_save = True)
+                                  yilin_save = yilin_save)
 
 thresh_idx = 1
 import export_events
