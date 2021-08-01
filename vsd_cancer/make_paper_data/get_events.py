@@ -29,7 +29,8 @@ def get_measure_events(initial_df,save_dir,thresh_range = np.arange(2,4.5,0.5),
                        overlap = 0.7,
                        simultaneous = 5,
                        MCF_overlap = 0.3,
-                       MCF_simultaneous = 3):
+                       MCF_simultaneous = 3, 
+                       yilin_save = False):
 
     df = pd.read_csv(initial_df)
     for idx, data in enumerate(df.itertuples()):
@@ -127,6 +128,13 @@ def get_measure_events(initial_df,save_dir,thresh_range = np.arange(2,4.5,0.5),
               }
 
         #all_props = np.concatenate([event_props[p] for p in event_props.keys() if 'props' in str(p)])
-        
-        np.save(Path(trial_save,f'{trial_string}_event_properties.npy'),result_dict)
+        if not yilin_save:
+            print('Overwriting previous event props')
+            np.save(Path(trial_save,f'{trial_string}_event_properties.npy'),result_dict)
+            
+        else:
+            print('Not overwriting previous event props - saving for yilin')
+            ypath = Path(trial_save,'../../yilin_event_props',f'{trial_string}_event_properties_yilin_copy.npy')
+            print(ypath.absolute())
+            np.save(ypath,result_dict)
         

@@ -61,17 +61,19 @@ _,_ = load_all_long.load_all_long_washin(initial_df, data_dir,redo = False, HPC_
 
 
 print('Segmenting...')
-#import segment_cellpose
-#segment_cellpose.segment_cellpose(initial_df, data_dir, HPC_num = HPC_num, only_hand_rois = False)
+if redo:
+    import segment_cellpose
+    segment_cellpose.segment_cellpose(initial_df, data_dir, HPC_num = HPC_num, only_hand_rois = False)
 
 print('Making overlays...')
-#import make_roi_overlays
-#make_roi_overlays.make_all_overlay(initial_df, data_dir, Path(viewing_dir,'rois'), HPC_num = HPC_num)
+if redo:
+    import make_roi_overlays
+    make_roi_overlays.make_all_overlay(initial_df, data_dir, Path(viewing_dir,'rois'), HPC_num = HPC_num)
 
 
 print('Extracting time series...')
 import make_all_t_courses
-make_all_t_courses.make_all_tc(initial_df, data_dir,redo = False, njobs = 10, HPC_num = HPC_num, only_hand_rois = False)
+#make_all_t_courses.make_all_tc(initial_df, data_dir,redo = False, njobs = 10, HPC_num = HPC_num, only_hand_rois = False)
 
 import make_all_cell_free_t_courses
 make_all_cell_free_t_courses.make_all_cellfree_tc(initial_df, data_dir, redo = False,HPC_num=HPC_num)
@@ -95,13 +97,14 @@ import get_all_brightness
 
 print('Detecting events...')
 import get_events
-if False:
+if True:
     get_events.get_measure_events(initial_df,data_dir,
                                   thresh_range = np.arange(2,4.5,0.5),
                                   surrounds_z = 10,
                                   exclude_first = 400,
                                   tc_type = 'median',
-                                  exclude_circle = True)
+                                  exclude_circle = True,
+                                  yilin_save = True)
 
 thresh_idx = 1
 import export_events
