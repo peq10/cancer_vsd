@@ -40,6 +40,13 @@ def plot_TTX_pre_post(save_dir,figsave,filetype):
     log = [True,False]
     only_neg = [True,False]
     histtype = ['bar','step']
+    
+    
+    ttx = [10]
+    log = [True]
+    only_neg = [False]
+    histtype = ['bar']
+    
     for t in ttx:
         for l in log:
             for n in only_neg:
@@ -52,15 +59,21 @@ def plot_TTX_washout(save_dir,figsave,filetype):
     df = pd.read_csv(Path(save_dir,'all_events_df.csv'))
     df['exp_stage'] = df.expt + '_' + df.stage
 
-    use = [x for x in np.unique(df['exp_stage']) if 'TTX' in x]
+    use = [x for x in np.unique(df['exp_stage']) if 'TTX' in x and 'washout' in x]
     
     log = [True,False]
     only_neg = [True,False]
     histtype = ['bar','step']
-    
+
+    log = [True]
+    only_neg = [False]
+    histtype = ['bar']    
+
+
     for l in log:
         for n in only_neg:
             for h in histtype:
+
                 fig = plot_events_TTX_washout(df,use,log = l,only_neg=n,histtype = h)
                 fig.savefig(Path(figsave,'washout',f'TTX_washout_histograms_{h}_log_{l}_onlyneg_{n}{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
     
@@ -84,7 +97,11 @@ def plot_events_TTX(df,use,TTX_level = 1,log = True,upper_lim = 6.6,lower_lim = 
         dfn = dfn[dfn['event_amplitude'] < 0]
     
     length_bins = np.histogram(dfn['event_length']*T,bins = nbins)[1]
-    amp_bins = np.histogram(np.abs(dfn['event_amplitude'])*100,bins = nbins)[1]
+    
+    if only_neg:
+        amp_bins = np.histogram(np.abs(dfn['event_amplitude'])*100,bins = nbins)[1]
+    else:
+        amp_bins = np.histogram(dfn['event_amplitude']*100,bins = nbins)[1]
     
     neg = dfn[dfn.stage == 'pre']
     pos = dfn[dfn.stage == 'post']
@@ -95,8 +112,12 @@ def plot_events_TTX(df,use,TTX_level = 1,log = True,upper_lim = 6.6,lower_lim = 
     fig,axarr = plt.subplots(figsize = (8,6))
     
     ax0 = plt.subplot(gs[0])
-    ax0.hist(np.abs(neg['event_amplitude'])*100,bins = amp_bins,log = log,label = 'Pre',histtype = histtype)
-    ax0.hist(np.abs(pos['event_amplitude'])*100,bins = amp_bins,log = log,label = f'TTX {TTX_level}'+' $\mathrm{\mu}$M',histtype = histtype)
+    if only_neg:
+        ax0.hist(np.abs(neg['event_amplitude'])*100,bins = amp_bins,log = log,label = 'Pre',histtype = histtype)
+        ax0.hist(np.abs(pos['event_amplitude'])*100,bins = amp_bins,log = log,label = f'TTX {TTX_level}'+' $\mathrm{\mu}$M',histtype = histtype)
+    else:
+        ax0.hist(neg['event_amplitude']*100,bins = amp_bins,log = log,label = 'Pre',histtype = histtype)
+        ax0.hist(pos['event_amplitude']*100,bins = amp_bins,log = log,label = f'TTX {TTX_level}'+' $\mathrm{\mu}$M',histtype = histtype)
     ax0.set_xlabel('Absolute event amplitude (% $\Delta$R/R$_0$)')
     ax0.set_ylabel('Observed Frequency')    
     ax0.legend(frameon = False)
@@ -115,12 +136,19 @@ def plot_events_TTX(df,use,TTX_level = 1,log = True,upper_lim = 6.6,lower_lim = 
         norm = None
     
     ax2 = plt.subplot(gs[2])
-    ax2.hist2d(np.abs(neg['event_amplitude'])*100,neg['event_length']*T,bins = (amp_bins,length_bins),norm = norm)
+    if only_neg:
+        ax2.hist2d(np.abs(neg['event_amplitude'])*100,neg['event_length']*T,bins = (amp_bins,length_bins),norm = norm)
+    else:
+        ax2.hist2d(neg['event_amplitude']*100,neg['event_length']*T,bins = (amp_bins,length_bins),norm = norm)
+        
     ax2.set_xlabel('Pre-TTX event amplitude (% $\Delta$R/R$_0$)')    
     ax2.set_ylabel('Event length (s)')
     
     ax3 = plt.subplot(gs[3])
-    ax3.hist2d(np.abs(pos['event_amplitude'])*100,pos['event_length']*T,bins = (amp_bins,length_bins),norm=norm)
+    if only_neg:
+        ax3.hist2d(np.abs(pos['event_amplitude'])*100,pos['event_length']*T,bins = (amp_bins,length_bins),norm=norm)
+    else:
+        ax3.hist2d(pos['event_amplitude']*100,pos['event_length']*T,bins = (amp_bins,length_bins),norm=norm)
     ax3.set_xlabel('Post-TTX event size (% $\Delta$R/R$_0$)')    
     ax3.set_ylabel('Event length (s)')
     
@@ -142,10 +170,14 @@ def plot_events_TTX_washout(df,use,log = True,upper_lim = 6.6,lower_lim = 0, T =
     
     if only_neg:
         
-        dfn = dfn[dfn['event_amplitude'] < 0]
+        dfn = dfn[dfn['event_amplitude'] < 0]    
+        amp_bins = np.histogram(np.abs(dfn['event_amplitude'])*100,bins = nbins)[1]
+        
+    else:
+        amp_bins = np.histogram(dfn['event_amplitude']*100,bins = nbins)[1]
     
     length_bins = np.histogram(dfn['event_length']*T,bins = nbins)[1]
-    amp_bins = np.histogram(np.abs(dfn['event_amplitude'])*100,bins = nbins)[1]
+
     
     neg = dfn[dfn.stage == 'pre']
     pos = dfn[dfn.stage == 'post']
@@ -157,9 +189,14 @@ def plot_events_TTX_washout(df,use,log = True,upper_lim = 6.6,lower_lim = 0, T =
     fig,axarr = plt.subplots(figsize = (8,6))
     
     ax0 = plt.subplot(gs[0])
-    ax0.hist(np.abs(neg['event_amplitude'])*100,bins = amp_bins,log = log,label = 'Pre', histtype = histtype)
-    ax0.hist(np.abs(pos['event_amplitude'])*100,bins = amp_bins,log = log,label = 'TTX 10 $\mathrm{\mu}$M', histtype = histtype)
-    ax0.hist(np.abs(wash['event_amplitude'])*100,bins = amp_bins,log = log,label = 'Washout', histtype = histtype)
+    if only_neg:
+        ax0.hist(np.abs(neg['event_amplitude'])*100,bins = amp_bins,log = log,label = 'Pre', histtype = histtype)
+        ax0.hist(np.abs(pos['event_amplitude'])*100,bins = amp_bins,log = log,label = 'TTX 10 $\mathrm{\mu}$M', histtype = histtype)
+        ax0.hist(np.abs(wash['event_amplitude'])*100,bins = amp_bins,log = log,label = 'Washout', histtype = histtype)
+    else:
+        ax0.hist(neg['event_amplitude']*100,bins = amp_bins,log = log,label = 'Pre', histtype = histtype)
+        ax0.hist(pos['event_amplitude']*100,bins = amp_bins,log = log,label = 'TTX 10 $\mathrm{\mu}$M', histtype = histtype)
+        ax0.hist(wash['event_amplitude']*100,bins = amp_bins,log = log,label = 'Washout', histtype = histtype)
     ax0.set_xlabel('Absolute event amplitude (% $\Delta$R/R$_0$)')
     ax0.set_ylabel('Observed Frequency')    
     ax0.legend(frameon = False)
@@ -179,17 +216,26 @@ def plot_events_TTX_washout(df,use,log = True,upper_lim = 6.6,lower_lim = 0, T =
         norm = None
     
     ax2 = plt.subplot(gs[3])
-    ax2.hist2d(np.abs(neg['event_amplitude'])*100,neg['event_length']*T,bins = (amp_bins,length_bins),norm = norm)
+    if only_neg:
+        ax2.hist2d(np.abs(neg['event_amplitude'])*100,neg['event_length']*T,bins = (amp_bins,length_bins),norm = norm)
+    else:
+        ax2.hist2d(neg['event_amplitude']*100,neg['event_length']*T,bins = (amp_bins,length_bins),norm = norm)
     ax2.set_xlabel('Pre-TTX event amplitude (% $\Delta$R/R$_0$)')    
     ax2.set_ylabel('Event length (s)')
     
     ax3 = plt.subplot(gs[4])
-    ax3.hist2d(np.abs(pos['event_amplitude'])*100,pos['event_length']*T,bins = (amp_bins,length_bins),norm=norm)
+    if only_neg:
+        ax3.hist2d(np.abs(pos['event_amplitude'])*100,pos['event_length']*T,bins = (amp_bins,length_bins),norm=norm)
+    else:
+        ax3.hist2d(pos['event_amplitude']*100,pos['event_length']*T,bins = (amp_bins,length_bins),norm=norm)
     ax3.set_xlabel('Post-TTX event size (% $\Delta$R/R$_0$)')    
     ax3.set_ylabel('Event length (s)')
     
     ax3 = plt.subplot(gs[5])
-    ax3.hist2d(np.abs(wash['event_amplitude'])*100,wash['event_length']*T,bins = (amp_bins,length_bins),norm=norm)
+    if only_neg:
+        ax3.hist2d(np.abs(wash['event_amplitude'])*100,wash['event_length']*T,bins = (amp_bins,length_bins),norm=norm)
+    else:
+        ax3.hist2d(wash['event_amplitude']*100,wash['event_length']*T,bins = (amp_bins,length_bins),norm=norm)
     ax3.set_xlabel('Washout event size (% $\Delta$R/R$_0$)')    
     ax3.set_ylabel('Event length (s)')
     

@@ -153,12 +153,18 @@ def plot_positive_negative_events(save_dir,figsave,filetype):
 
     fig2 = plot_events(df,use,log = False)
     fig2.savefig(Path(figsave,f'231_histograms_no_log{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
+    
+    fig3 = plot_events2(df,use,log = True)
+    fig3.savefig(Path(figsave,f'231_histograms_log_both_pos{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
+
+    fig4 = plot_events2(df,use,log = False)
+    fig4.savefig(Path(figsave,f'231_histograms_no_log_both_pos{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
 
 
 
 
 
-def plot_events(df,use,log = True,upper_lim = 6.6,lower_lim = 0, T = 0.2,nbins = 50):
+def plot_events(df,use,log = True,upper_lim = 6.6,lower_lim = 0, T = 0.2,nbins = 50, only_neg = True):
     
     
     dfn = df.copy()
@@ -173,6 +179,9 @@ def plot_events(df,use,log = True,upper_lim = 6.6,lower_lim = 0, T = 0.2,nbins =
     dfn = dfn[np.logical_not(np.logical_or(too_big,too_small))]
     
     length_bins = np.histogram(dfn['event_length']*T,bins = nbins)[1]
+    
+    
+    
     amp_bins = np.histogram(np.abs(dfn['event_amplitude'])*100,bins = nbins)[1]
     
     neg = dfn[dfn.event_amplitude <0]
@@ -211,11 +220,74 @@ def plot_events(df,use,log = True,upper_lim = 6.6,lower_lim = 0, T = 0.2,nbins =
     
     ax3 = plt.subplot(gs[3])
 
-
-    print('clipping x?')
     ax3.hist2d(np.abs(pos['event_amplitude'])*100,pos['event_length']*T,bins = (amp_bins,length_bins),norm=norm)
     ax3.set_xlabel('Positive event size (% $\Delta$R/R$_0$)')    
     ax3.set_ylabel('Event length (s)')
+    
+    
+    
+
+    
+    return fig
+
+def plot_events2(df,use,log = True,upper_lim = 6.6,lower_lim = 0, T = 0.2,nbins = 50, only_neg = True):
+    
+    
+    dfn = df.copy()
+    
+    
+    use_bool = np.array([np.any(x in use) for x in dfn.exp_stage])
+    dfn = dfn[use_bool]
+    
+
+    too_big = np.abs(dfn.event_amplitude) > 6.6/100
+    too_small =  np.abs(dfn.event_amplitude) < 0/100
+    dfn = dfn[np.logical_not(np.logical_or(too_big,too_small))]
+    
+    length_bins = np.histogram(dfn['event_length']*T,bins = nbins)[1]
+    
+    
+    
+    amp_bins = np.histogram(dfn['event_amplitude']*100,bins = nbins)[1]
+    
+    neg = dfn[dfn.event_amplitude <0]
+    pos = dfn[dfn.event_amplitude >0]
+    
+    gs = gridspec.GridSpec(2, 2)
+    gs.update(wspace=0.3, hspace=0.3) 
+    
+    fig,axarr = plt.subplots(figsize = (8,6))
+    
+    ax0 = plt.subplot(gs[0])
+    ax0.hist(neg['event_amplitude']*100,bins = amp_bins,log = log,label = '-ve')
+    ax0.hist(pos['event_amplitude']*100,bins = amp_bins,log = log,label = '+ve')
+    ax0.set_xlabel('Event amplitude (% $\Delta$R/R$_0$)')
+    ax0.set_ylabel('Observed Frequency')    
+    ax0.legend(frameon = False)
+    
+    ax1 = plt.subplot(gs[1])
+    ax1.hist(np.abs(neg['event_length'])*T,bins = length_bins,log = log,label = '-ve')
+    ax1.hist(pos['event_length']*T,bins = length_bins,log = log,label = '+ve')
+    ax1.set_xlabel('Event length (s)')
+    ax1.set_ylabel('Observed Frequency')   
+    ax1.legend(frameon = False)
+    
+    
+    if log:
+        norm = mpl.colors.LogNorm()
+    else:
+        norm = None
+    
+    ax2 = plt.subplot(gs[2])
+    ax2.hist2d(dfn['event_amplitude']*100,dfn['event_length']*T,bins = (amp_bins,length_bins),norm = norm)
+
+    ax2.set_xlabel('Event amplitude (% $\Delta$R/R$_0$)')    
+    ax2.set_ylabel('Event length (s)')
+    
+
+    
+    
+    
 
     
     return fig

@@ -31,7 +31,7 @@ initial_df = Path(top_dir,'analysis',f'long_acqs_20201230_experiments_correct{df
 
 df = pd.read_csv(initial_df)
 
-figsave = Path(Path.home(),'Dropbox/papers/cancer/v1/TTX_washout/')
+figsave = Path(Path.home(),'Dropbox/Papers/cancer/v1/TTX_washout/')
 if not figsave.is_dir():
     figsave.mkdir()
 

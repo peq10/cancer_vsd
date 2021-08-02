@@ -33,7 +33,7 @@ def export_events(initial_df,save_dir,thresh_idx,min_ttx_amp = 1):
     all_expt = []
     all_std = []
     all_stage = []
-    
+    all_trial_str = []
     for idx,data in enumerate(df.itertuples()):
         
         if data.use == 'n':
@@ -79,6 +79,7 @@ def export_events(initial_df,save_dir,thresh_idx,min_ttx_amp = 1):
                 all_event_length.append(leng)
                 all_event_integral.append(integ)
                 all_expt.append(data.expt)
+                all_trial_str.append(data.trial_string)
                 
                 if type(data.stage) == str:
                     all_stage.append(data.stage)
@@ -96,7 +97,8 @@ def export_events(initial_df,save_dir,thresh_idx,min_ttx_amp = 1):
                                     'cell_y':all_cell_y,
                                     'std':all_std,
                                     'expt':all_expt,
-                                    'stage': all_stage})
+                                    'stage': all_stage,
+                                    'trial_string': all_trial_str})
     
     
     event_df.to_csv(Path(save_dir,'all_events_df.csv'))
@@ -167,7 +169,7 @@ def export_events(initial_df,save_dir,thresh_idx,min_ttx_amp = 1):
                            'neg_active':all_neg_active,
                            'total_active':all_tot_active,
                            'slip':slip,
-                           'expts':expts,
+                           'expt':expts,
                            'stage':stage,
                            'num_cells':tot_cells,
                            'imaging_length':tot_time,

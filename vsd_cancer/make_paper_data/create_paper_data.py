@@ -73,7 +73,7 @@ if not yilins_computer:
 
 
 print('Segmenting...')
-if True:
+if redo:
     import segment_cellpose
     segment_cellpose.segment_cellpose(initial_df, data_dir, HPC_num = HPC_num, only_hand_rois = False)
 
@@ -85,18 +85,18 @@ if redo:
 
 print('Extracting time series...')
 import make_all_t_courses
-make_all_t_courses.make_all_tc(initial_df, data_dir,redo = True, njobs = njobs, HPC_num = HPC_num, only_hand_rois = False)
+make_all_t_courses.make_all_tc(initial_df, data_dir,redo = False, njobs = njobs, HPC_num = HPC_num, only_hand_rois = False)
 
 
 import make_all_cell_free_t_courses
-make_all_cell_free_t_courses.make_all_cellfree_tc(initial_df, data_dir, redo = True,HPC_num=HPC_num)
+make_all_cell_free_t_courses.make_all_cellfree_tc(initial_df, data_dir, redo = False,HPC_num=HPC_num)
 
 print('Extracting FOV time series...')
 import make_full_fov_t_courses
-make_full_fov_t_courses.make_all_FOV_tc(initial_df, data_dir, redo = True,HPC_num=HPC_num)
+make_full_fov_t_courses.make_all_FOV_tc(initial_df, data_dir, redo = False,HPC_num=HPC_num)
 
 import get_dead_cells
-get_dead_cells.make_all_raw_tc(initial_df, data_dir,redo = True, njobs = njobs,HPC_num=HPC_num)
+get_dead_cells.make_all_raw_tc(initial_df, data_dir,redo = False, njobs = njobs,HPC_num=HPC_num)
 
 
 print('Getting mean brightnesses')
@@ -123,6 +123,8 @@ thresh_idx = 1
 import export_events
 export_events.export_events(initial_df, data_dir, thresh_idx,min_ttx_amp = 1)
 
+import make_spike_trains
+make_spike_trains.export_spike_trains(data_dir,T = 0.2, only_neg = True)
 
 raise NotImplementedError('')
 print('Getting user input for good detections')
