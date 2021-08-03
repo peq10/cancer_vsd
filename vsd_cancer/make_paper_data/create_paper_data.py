@@ -78,7 +78,7 @@ if redo:
     segment_cellpose.segment_cellpose(initial_df, data_dir, HPC_num = HPC_num, only_hand_rois = False)
 
 print('Making overlays...')
-if redo:
+if True:
     import make_roi_overlays
     make_roi_overlays.make_all_overlay(initial_df, data_dir, Path(viewing_dir,'rois'), HPC_num = HPC_num)
 

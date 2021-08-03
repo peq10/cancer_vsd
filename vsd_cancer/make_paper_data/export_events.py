@@ -177,6 +177,97 @@ def export_events(initial_df,save_dir,thresh_idx,min_ttx_amp = 1):
 
 
     TTX_df.to_csv(Path(save_dir,'TTX_active_df.csv'))
+    
+    
+    
+    
+    #now do per cell events
+    
+    
+    all_cell_id = []
+    num_pos_evs = []
+    num_neg_evs = []
+    all_integ_ev = []
+    neg_integ_ev = []
+    trial = []
+    day = []
+    slip = []
+    expts = []
+    stage = []
+    obs_length = []
+    
+    for idx,data in enumerate(df.itertuples()):
+        if 'TTX' not in data.expt:
+            continue
+        
+        if data.use == 'n':
+            continue
+        
+        if 'washin' in data.expt:
+            continue
+        
+        trial_string = data.trial_string
+        trial_save = Path(save_dir,'ratio_stacks',trial_string)
+        
+        results = np.load(Path(trial_save,f'{trial_string}_event_properties.npy'),allow_pickle = True).item()
+        events = results['events'][thresh_idx]
+        
+        active_cell_ids = [x for x in events.keys() if type(x) != str]
+        all_cell_ids = [x for x in range(events['tc'].shape[0])]
+
+        for c_id in all_cell_ids:
+            
+            cell_name = f'{trial_string}_cell_{c_id}'            
+            
+            if c_id in active_cell_ids:
+                eve = events[c_id]
+                eve_prop = events['event_props'][c_id]
+                
+                #remove too large events
+                eve_prop = eve_prop[np.abs(eve_prop[:,1])<0.066,:]
+                
+                n_pos_evs = len(eve_prop[:,1] > 0)
+                n_neg_evs = len(eve_prop[:,1] < 0)
+                sum_integ_evs = np.sum(np.abs(eve_prop[:,2]))
+                sum_neg_integ_evs = np.sum(eve_prop[eve_prop[:,1] < 0,2])
+                
+            else:
+                n_pos_evs = 0
+                n_neg_evs = 0
+                sum_integ_evs = 0
+                sum_neg_integ_evs = 0
+                
+            
+            all_cell_id.append(cell_name)
+            num_pos_evs.append(n_pos_evs)
+            num_neg_evs.append(n_neg_evs)
+            all_integ_ev.append(sum_integ_evs)
+            neg_integ_ev.append(sum_neg_integ_evs)
+            trial.append(data.trial_string)
+            day.append(data.date)
+            slip.append(data.slip)
+            expts.append(data.expt)
+            stage.append(data.stage)
+        
+
+            obs_length.append(results['observation_length'][thresh_idx][c_id])
+    
+        
+
+    TTX_df2 = pd.DataFrame({'cell':all_cell_id,
+                            'trial':trial,
+                           'day':day,    
+                            'n_pos_events': num_pos_evs,
+                            'n_neg_events': num_neg_evs,
+                            'integrated_events': all_integ_ev,
+                            'neg_integrated_events': neg_integ_ev,
+                           'slip':slip,
+                           'expt':expts,
+                           'stage':stage,
+                           'obs_length':obs_length})
+
+
+    TTX_df2.to_csv(Path(save_dir,'TTX_active_df_by_cell.csv'))
         
         
         
