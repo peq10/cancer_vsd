@@ -13,6 +13,9 @@ import pandas as pd
 
 import matplotlib.pyplot as plt
 
+from vsd_cancer.functions import stats_functions as statsf
+
+import f.plotting_functions as pf
 
 import matplotlib.cm
 import matplotlib.gridspec as gridspec
@@ -54,6 +57,16 @@ def plot_TTX_pre_post(save_dir,figsave,filetype):
                     fig = plot_events_TTX(df,use,TTX_level = t,log = l,only_neg=n,histtype = h)
                     fig.savefig(Path(figsave,'pre_post',str(t),f'TTX_{t}um_histograms_{h}_log_{l}_onlyneg_{n}{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
 
+    df2 = pd.read_csv(Path(save_dir,'TTX_active_df_by_cell.csv'))
+    T = 0.2
+    df2['exp_stage'] = df2.expt + '_' + df2.stage
+    df2['neg_event_rate'] = (df2['n_neg_events'] )/(df2['obs_length']*T)
+    use2 = [x for x in np.unique(df2['exp_stage']) if 'washout' not in x]
+    fig1 = plot_TTX_summary(df2,use2,key = 'neg_event_rate')
+    
+    fig1.savefig(Path(figsave,'pre_post',f'TTX_1_10_summary_stats{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
+
+
 def plot_TTX_washout(save_dir,figsave,filetype):
     
     df = pd.read_csv(Path(save_dir,'all_events_df.csv'))
@@ -77,6 +90,125 @@ def plot_TTX_washout(save_dir,figsave,filetype):
                 fig = plot_events_TTX_washout(df,use,log = l,only_neg=n,histtype = h)
                 fig.savefig(Path(figsave,'washout',f'TTX_washout_histograms_{h}_log_{l}_onlyneg_{n}{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
     
+    #now plot the mean and bootstrapped cis   
+    df2 = pd.read_csv(Path(save_dir,'TTX_active_df_by_cell.csv'))
+    T = 0.2
+    df2['exp_stage'] = df2.expt + '_' + df2.stage
+    df2['neg_event_rate'] = (df2['n_neg_events'] )/(df2['obs_length']*T)
+    use2 = [x for x in np.unique(df2['exp_stage']) if 'washout' in x]
+    fig1 = plot_washout_summary(df2,use2,key = 'neg_event_rate')
+    
+    
+    fig1.savefig(Path(figsave,'washout',f'TTX_washout_summary_stats{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
+    
+    
+
+
+def plot_average_cis_washout(pre,post,wash, function = np.mean,num_resamplings = 10**5,scale = 4):
+    
+    CI_pre,pre_resamplings = statsf.construct_CI(pre,5, num_resamplings = num_resamplings)
+    CI_post,post_resamplings = statsf.construct_CI(post, 5, num_resamplings = num_resamplings)
+    CI_wash,wash_resamplings = statsf.construct_CI(wash,5, num_resamplings = num_resamplings)
+    
+    
+    p_pre_post = statsf.bootstrap_test(pre,post,function = function,plot = False,num_resamplings = num_resamplings)
+    p_post_wash = statsf.bootstrap_test(wash,post,function = function,plot = False,num_resamplings = num_resamplings)
+    p_pre_wash = statsf.bootstrap_test(pre,wash,function = function, plot = False,num_resamplings = num_resamplings)
+    
+    #TODO print n cells etc. to a file
+    print(f'Pre-post: {p_pre_post[0]}, Post-wash: {p_post_wash[0]}, Pre-wash: {p_pre_wash[0]}')
+    vals = np.array([np.mean(pre),np.mean(post),np.mean(wash)])*10**scale
+    errors = np.array([CI_pre,CI_post,CI_wash])*10**scale
+    
+    
+    fig,ax = plt.subplots()
+    pf.plot_errorbar(ax,vals,errors)
+    sc_str = '10$^{-'+str(scale)+'}$'
+    ax.set_ylabel('Negative Event Rate\nper Cell (x'+sc_str+' s$^{-1}$)')
+    ax.set_xticks(range(len(vals)))
+    ax.set_xticklabels(['Pre-TTX', 'Post-TTX', 'Washout'])
+    
+    
+    pf.add_significance_bar(ax, p_pre_post[0], [0,0.975], np.array([1.075,1.1])*errors.max(),textFormat = 3, textLoc = 1.15*errors.max())
+    pf.add_significance_bar(ax, p_post_wash[0], [1.025,2], np.array([1.075,1.1])*errors.max(), textLoc = 1.15*errors.max())
+
+    pf.set_all_fontsize(ax, 16)
+    pf.set_thickaxes(ax, 3)
+    pf.make_square_plot(ax)
+    
+    return fig
+    
+
+def plot_washout_summary(df,use,key = 'neg_event_rate', function = np.mean):
+    dfn = df.copy()     
+        
+    use_bool = np.array([np.any(x in use) for x in dfn.exp_stage])
+    dfn = dfn[use_bool]
+    
+    pre = dfn[dfn.stage == 'pre'][key].to_numpy()
+    post = dfn[dfn.stage == 'post'][key].to_numpy()
+    wash = dfn[dfn.stage == 'washout'][key].to_numpy()
+    
+    fig1 = plot_average_cis_washout(pre,post,wash)
+    
+    
+    return fig1
+
+def plot_average_cis_1_10(pre_10,post_10,pre_1,post_1, function = np.mean,num_resamplings = 10**5,scale = 4):
+    
+    CI_pre_10,pre_10_resamplings = statsf.construct_CI(pre_10,5, num_resamplings = num_resamplings)
+    CI_post_10,post_10_resamplings = statsf.construct_CI(post_10, 5, num_resamplings = num_resamplings)
+    CI_pre_1,pre_1_resamplings = statsf.construct_CI(pre_1,5, num_resamplings = num_resamplings)
+    CI_post_1,post_1_resamplings = statsf.construct_CI(post_1, 5, num_resamplings = num_resamplings)
+
+    
+    
+    p_10 = statsf.bootstrap_test(pre_10,post_10,function = function,plot = False,num_resamplings = num_resamplings)
+    p_1 = statsf.bootstrap_test(pre_1,post_1,function = function,plot = False,num_resamplings = num_resamplings)
+
+    
+    #TODO print n cells etc. to a file
+    print(f'10 uM: {p_10[0]}, 1 uM: {p_1[0]}')
+    vals = np.array([np.mean(pre_10),np.mean(post_10),np.mean(pre_1),np.mean(post_1)])*10**scale
+    errors = np.array([CI_pre_10,CI_post_10,CI_pre_1,CI_post_1])*10**scale
+    
+    
+    fig,ax = plt.subplots()
+    pf.plot_errorbar(ax,vals[:2],errors[:2,:])
+    pf.plot_errorbar(ax,vals[2:],errors[2:,:],off = 2)
+    sc_str = '10$^{-'+str(scale)+'}$'
+    ax.set_ylabel('Negative Event Rate\nper Cell (x'+sc_str+' s$^{-1}$)')
+    ax.set_xticks(range(len(vals)))
+    ax.set_xticklabels(['Pre', 'Post 10 uM', 'Pre', 'Post 1 uM'])
+    
+    
+    pf.add_significance_bar(ax, p_10[0], [0,1], np.array([1.075,1.1])*errors.max(), textLoc = 1.15*errors.max())
+    pf.add_significance_bar(ax, p_1[0], [2,3], np.array([1.075,1.1])*errors.max(), textLoc = 1.15*errors.max())
+
+    pf.set_all_fontsize(ax, 16)
+    pf.set_thickaxes(ax, 3)
+    pf.make_square_plot(ax)
+    
+    return fig
+    
+
+def plot_TTX_summary(df,use,key = 'event_rate', function = np.mean):
+    dfn = df.copy()     
+        
+    use_bool = np.array([np.any(x in use) for x in dfn.exp_stage])
+    dfn = dfn[use_bool]
+    
+    pre_10 = dfn[dfn.exp_stage == 'TTX_10um_pre'][key].to_numpy()
+    post_10 = dfn[dfn.exp_stage == 'TTX_10um_post'][key].to_numpy()
+    pre_1 = dfn[dfn.exp_stage == 'TTX_1um_pre'][key].to_numpy()
+    post_1 = dfn[dfn.exp_stage == 'TTX_1um_post'][key].to_numpy()
+    
+    fig1 = plot_average_cis_1_10(pre_10,post_10,pre_1,post_1)
+    
+    
+    return fig1
+
+
 def plot_events_TTX(df,use,TTX_level = 1,log = True,upper_lim = 6.6,lower_lim = 0, T = 0.2,nbins = 20,only_neg = True,histtype = 'bar'):
     
     
