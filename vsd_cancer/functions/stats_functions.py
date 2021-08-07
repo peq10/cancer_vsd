@@ -8,6 +8,7 @@ Created on Wed Aug  4 17:57:09 2021
 import astropy.stats as ass
 import numpy as np
 import matplotlib.pyplot as plt
+import warnings
 
 def construct_CI(array,level,function = np.mean,num_resamplings = 10000):
     
@@ -34,6 +35,10 @@ def bootstrap_test(control,test,function = np.mean,num_resamplings = 10000,plot 
     res = function(test) - function(control)
     
     pvalue = len(diff[diff < res])/len(diff)
+    
+    if len(diff[diff < res]) == 0:
+        warnings.warn('Not enough resamples to resolve p this small')
+        pvalue = 1/num_resamplings #we can only resolve to be up to this val
     
     if plot:
         plt.figure()

@@ -78,7 +78,7 @@ if redo:
     segment_cellpose.segment_cellpose(initial_df, data_dir, HPC_num = HPC_num, only_hand_rois = False)
 
 print('Making overlays...')
-if True:
+if redo:
     import make_roi_overlays
     make_roi_overlays.make_all_overlay(initial_df, data_dir, Path(viewing_dir,'rois'), HPC_num = HPC_num)
 
@@ -110,7 +110,7 @@ import get_all_brightness
 
 print('Detecting events...')
 import get_events
-if True:
+if False:
     get_events.get_measure_events(initial_df,data_dir,
                                   thresh_range = np.arange(2,4.5,0.5),
                                   surrounds_z = 10,
@@ -125,6 +125,9 @@ export_events.export_events(initial_df, data_dir, thresh_idx,min_ttx_amp = 1)
 
 import make_spike_trains
 make_spike_trains.export_spike_trains(data_dir,T = 0.2, only_neg = True)
+
+import bootstrap_correlation_analysis
+bootstrap_correlation_analysis.calculate_corrs(top_dir, data_dir,redo = True)
 
 raise NotImplementedError('')
 print('Getting user input for good detections')
