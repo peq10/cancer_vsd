@@ -39,6 +39,7 @@ T = 0.2
 
 
 df['exp_stage'] = df.expt + '_' + df.stage
+df['day_slip'] = df.day.astype(str) + '_' + df.slip.astype(str) 
 
 df['event_rate'] = (df['n_neg_events'] +  df['n_pos_events'])/(df['obs_length']*T)
 df['neg_event_rate'] = (df['n_neg_events'] )/(df['obs_length']*T)
@@ -88,12 +89,19 @@ def plot_average_cis_1_10(pre_10,post_10,pre_1,post_1, function = np.mean,num_re
     
     p_10 = statsf.bootstrap_test(pre_10,post_10,function = function,plot = False,num_resamplings = num_resamplings)
     p_1 = statsf.bootstrap_test(pre_1,post_1,function = function,plot = False,num_resamplings = num_resamplings)
-
     
+
     #TODO print n cells etc. to a file
     print(f'10 um: {p_10[0]}, 1 um: {p_1[0]}')
     vals = np.array([np.mean(pre_10),np.mean(post_10),np.mean(pre_1),np.mean(post_1)])*10**scale
     errors = np.array([CI_pre_10,CI_post_10,CI_pre_1,CI_post_1])*10**scale
+    
+    #vals[:2] /= vals[0]
+    #errors[:2] /= errors[0]
+    
+    
+    #vals[2:] /= vals[2]
+    #errors[2:] /= errors[2:]
     
     
     fig,ax = plt.subplots()
@@ -121,17 +129,17 @@ def plot_TTX_summary(df,use,key = 'event_rate', function = np.mean):
     use_bool = np.array([np.any(x in use) for x in dfn.exp_stage])
     dfn = dfn[use_bool]
     
-    pre_10 = dfn[dfn.exp_stage == 'TTX_10um_pre'][key].to_numpy()
-    post_10 = dfn[dfn.exp_stage == 'TTX_10um_post'][key].to_numpy()
-    pre_1 = dfn[dfn.exp_stage == 'TTX_1um_pre'][key].to_numpy()
-    post_1 = dfn[dfn.exp_stage == 'TTX_1um_post'][key].to_numpy()
+    pre_10 = dfn[dfn.exp_stage == 'TTX_10um_pre'][[key, 'day_slip']]
+    post_10 = dfn[dfn.exp_stage == 'TTX_10um_post'][[key, 'day_slip']]
+    pre_1 = dfn[dfn.exp_stage == 'TTX_1um_pre'][[key, 'day_slip']]
+    post_1 = dfn[dfn.exp_stage == 'TTX_1um_post'][[key, 'day_slip']]
     
-    fig1 = plot_average_cis_1_10(pre_10,post_10,pre_1,post_1)
+    fig1 = plot_average_cis_1_10(pre_10[key].to_numpy(),post_10[key].to_numpy(),pre_1[key].to_numpy(),post_1[key].to_numpy())
     
     
     return fig1
         
-
+print('Todo - add cell swarmplot?')
 plot_TTX_summary(df,use)
 
 

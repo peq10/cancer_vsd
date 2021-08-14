@@ -78,7 +78,7 @@ if redo:
     segment_cellpose.segment_cellpose(initial_df, data_dir, HPC_num = HPC_num, only_hand_rois = False)
 
 print('Making overlays...')
-if redo:
+if False:
     import make_roi_overlays
     make_roi_overlays.make_all_overlay(initial_df, data_dir, Path(viewing_dir,'rois'), HPC_num = HPC_num)
 
@@ -116,34 +116,39 @@ if False:
                                   surrounds_z = 10,
                                   exclude_first = 400,
                                   tc_type = 'median',
-                                  exclude_circle = True,
+                                  exclude_circle = False,
                                   yilin_save = yilin_save)
 
+
 thresh_idx = 1
+print('Making videos...')
+import make_corr_grey_vids
+make_corr_grey_vids.make_all_grey_vids(top_dir, data_dir, initial_df, Path(viewing_dir,'final_paper_before_user_input'), thresh_idx, redo = False, QCd = False)
+
+
+
+print('Getting user input for good detections')
+if False:
+    import get_all_good_detections
+    get_all_good_detections.get_user_event_input(initial_df,data_dir,Path(viewing_dir,'final_paper_before_user_input'),thresh_idx, redo = False)
+
+print('Exporting events...')
 import export_events
-export_events.export_events(initial_df, data_dir, thresh_idx,min_ttx_amp = 1)
+export_events.export_events(initial_df, data_dir, thresh_idx,min_ttx_amp = 0)
+
+print('Making videos...')
+import make_corr_grey_vids
+make_corr_grey_vids.make_all_grey_vids(top_dir, data_dir, initial_df, Path(viewing_dir,'final_paper_after_user_input'), thresh_idx, redo = False, QCd = True, onlymcf = True)
+
 
 import make_spike_trains
 make_spike_trains.export_spike_trains(data_dir,T = 0.2, only_neg = True)
 
 import bootstrap_correlation_analysis
-bootstrap_correlation_analysis.calculate_corrs(top_dir, data_dir,redo = True)
+bootstrap_correlation_analysis.calculate_corrs(top_dir, data_dir,redo = False)
 
-raise NotImplementedError('')
-print('Getting user input for good detections')
-import get_all_good_detections
-
-#get_all_good_detections.get_user_event_input(initial_df,data_dir,thresh_idx, redo = False)
-
-print('Applying user input')
-import include_user_input
-include_user_input.include_user_input(initial_df, data_dir, thresh_idx)
+import make_paper_figures.make_all_figures
 
 
-
-
-import get_shape_params
-get_shape_params.get_all_shape_params(initial_df, data_dir)
-raise NotImplementedError('CHECK THE DEAD CELLS IN MCF10A DATA')
 
 print('Finished successfully')

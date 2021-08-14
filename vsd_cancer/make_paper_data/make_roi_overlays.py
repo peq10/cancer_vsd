@@ -16,6 +16,10 @@ import f.general_functions as gf
 
 from vsd_cancer.functions import cancer_functions as canf
 
+import tifffile
+import cv2
+
+import scipy.ndimage as ndimage
 
 def make_all_overlay(df_file,save_dir,viewing_dir,HPC_num = None):
     df = pd.read_csv(df_file)
@@ -36,6 +40,7 @@ def make_all_overlay(df_file,save_dir,viewing_dir,HPC_num = None):
         im = np.load(Path(trial_save,f'{trial_string}_im.npy'))
         try:
             overlay,colours = pf.make_colormap_rois(masks, 'gist_rainbow')
+    
         except ValueError:
             continue
         
@@ -50,6 +55,24 @@ def make_all_overlay(df_file,save_dir,viewing_dir,HPC_num = None):
             a.axis('off')
         ax[1].set_title(trial_string[:trial_string.find('long_acq')])
         fig.savefig(Path(viewing_dir,f'{trial_string}_rois.png'),bbox_inches = 'tight',dpi = 300)
-        plt.show()
+
+        tif_overlay = (255*(np.sum(overlay,-1)>0)).astype(np.uint8)
+        
+        font                   = cv2.FONT_HERSHEY_SIMPLEX
+        bottomLeftCornerOfText = (100,100)
+        fontScale              = 0.5
+        fontColor              = 255
+        lineType               = 2
+        
+        coms = [ndimage.center_of_mass(mask) for mask in masks]
+        for idx,com in enumerate(coms):
+            cv2.putText(tif_overlay,str(idx), 
+                (int(com[1])-7,int(com[0])+7), 
+                font, 
+                fontScale,
+                fontColor,
+                lineType)
+        
+        tifffile.imsave(Path(viewing_dir,'../overlays/',f'{trial_string}_just_rois_withlab.tif'),tif_overlay)
         
 

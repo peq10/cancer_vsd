@@ -15,13 +15,15 @@ from vsd_cancer.functions import cancer_functions as canf
 
 import scipy.ndimage as ndimage
 
-
+import pdb
 
 def export_events(initial_df,save_dir,thresh_idx,min_ttx_amp = 1):
 
     df = pd.read_csv(initial_df)
     
-    print('NEED TO CHANGE TO INCLUDE QC')
+    user_input_df = pd.read_csv(Path(save_dir,'good_detections.csv'))
+
+    user_input_df.to_csv(Path(save_dir,'good_detections_debug_new.csv'))
     
     all_cell_id = []
     all_cell_x = []
@@ -56,6 +58,15 @@ def export_events(initial_df,save_dir,thresh_idx,min_ttx_amp = 1):
         
         
         for c_id in cell_ids:
+            
+
+            row = user_input_df[(user_input_df.trial_string == data.trial_string)&(user_input_df.cell_id == c_id)]
+            if len(row)!= 1:
+                raise ValueError('Should only be one matching cell')
+            
+            use = bool(row.correct.values[0])
+            if not use:
+                continue
             
             cell_name = f'{trial_string}_cell_{c_id}'
             cell_y,cell_x = ndimage.measurements.center_of_mass(masks[c_id,...])
@@ -129,6 +140,7 @@ def export_events(initial_df,save_dir,thresh_idx,min_ttx_amp = 1):
         if 'washin' in data.expt:
             continue
         
+        
         trial_string = data.trial_string
         trial_save = Path(save_dir,'ratio_stacks',trial_string)
         
@@ -137,6 +149,9 @@ def export_events(initial_df,save_dir,thresh_idx,min_ttx_amp = 1):
         
         active_cell_ids = [x for x in events.keys() if type(x) != str]
         
+        active_cell_use = [user_input_df[(user_input_df.trial_string == data.trial_string)&(user_input_df.cell_id == x)].correct.values[0] for x in active_cell_ids]
+        active_cell_ids = list(np.array(active_cell_ids)[active_cell_use])
+
         #exclude under minimum amplitude
         active_cell_ids = [x for x in active_cell_ids if np.max(np.abs(events['event_props'][x][:,1]))>min_ttx_amp/100]
         
@@ -157,7 +172,7 @@ def export_events(initial_df,save_dir,thresh_idx,min_ttx_amp = 1):
         expts.append(data.expt)
         stage.append(data.stage)
         
-        tot_cells.append(events['tc'].shape[0])
+        tot_cells.append(events['tc'].shape[0] - np.sum(np.logical_not(active_cell_use))) # have to get rid of exclusions
         tot_time.append(events['tc'].shape[1])
 
         obs_length.append(np.sum(results['observation_length'][thresh_idx]))
@@ -213,6 +228,12 @@ def export_events(initial_df,save_dir,thresh_idx,min_ttx_amp = 1):
         events = results['events'][thresh_idx]
         
         active_cell_ids = [x for x in events.keys() if type(x) != str]
+        active_cell_use = [user_input_df[(user_input_df.trial_string == data.trial_string)&(user_input_df.cell_id == x)].correct.values[0] for x in active_cell_ids]
+       
+        dont_use = list(np.array(active_cell_ids)[np.logical_not(active_cell_use)])
+        active_cell_ids = list(np.array(active_cell_ids)[active_cell_use])
+
+        
         all_cell_ids = [x for x in range(events['tc'].shape[0])]
 
         for c_id in all_cell_ids:
@@ -230,6 +251,8 @@ def export_events(initial_df,save_dir,thresh_idx,min_ttx_amp = 1):
                 n_neg_evs = len(eve_prop[:,1] < 0)
                 sum_integ_evs = np.sum(np.abs(eve_prop[:,2]))
                 sum_neg_integ_evs = np.sum(eve_prop[eve_prop[:,1] < 0,2])
+            elif c_id in dont_use:
+                continue
                 
             else:
                 n_pos_evs = 0
@@ -268,6 +291,116 @@ def export_events(initial_df,save_dir,thresh_idx,min_ttx_amp = 1):
 
 
     TTX_df2.to_csv(Path(save_dir,'TTX_active_df_by_cell.csv'))
+    
+    
+    #now do per cell events for non ttx
+    
+    
+    all_cell_id = []
+    num_pos_evs = []
+    num_neg_evs = []
+    all_integ_ev = []
+    neg_integ_ev = []
+    trial = []
+    day = []
+    slip = []
+    expts = []
+    stage = []
+    obs_length = []
+    
+    for idx,data in enumerate(df.itertuples()):
+        
+        if 'TTX' in data.expt:
+            continue
+        
+        if data.use != 'y':
+            continue
+        
+        if 'washin' in data.expt:
+            continue
+        
+        trial_string = data.trial_string
+        #if trial_string == 'cancer_20210314_slip2_area3_long_acq_MCF10A_TGFB_37deg_long_acq_blue_0.06681_green_0.07975_1':
+        #    pdb.set_trace()
+        
+        trial_save = Path(save_dir,'ratio_stacks',trial_string)
+
+        results = np.load(Path(trial_save,f'{trial_string}_event_properties.npy'),allow_pickle = True).item()
+        events = results['events'][thresh_idx]
+        
+
+        
+        active_cell_ids = [x for x in events.keys() if type(x) != str]
+        active_cell_use = [bool(user_input_df[(user_input_df.trial_string == data.trial_string)&(user_input_df.cell_id == x)].correct.values[0]) for x in active_cell_ids]
+      
+        dont_use = list(np.array(active_cell_ids)[np.logical_not(active_cell_use)])
+        active_cell_ids = list(np.array(active_cell_ids)[active_cell_use])
+        
+
+        
+        
+        all_cell_ids = [x for x in range(events['tc'].shape[0])]
+
+        for c_id in all_cell_ids:            
+            
+            cell_name = f'{trial_string}_cell_{c_id}'            
+            
+            if c_id in active_cell_ids:
+                eve = events[c_id]
+                eve_prop = events['event_props'][c_id]
+                
+                #remove too large events
+                eve_prop = eve_prop[np.abs(eve_prop[:,1])<0.066,:]
+                
+                n_pos_evs = len(eve_prop[:,1] > 0)
+                n_neg_evs = len(eve_prop[:,1] < 0)
+                sum_integ_evs = np.sum(np.abs(eve_prop[:,2]))
+                sum_neg_integ_evs = np.sum(eve_prop[eve_prop[:,1] < 0,2])
+            elif c_id in dont_use:
+                continue
+                
+            else:
+                n_pos_evs = 0
+                n_neg_evs = 0
+                sum_integ_evs = 0
+                sum_neg_integ_evs = 0
+                
+            
+            all_cell_id.append(cell_name)
+            num_pos_evs.append(n_pos_evs)
+            num_neg_evs.append(n_neg_evs)
+            all_integ_ev.append(sum_integ_evs)
+            neg_integ_ev.append(sum_neg_integ_evs)
+            trial.append(data.trial_string)
+            day.append(data.date)
+            slip.append(data.slip)
+            expts.append(data.expt)
+            if type(data.stage) == str:
+                stage.append(data.stage)
+            else:
+                stage.append('none')
+            
+
+            obs_length.append(results['observation_length'][thresh_idx][c_id])
+
+            
+    
+        
+
+    df3 = pd.DataFrame({'cell':all_cell_id,
+                            'trial':trial,
+                           'day':day,    
+                            'n_pos_events': num_pos_evs,
+                            'n_neg_events': num_neg_evs,
+                            'integrated_events': all_integ_ev,
+                            'neg_integrated_events': neg_integ_ev,
+                           'slip':slip,
+                           'expt':expts,
+                           'stage':stage,
+                           'obs_length':obs_length})
+
+
+    df3.to_csv(Path(save_dir,'non_ttx_active_df_by_cell.csv'))
         
         
         

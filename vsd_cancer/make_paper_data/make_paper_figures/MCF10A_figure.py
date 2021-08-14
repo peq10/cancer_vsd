@@ -63,7 +63,7 @@ def plot_events_MCF(df,use,log = True,upper_lim = 6.6,lower_lim = 0, T = 0.2,nbi
         dfn = dfn[dfn['event_amplitude'] < 0]
     
     length_bins = np.histogram(dfn['event_length']*T,bins = nbins)[1]
-    amp_bins = np.histogram(np.abs(dfn['event_amplitude'])*100,bins = nbins)[1]
+    amp_bins = np.histogram(dfn['event_amplitude']*100,bins = nbins)[1]
     
     neg = dfn[dfn.exp_stage == 'MCF10A_none']
     pos = dfn[dfn.exp_stage == 'MCF10A_TGFB_none']
@@ -74,8 +74,8 @@ def plot_events_MCF(df,use,log = True,upper_lim = 6.6,lower_lim = 0, T = 0.2,nbi
     fig,axarr = plt.subplots(figsize = (8,6))
     
     ax0 = plt.subplot(gs[0])
-    ax0.hist(np.abs(neg['event_amplitude'])*100,bins = amp_bins,log = log,label = 'MCF10A',histtype = histtype)
-    ax0.hist(np.abs(pos['event_amplitude'])*100,bins = amp_bins,log = log,label = 'MCF10A + TGF-$\\beta$',histtype = histtype)
+    ax0.hist(neg['event_amplitude']*100,bins = amp_bins,log = log,label = 'MCF10A',histtype = histtype)
+    ax0.hist(pos['event_amplitude']*100,bins = amp_bins,log = log,label = 'MCF10A + TGF-$\\beta$',histtype = histtype)
     ax0.set_xlabel('Absolute event amplitude (% $\Delta$R/R$_0$)')
     ax0.set_ylabel('Observed Frequency')    
     ax0.legend(frameon = False)
@@ -94,12 +94,12 @@ def plot_events_MCF(df,use,log = True,upper_lim = 6.6,lower_lim = 0, T = 0.2,nbi
         norm = None
     
     ax2 = plt.subplot(gs[2])
-    ax2.hist2d(np.abs(neg['event_amplitude'])*100,neg['event_length']*T,bins = (amp_bins,length_bins),norm = norm)
+    ax2.hist2d(neg['event_amplitude']*100,neg['event_length']*T,bins = (amp_bins,length_bins),norm = norm)
     ax2.set_xlabel('MCF10A event amplitude (% $\Delta$R/R$_0$)')    
     ax2.set_ylabel('Event length (s)')
     
     ax3 = plt.subplot(gs[3])
-    ax3.hist2d(np.abs(pos['event_amplitude'])*100,pos['event_length']*T,bins = (amp_bins,length_bins),norm=norm)
+    ax3.hist2d(pos['event_amplitude']*100,pos['event_length']*T,bins = (amp_bins,length_bins),norm=norm)
     ax3.set_xlabel('MCF10A + TGF-$\\beta$ event size (% $\Delta$R/R$_0$)')    
     ax3.set_ylabel('Event length (s)')
     
