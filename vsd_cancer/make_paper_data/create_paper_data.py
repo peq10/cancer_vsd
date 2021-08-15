@@ -108,6 +108,13 @@ import get_all_brightness
 #import apply_circle_rois
 #import apply_principle_use
 
+print('Getting LED calibration...')
+import get_LED_calibration
+get_LED_calibration.get_LED_calibration(top_dir,data_dir)
+
+import get_led_powers
+get_led_powers.get_all_powers(initial_df,data_dir)
+
 print('Detecting events...')
 import get_events
 if False:
@@ -148,6 +155,7 @@ import bootstrap_correlation_analysis
 bootstrap_correlation_analysis.calculate_corrs(top_dir, data_dir,redo = False)
 
 import make_paper_figures.make_all_figures
+
 
 
 

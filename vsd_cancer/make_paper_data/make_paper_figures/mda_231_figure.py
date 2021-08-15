@@ -33,6 +33,9 @@ def make_figures(initial_df,save_dir,figure_dir,filetype = '.png'):
     num_traces = 15
     sep = 25
     make_example_trace_fig(trial_string_use,num_traces,sep,df,save_dir,figsave,filetype)
+    #make example for synchrony fig
+    make_example_trace_fig(trial_string_use,15,sep,df,save_dir,Path(figure_dir,'wave_figure'),filetype)
+    
     plot_positive_negative_events(save_dir,figsave,filetype)
     
 def make_example_trace_fig(trial_string_use,num_traces,sep,df,save_dir,figsave,filetype):

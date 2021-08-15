@@ -21,7 +21,7 @@ def construct_CI(array,level,function = np.mean,num_resamplings = 10000):
     
     return CI, resamplings
 
-def bootstrap_test(control,test,function = np.mean,num_resamplings = 10000,plot = False):
+def bootstrap_test(control,test,function = np.mean,num_resamplings = 10000,plot = False, names = None):
     '''
     test one sided hypothesis that function(control) > function(test)
 
@@ -43,9 +43,14 @@ def bootstrap_test(control,test,function = np.mean,num_resamplings = 10000,plot 
         pvalue = 1/num_resamplings #we can only resolve to be up to this val
     
     if plot:
-        plt.figure()
-        a = plt.hist(diff,bins = 50)
-        plt.plot([res,res],[0,a[0].max()])
+        fig, ax = plt.subplots()
+        a = ax.hist(diff,bins = 50, label = 'Resampled Null differences')
+        ax.plot([res,res],[0,a[0].max()], label  = 'Observed difference')
+        if names is not None:
+            ax.set_xlabel(f'Mean {names[1]} - {names[0]}')
+        plt.legend(frameon = False)
+        
+        
         
     return pvalue, diff
 
