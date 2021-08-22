@@ -19,6 +19,8 @@ import matplotlib.cm
 import matplotlib.gridspec as gridspec
 import matplotlib as mpl
 
+import seaborn as sns
+
 def make_figures(initial_df,save_dir,figure_dir,filetype = '.png'):
     figsave = Path(figure_dir,'231_figure')
     if not figsave.is_dir():
@@ -30,13 +32,83 @@ def make_figures(initial_df,save_dir,figure_dir,filetype = '.png'):
     df = pd.read_csv(initial_df)
     
     
-    num_traces = 15
-    sep = 25
-    make_example_trace_fig(trial_string_use,num_traces,sep,df,save_dir,figsave,filetype)
-    #make example for synchrony fig
-    make_example_trace_fig(trial_string_use,15,sep,df,save_dir,Path(figure_dir,'wave_figure'),filetype)
+    if False:
+        num_traces = 15
+        sep = 25
+        make_example_trace_fig(trial_string_use,num_traces,sep,df,save_dir,figsave,filetype)
+        #make example for synchrony fig
+        make_example_trace_fig(trial_string_use,15,sep,df,save_dir,Path(figure_dir,'wave_figure'),filetype)
+        
+        plot_positive_negative_events(save_dir,figsave,filetype)
+        
     
-    plot_positive_negative_events(save_dir,figsave,filetype)
+    plot_percent_quiet(save_dir, figsave, filetype)
+    
+    
+def plot_percent_quiet(save_dir,figsave,filetype):
+    
+    df = pd.read_csv(Path(save_dir,'non_ttx_active_df_by_cell.csv'))
+
+    T = 0.2
+    
+    
+    df['exp_stage'] = df.expt + '_' + df.stage
+    df['day_slip'] = df.day.astype(str) + '_' + df.slip.astype(str) 
+    
+    
+    df['event_rate'] = (df['n_neg_events'] +  df['n_pos_events'])/(df['obs_length']*T)
+    df['neg_event_rate'] = (df['n_neg_events'] )/(df['obs_length']*T)
+    
+    df['integ_rate'] = (df['integrated_events'])/(df['obs_length']*T)
+    df['neg_integ_rate'] = -1*(df['neg_integrated_events'] )/(df['obs_length']*T)
+    
+    mda = df[df.exp_stage == 'standard_none'][['neg_event_rate','day_slip']]
+    
+    mda['active'] = 100*(mda['neg_event_rate'] > 0).astype(int)
+    
+    
+    active_d = mda[mda.active != 0]
+    active_rate = active_d.groupby('day_slip').mean()['neg_event_rate'].to_numpy()
+    
+    active = mda.groupby('day_slip').mean()['active'].to_numpy()
+    
+    fig,ax4 = plt.subplots()
+    #sns.violinplot(y=active,saturation = 0.5)
+    #ax4.plot(np.random.normal(loc = 1,scale = scale,size = sens.shape[0]),sens[:,-1],'.k',markersize = 12)
+    sns.swarmplot(y=active,ax = ax4,color = 'k',size = 7)
+    ax4.xaxis.set_visible(False)
+    ax4.set_ylabel('Active Cells (%)')
+    pf.set_thickaxes(ax4, 3,remove = ['top','right','bottom'])
+    pf.set_all_fontsize(ax4, 16)
+    pf.set_all_fontsize(ax4, 16)
+    
+    pf.make_square_plot(ax4)
+    fig.savefig(Path(figsave,f'231_active_cells{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
+    
+    
+    fig,ax = plt.subplots()
+    #sns.violinplot(y=active,saturation = 0.5)
+    #ax4.plot(np.random.normal(loc = 1,scale = scale,size = sens.shape[0]),sens[:,-1],'.k',markersize = 12)
+    sns.swarmplot(y=active_rate*10**3,ax = ax,color = 'k',size = 7)
+    ax.xaxis.set_visible(False)
+    ax.set_ylabel('Mean event rate\n(active cells, x10$^3$ s$^{-1}$)')
+    pf.set_thickaxes(ax, 3,remove = ['top','right','bottom'])
+    pf.set_all_fontsize(ax, 16)
+    pf.set_all_fontsize(ax, 16)
+    
+    pf.make_square_plot(ax)
+    fig.savefig(Path(figsave,f'231_active_rates{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
+    
+    fig1,ax1 = plt.subplots()
+    ax1.hist(active_d.neg_event_rate*1000,bins = 20, log = True, color = (0.2,0.2,0.2))
+    ax1.set_xlabel('Event rate(active cells, x10$^3$ s$^{-1}$)')
+    ax1.set_ylabel('Number of cells')
+    pf.set_thickaxes(ax1, 3)
+    pf.set_all_fontsize(ax1, 16)
+    pf.set_all_fontsize(ax1, 16)
+    fig1.savefig(Path(figsave,f'231_active_hists{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
+
+    
     
 def make_example_trace_fig(trial_string_use,num_traces,sep,df,save_dir,figsave,filetype):
     T = 0.2

@@ -15,14 +15,109 @@ import matplotlib.pyplot as plt
 import matplotlib.cm
 import matplotlib.gridspec as gridspec
 import matplotlib as mpl
+import datetime
 
-def make_figures(initial_df,save_dir,figure_dir,filetype = '.png'):
+import f.plotting_functions as pf
+
+
+from vsd_cancer.functions import stats_functions as statsf
+
+def make_figures(initial_df,save_dir,figure_dir,filetype = '.png', redo_stats = False):
     figsave = Path(figure_dir,'10A_figure')
     if not figsave.is_dir():
         figsave.mkdir()
     
     plot_MCF_hist(save_dir,figsave,filetype)
-    pass
+
+    plot_compare_mda(save_dir,figsave,filetype , 'neg_event_rate', np.mean, 'np.mean', scale = 3, density = False, redo_stats =redo_stats)
+    plot_compare_mda(save_dir,figsave,filetype , 'neg_event_rate', np.mean, 'np.mean', scale = 3, density = True, redo_stats = False)
+    plot_compare_mda(save_dir,figsave,filetype , 'neg_integ_rate', np.mean, 'np.mean', scale = 3, density = False, redo_stats = redo_stats)
+    plot_compare_mda(save_dir,figsave,filetype , 'neg_integ_rate', np.mean, 'np.mean', scale = 3, density = True, redo_stats = False)
+
+
+def plot_compare_mda(save_dir,figsave,filetype , key, function, function_name, scale = 3, density = False, redo_stats = True,num_resamplings = 10**6):
+    df = pd.read_csv(Path(save_dir,'non_ttx_active_df_by_cell.csv'))
+
+    T = 0.2
+    
+    
+    df['exp_stage'] = df.expt + '_' + df.stage
+    df['day_slip'] = df.day.astype(str) + '_' + df.slip.astype(str) 
+    
+    
+    df['event_rate'] = (df['n_neg_events'] +  df['n_pos_events'])/(df['obs_length']*T)
+    df['neg_event_rate'] = (df['n_neg_events'] )/(df['obs_length']*T)
+    
+    df['integ_rate'] = (df['integrated_events'])/(df['obs_length']*T)
+    df['neg_integ_rate'] = -1*(df['neg_integrated_events'] )/(df['obs_length']*T)
+    
+    mda = df[df.exp_stage == 'standard_none'][[key,'day_slip']]
+    mcf = df[df.exp_stage == 'MCF10A_none'][[key,'day_slip']]
+    tgf = df[df.exp_stage == 'MCF10A_TGFB_none'][[key,'day_slip']]
+    
+    md = mda[key].to_numpy()
+    mc = mcf[key].to_numpy()
+    tg = tgf[key].to_numpy()
+    
+    
+    bins = np.histogram(np.concatenate((md,mc,tg))*10**3,bins = 20)[1]
+    
+
+    fig,axarr = plt.subplots(nrows = 3)
+    c = 0.05
+    axarr[0].hist(md*10**scale,bins = bins, log = True, density = density, label = 'MDA-MB-231', color = (c,c,c))
+    axarr[1].hist(mc*10**scale,bins = bins, log = True,  density = density, label = 'MCF10A', color = (c,c,c))
+    axarr[2].hist(tg*10**scale,bins = bins, log = True,  density = density, label = 'MCF10A+TGF$\\beta$', color = (c,c,c))
+    
+    for idx,a in enumerate(axarr):
+        if not density:
+            a.set_ylim([0.6,10**4.5])
+            a.set_yticks(10**np.arange(0,4,3))
+        a.legend(frameon = False,loc = (0.4,0.4),fontsize = 16)
+        pf.set_all_fontsize(a, 16)
+        if idx != 2:
+            a.set_xticklabels([])
+            
+        
+    if not density:
+        axarr[1].set_ylabel('Number of cells')
+    else:
+        axarr[1].set_ylabel('Proportion of cells')
+
+    if key == 'neg_event_rate':
+        axarr[-1].set_xlabel('Negative event rate ' + '(1000 cells$^{-1}$ s$^{-1}$)')
+    elif key == 'neg_integ_rate':
+        axarr[-1].set_xlabel(f'Integrated event rate per {10**scale} cells ' + '(%$\cdot$s / s)')
+    else:
+        raise ValueError('wrong key')
+        
+    fig.savefig(Path(figsave,f'MCF_compare_density_{density}_{key}{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
+
+    if redo_stats:
+        p_mda_mcf,_,f1 = statsf.bootstrap_test(md,mc,function = function,plot = True,num_resamplings = num_resamplings, names = ['MDA-MB-231', 'MCF10A'])
+        p_mda_tgf,_,f2 = statsf.bootstrap_test(md,tg,function = function,plot = True,num_resamplings = num_resamplings, names = ['MDA-MB-231', 'MCF10A + TGF$\\beta$'])
+        p_mcf_tgf,_,f3 = statsf.bootstrap_test(tg,mc,function = function,plot = True,num_resamplings = num_resamplings, names = ['MCF10A + TGF$\\beta$', 'MCF10A'])
+        
+        f1.savefig(Path(figsave,'bootstrap',f'bootstrap_231_MCF_{key}{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
+        f2.savefig(Path(figsave,'bootstrap',f'bootstrap_231_tgf_{key}{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
+        f3.savefig(Path(figsave,'bootstrap',f'bootstrap_tgf_MCF_{key}{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
+        
+        
+        with open(Path(figsave, f'statistical_test_results_{key}.txt'),'w') as f:
+            f.write(f'{datetime.datetime.now()}\n')
+            f.write(f'Testing significance of second less than first for function {function_name}\n')
+            f.write(f'N cells MDA: {len(md)}\n')
+            f.write(f'N cells MCF: {len(mc)}\n')
+            f.write(f'N cells TGF: {len(tg)}\n')
+            f.write(f'N slips MDA: {len(np.unique(mda["day_slip"]))}\n')
+            f.write(f'N slips MCF: {len(np.unique(mcf["day_slip"]))}\n')
+            f.write(f'N slips TGF: {len(np.unique(tgf["day_slip"]))}\n')
+    
+            f.write(f'Num resamples: {num_resamplings}\n')
+            f.write(f'p MDA-MCF {p_mda_mcf}\n')
+            f.write(f'p MDA-TGF {p_mda_tgf}\n')
+            f.write(f'p MCF-TGF {p_mcf_tgf}\n')
+
 
 def plot_MCF_hist(save_dir,figsave,filetype):
     

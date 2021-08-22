@@ -45,14 +45,57 @@ def bootstrap_test(control,test,function = np.mean,num_resamplings = 10000,plot 
     if plot:
         fig, ax = plt.subplots()
         a = ax.hist(diff,bins = 50, label = 'Resampled Null differences')
-        ax.plot([res,res],[0,a[0].max()], label  = 'Observed difference')
+        if not len(diff[diff < res]) == 0:
+            ax.plot([res,res],[0,a[0].max()], label  = f'Observed difference (p = {pvalue})')
+        else:
+            ax.plot([res,res],[0,a[0].max()], label  = f'Observed difference (p < {pvalue}, floored)')
         if names is not None:
             ax.set_xlabel(f'Mean {names[1]} - {names[0]}')
         plt.legend(frameon = False)
         
         
         
-    return pvalue, diff
+        return pvalue, diff,fig
+    else:
+        return pvalue,diff
+    
+def bootstrap_test_2sided(control,test,function = np.mean,num_resamplings = 10000,plot = False, names = None):
+    '''
+    test one sided hypothesis that function(control) > function(test)
+
+    '''
+    
+    null = np.concatenate([control,test])
+    
+    control_resamp = ass.bootstrap(null,samples = len(control), bootnum = num_resamplings,bootfunc = function)
+    test_resamp = ass.bootstrap(null,samples = len(test),bootnum = num_resamplings,bootfunc = function)
+
+
+    diff = test_resamp - control_resamp
+    res = function(test) - function(control)
+    
+    pvalue = len(diff[np.abs(diff) < np.abs(res)])/len(diff)
+    
+    if len(diff[np.abs(diff) < np.abs(res)]) == 0:
+        warnings.warn('Not enough resamples to resolve p this small')
+        pvalue = 1/num_resamplings #we can only resolve to be up to this val
+    
+    if plot:
+        fig, ax = plt.subplots()
+        a = ax.hist(diff,bins = 50, label = 'Resampled Null differences')
+        if not len(diff[np.abs(diff) < np.abs(res)]) == 0:
+            ax.plot([res,res],[0,a[0].max()], label  = f'Observed difference (p = {pvalue})')
+        else:
+            ax.plot([res,res],[0,a[0].max()], label  = f'Observed difference (p < {pvalue}, floored)')
+        if names is not None:
+            ax.set_xlabel(f'Mean {names[1]} - {names[0]}')
+        plt.legend(frameon = False)
+        
+        
+        
+        return pvalue, diff,fig
+    else:
+        return pvalue,diff
 
 
 def qqplot(x, y, quantiles=None, interpolation='nearest', ax=None, rug=False,

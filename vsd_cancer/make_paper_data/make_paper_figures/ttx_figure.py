@@ -7,7 +7,7 @@ Created on Thu Jul 29 18:33:36 2021
 """
 from pathlib import Path
 
-
+import datetime
 import numpy as np
 import pandas as pd
 
@@ -21,17 +21,17 @@ import matplotlib.cm
 import matplotlib.gridspec as gridspec
 import matplotlib as mpl
 
-def make_figures(initial_df,save_dir,figure_dir,filetype = '.png'):
+def make_figures(initial_df,save_dir,figure_dir,filetype = '.png', redo_stats = False):
     figsave = Path(figure_dir,'ttx_figure')
     if not figsave.is_dir():
         figsave.mkdir()
     
-    plot_TTX_pre_post(save_dir,figsave,filetype)
-    plot_TTX_washout(save_dir,figsave,filetype)
-    pass
+    plot_TTX_pre_post(save_dir,figsave,filetype,redo_stats)
+    plot_TTX_washout(save_dir,figsave,filetype, redo_stats)
 
 
-def plot_TTX_pre_post(save_dir,figsave,filetype):
+
+def plot_TTX_pre_post(save_dir,figsave,filetype, redo_stats):
     
     df = pd.read_csv(Path(save_dir,'all_events_df.csv'))
     df['exp_stage'] = df.expt + '_' + df.stage
@@ -45,7 +45,7 @@ def plot_TTX_pre_post(save_dir,figsave,filetype):
     histtype = ['bar','step']
     
     
-    ttx = [10]
+    ttx = [1,10]
     log = [True]
     only_neg = [False]
     histtype = ['bar']
@@ -60,14 +60,24 @@ def plot_TTX_pre_post(save_dir,figsave,filetype):
     df2 = pd.read_csv(Path(save_dir,'TTX_active_df_by_cell.csv'))
     T = 0.2
     df2['exp_stage'] = df2.expt + '_' + df2.stage
+    df2['day_slip'] = df2.day.astype(str) + '_' + df2.slip.astype(str) 
+
     df2['neg_event_rate'] = (df2['n_neg_events'] )/(df2['obs_length']*T)
-    use2 = [x for x in np.unique(df2['exp_stage']) if 'washout' not in x]
-    fig1 = plot_TTX_summary(df2,use2,key = 'neg_event_rate')
     
-    fig1.savefig(Path(figsave,'pre_post',f'TTX_1_10_summary_stats{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
+
+    df2['neg_integ_rate'] = -1*(df2['neg_integrated_events'] )/(df2['obs_length']*T)
+    
+    
+    use2 = [x for x in np.unique(df2['exp_stage']) if 'washout' not in x]
+    plot_TTX_summary(df2,use2,figsave,filetype,redo_stats = redo_stats,key = 'neg_event_rate', function = np.mean,function_name = 'np.mean',scale = 3, density = True)
+    plot_TTX_summary(df2,use2,figsave,filetype,redo_stats = False,key = 'neg_event_rate', function = np.mean,function_name = 'np.mean',scale = 3, density = False)
+    plot_TTX_summary(df2,use2,figsave,filetype,redo_stats = redo_stats,key = 'neg_integ_rate', function = np.mean,function_name = 'np.mean',scale = 3, density = True)
+    plot_TTX_summary(df2,use2,figsave,filetype,redo_stats = False,key = 'neg_integ_rate', function = np.mean,function_name = 'np.mean',scale = 3, density = False)
+    
 
 
-def plot_TTX_washout(save_dir,figsave,filetype):
+
+def plot_TTX_washout(save_dir,figsave,filetype, redo_stats):
     
     df = pd.read_csv(Path(save_dir,'all_events_df.csv'))
     df['exp_stage'] = df.expt + '_' + df.stage
@@ -95,51 +105,21 @@ def plot_TTX_washout(save_dir,figsave,filetype):
     T = 0.2
     df2['exp_stage'] = df2.expt + '_' + df2.stage
     df2['neg_event_rate'] = (df2['n_neg_events'] )/(df2['obs_length']*T)
+    df2['day_slip'] = df2.day.astype(str) + '_' + df2.slip.astype(str) 
+    
+    df2['neg_integ_rate'] = -1*(df2['neg_integrated_events'] )/(df2['obs_length']*T)
+    
     use2 = [x for x in np.unique(df2['exp_stage']) if 'washout' in x]
-    fig1 = plot_washout_summary(df2,use2,key = 'neg_event_rate')
     
     
-    fig1.savefig(Path(figsave,'washout',f'TTX_washout_summary_stats{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
+    plot_washout_summary(df2,use2,figsave,filetype,redo_stats = redo_stats,key = 'neg_event_rate', function = np.mean,function_name = 'np.mean',scale = 3, density = True)
+    plot_washout_summary(df2,use2,figsave,filetype,redo_stats = False,key = 'neg_event_rate', function = np.mean,function_name = 'np.mean',scale = 3, density = False)
+    plot_washout_summary(df2,use2,figsave,filetype,redo_stats = redo_stats,key = 'neg_integ_rate', function = np.mean,function_name = 'np.mean',scale = 3, density = True)
+    plot_washout_summary(df2,use2,figsave,filetype,redo_stats = False,key = 'neg_integ_rate', function = np.mean,function_name = 'np.mean',scale = 3, density = False)
     
-    
+      
 
-
-def plot_average_cis_washout(pre,post,wash, function = np.mean,num_resamplings = 10**5,scale = 4):
-    
-    CI_pre,pre_resamplings = statsf.construct_CI(pre,5, num_resamplings = num_resamplings)
-    CI_post,post_resamplings = statsf.construct_CI(post, 5, num_resamplings = num_resamplings)
-    CI_wash,wash_resamplings = statsf.construct_CI(wash,5, num_resamplings = num_resamplings)
-    
-    
-    p_pre_post = statsf.bootstrap_test(pre,post,function = function,plot = False,num_resamplings = num_resamplings)
-    p_post_wash = statsf.bootstrap_test(wash,post,function = function,plot = False,num_resamplings = num_resamplings)
-    p_pre_wash = statsf.bootstrap_test(pre,wash,function = function, plot = False,num_resamplings = num_resamplings)
-    
-    #TODO print n cells etc. to a file
-    print(f'Pre-post: {p_pre_post[0]}, Post-wash: {p_post_wash[0]}, Pre-wash: {p_pre_wash[0]}')
-    vals = np.array([np.mean(pre),np.mean(post),np.mean(wash)])*10**scale
-    errors = np.array([CI_pre,CI_post,CI_wash])*10**scale
-    
-    
-    fig,ax = plt.subplots()
-    pf.plot_errorbar(ax,vals,errors)
-    sc_str = '10$^{-'+str(scale)+'}$'
-    ax.set_ylabel('Negative Event Rate\nper Cell (x'+sc_str+' s$^{-1}$)')
-    ax.set_xticks(range(len(vals)))
-    ax.set_xticklabels(['Pre-TTX', 'Post-TTX', 'Washout'])
-    
-    
-    pf.add_significance_bar(ax, p_pre_post[0], [0,0.975], np.array([1.075,1.1])*errors.max(),textFormat = 3, textLoc = 1.15*errors.max())
-    pf.add_significance_bar(ax, p_post_wash[0], [1.025,2], np.array([1.075,1.1])*errors.max(), textLoc = 1.15*errors.max())
-
-    pf.set_all_fontsize(ax, 16)
-    pf.set_thickaxes(ax, 3)
-    pf.make_square_plot(ax)
-    
-    return fig
-    
-
-def plot_washout_summary(df,use,key = 'neg_event_rate', function = np.mean):
+def plot_washout_summary(df,use,figsave,filetype,redo_stats = True,num_resamplings = 10**6,key = 'neg_event_rate', function = np.mean,function_name = 'np.mean',scale = 3, density = True):
     dfn = df.copy()     
         
     use_bool = np.array([np.any(x in use) for x in dfn.exp_stage])
@@ -147,52 +127,74 @@ def plot_washout_summary(df,use,key = 'neg_event_rate', function = np.mean):
     
     pre = dfn[dfn.stage == 'pre'][key].to_numpy()
     post = dfn[dfn.stage == 'post'][key].to_numpy()
-    wash = dfn[dfn.stage == 'washout'][key].to_numpy()
+    wash = dfn[dfn.stage == 'washout'][key].to_numpy()   
     
-    fig1 = plot_average_cis_washout(pre,post,wash)
+    ppre = dfn[dfn.stage == 'pre'][[key,'day_slip']]
+    ppost = dfn[dfn.stage == 'post'][[key,'day_slip']]
+    wwash = dfn[dfn.stage == 'washout'][[key,'day_slip']]
     
-    
-    return fig1
-
-def plot_average_cis_1_10(pre_10,post_10,pre_1,post_1, function = np.mean,num_resamplings = 10**5,scale = 4):
-    
-    CI_pre_10,pre_10_resamplings = statsf.construct_CI(pre_10,5, num_resamplings = num_resamplings)
-    CI_post_10,post_10_resamplings = statsf.construct_CI(post_10, 5, num_resamplings = num_resamplings)
-    CI_pre_1,pre_1_resamplings = statsf.construct_CI(pre_1,5, num_resamplings = num_resamplings)
-    CI_post_1,post_1_resamplings = statsf.construct_CI(post_1, 5, num_resamplings = num_resamplings)
-
-    
-    
-    p_10 = statsf.bootstrap_test(pre_10,post_10,function = function,plot = False,num_resamplings = num_resamplings)
-    p_1 = statsf.bootstrap_test(pre_1,post_1,function = function,plot = False,num_resamplings = num_resamplings)
-
-    
-    #TODO print n cells etc. to a file
-    print(f'10 uM: {p_10[0]}, 1 uM: {p_1[0]}')
-    vals = np.array([np.mean(pre_10),np.mean(post_10),np.mean(pre_1),np.mean(post_1)])*10**scale
-    errors = np.array([CI_pre_10,CI_post_10,CI_pre_1,CI_post_1])*10**scale
-    
-    
-    fig,ax = plt.subplots()
-    pf.plot_errorbar(ax,vals[:2],errors[:2,:])
-    pf.plot_errorbar(ax,vals[2:],errors[2:,:],off = 2)
-    sc_str = '10$^{-'+str(scale)+'}$'
-    ax.set_ylabel('Negative Event Rate\nper Cell (x'+sc_str+' s$^{-1}$)')
-    ax.set_xticks(range(len(vals)))
-    ax.set_xticklabels(['Pre', 'Post 10 uM', 'Pre', 'Post 1 uM'])
-    
-    
-    pf.add_significance_bar(ax, p_10[0], [0,1], np.array([1.075,1.1])*errors.max(), textLoc = 1.15*errors.max())
-    pf.add_significance_bar(ax, p_1[0], [2,3], np.array([1.075,1.1])*errors.max(), textLoc = 1.15*errors.max())
-
-    pf.set_all_fontsize(ax, 16)
-    pf.set_thickaxes(ax, 3)
-    pf.make_square_plot(ax)
-    
-    return fig
+    bins = np.histogram(np.concatenate((pre,post,wash))*10**3,bins = 20)[1]
     
 
-def plot_TTX_summary(df,use,key = 'event_rate', function = np.mean):
+    fig,axarr = plt.subplots(nrows = 3)
+    c = 0.05
+    axarr[0].hist(pre*10**scale,bins = bins, log = True, density = density, label = 'pre TTX', color = (c,c,c))
+    axarr[1].hist(post*10**scale,bins = bins, log = True,  density = density, label = 'post 10 uM TTX', color = (c,c,c))
+    axarr[2].hist(wash*10**scale,bins = bins, log = True,  density = density, label = 'washout', color = (c,c,c))
+    
+    for idx,a in enumerate(axarr):
+        if not density:
+            a.set_ylim([0.6,10**4.5])
+            a.set_yticks(10**np.arange(0,4,3))
+        a.legend(frameon = False,loc = (0.4,0.4),fontsize = 16)
+        pf.set_all_fontsize(a, 16)
+        if idx != 2:
+            a.set_xticklabels([])
+            
+        
+    if not density:
+        axarr[1].set_ylabel('Number of cells')
+    else:
+        axarr[1].set_ylabel('Proportion of cells')
+
+    if key == 'neg_event_rate':
+        axarr[-1].set_xlabel('Negative event rate ' + '(1000 cells$^{-1}$ s$^{-1}$)')
+    elif key == 'neg_integ_rate':
+        axarr[-1].set_xlabel(f'Integrated event rate per {10**scale} cells ' + '(%$\cdot$s / s)')
+    else:
+        raise ValueError('wrong key')
+        
+    
+    fig.savefig(Path(figsave,f'TTX_washout_compare_density_{density}_{key}{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
+
+    if redo_stats:
+        p_pre_post,_,f1 = statsf.bootstrap_test(pre,post,function = function,plot = True,num_resamplings = num_resamplings, names = ['Pre TTX', 'Post TTX'])
+        p_pre_wash,_,f2 = statsf.bootstrap_test_2sided(wash,pre,function = function,plot = True,num_resamplings = num_resamplings, names = ['Pre TTX', 'washout'])
+        p_wash_post,_,f3 = statsf.bootstrap_test(wash,post,function = function,plot = True,num_resamplings = num_resamplings, names = ['Washout', 'Post TTX'])
+        
+        f1.savefig(Path(figsave,'bootstrap',f'bootstrap_pre_post_{key}{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
+        f2.savefig(Path(figsave,'bootstrap',f'bootstrap_wash_pre_{key}{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
+        f3.savefig(Path(figsave,'bootstrap',f'bootstrap_wash_post_{key}{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
+        
+        
+        with open(Path(figsave, f'statistical_test_results_washout_{key}.txt'),'w') as f:
+            f.write(f'{datetime.datetime.now()}\n')
+            f.write(f'Testing significance of second less than first for function {function_name}\n')
+            f.write(f'N cells pre: {len(pre)}\n')
+            f.write(f'N cells post: {len(post)}\n')
+            f.write(f'N cells wash: {len(wash)}\n')
+            f.write(f'N slips pre: {len(np.unique(ppre["day_slip"]))}\n')
+            f.write(f'N slips post: {len(np.unique(ppost["day_slip"]))}\n')
+            f.write(f'N slips wash: {len(np.unique(wwash["day_slip"]))}\n')
+    
+            f.write(f'Num resamples: {num_resamplings}\n')
+            f.write(f'p pre-post {p_pre_post}\n')
+            f.write(f'p pre-wash (2 sided) {p_pre_wash}\n')
+            f.write(f'p wash-post {p_wash_post}\n')
+    
+    
+
+def plot_TTX_summary(df,use,figsave,filetype,redo_stats = True,num_resamplings = 10**6,key = 'neg_event_rate', function = np.mean,function_name = 'np.mean',scale = 3, density = True):
     dfn = df.copy()     
         
     use_bool = np.array([np.any(x in use) for x in dfn.exp_stage])
@@ -203,10 +205,112 @@ def plot_TTX_summary(df,use,key = 'event_rate', function = np.mean):
     pre_1 = dfn[dfn.exp_stage == 'TTX_1um_pre'][key].to_numpy()
     post_1 = dfn[dfn.exp_stage == 'TTX_1um_post'][key].to_numpy()
     
-    fig1 = plot_average_cis_1_10(pre_10,post_10,pre_1,post_1)
     
+    ppre_10 = dfn[dfn.exp_stage == 'TTX_10um_pre'][[key,'day_slip']]
+    ppost_10 = dfn[dfn.exp_stage == 'TTX_10um_post'][[key,'day_slip']]
     
-    return fig1
+    ppre_1 = dfn[dfn.exp_stage == 'TTX_1um_pre'][[key,'day_slip']]
+    ppost_1 = dfn[dfn.exp_stage == 'TTX_1um_post'][[key,'day_slip']]
+
+    
+    bins_10 = np.histogram(np.concatenate((pre_10,post_10))*10**3,bins = 20)[1]
+    bins_1 = np.histogram(np.concatenate((pre_1,post_1))*10**3,bins = 20)[1]
+
+    fig_10,axarr_10 = plt.subplots(nrows = 2)
+    c = 0.05
+    axarr_10[0].hist(pre_10*10**scale,bins = bins_10, log = True, density = density, label = 'pre TTX', color = (c,c,c))
+    axarr_10[1].hist(post_10*10**scale,bins = bins_10, log = True,  density = density, label = 'post 10 uM TTX', color = (c,c,c))
+
+    
+    for idx,a in enumerate(axarr_10):
+        if not density:
+            a.set_ylim([0.6,10**4.5])
+            a.set_yticks(10**np.arange(0,4,3))
+        a.legend(frameon = False,loc = (0.4,0.4),fontsize = 16)
+        pf.set_all_fontsize(a, 16)
+        if idx != 1:
+            a.set_xticklabels([])
+            
+        
+    if not density:
+        axarr_10[1].set_ylabel('Number of cells')
+    else:
+        axarr_10[1].set_ylabel('Proportion of cells')
+
+    if key == 'neg_event_rate':
+        axarr_10[-1].set_xlabel('Negative event rate ' + '(1000 cells$^{-1}$ s$^{-1}$)')
+    elif key == 'neg_integ_rate':
+        axarr_10[-1].set_xlabel(f'Integrated event rate per {10**scale} cells ' + '(%$\cdot$s / s)')
+    else:
+        raise ValueError('wrong key')
+        
+    
+    fig_10.savefig(Path(figsave,f'TTX_10um_compare_density_{density}_{key}{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
+
+    if redo_stats:
+        p_pre_post_10,_,f1 = statsf.bootstrap_test(pre_10,post_10,function = function,plot = True,num_resamplings = num_resamplings, names = ['Pre TTX', 'Post 10 uM TTX'])
+        f1.savefig(Path(figsave,'bootstrap',f'bootstrap_pre_10_{key}{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
+        with open(Path(figsave, f'statistical_test_results_10uM_{key}.txt'),'w') as f:
+            f.write(f'{datetime.datetime.now()}\n')
+            f.write(f'Testing significance of second less than first for function {function_name}\n')
+            f.write(f'N cells pre: {len(pre_10)}\n')
+            f.write(f'N cells post: {len(post_10)}\n')
+            f.write(f'N slips pre: {len(np.unique(ppre_10["day_slip"]))}\n')
+            f.write(f'N slips post: {len(np.unique(ppost_10["day_slip"]))}\n')
+
+    
+            f.write(f'Num resamples: {num_resamplings}\n')
+            f.write(f'p pre-post {p_pre_post_10}\n')
+            
+            
+    fig_1,axarr_1 = plt.subplots(nrows = 2)
+    c = 0.05
+    axarr_1[0].hist(pre_1*10**scale,bins = bins_1, log = True, density = density, label = 'pre TTX', color = (c,c,c))
+    axarr_1[1].hist(post_1*10**scale,bins = bins_1, log = True,  density = density, label = 'post 1 uM TTX', color = (c,c,c))
+
+    
+    for idx,a in enumerate(axarr_1):
+        if not density:
+            a.set_ylim([0.6,10**4.5])
+            a.set_yticks(10**np.arange(0,4,3))
+        a.legend(frameon = False,loc = (0.4,0.4),fontsize = 16)
+        pf.set_all_fontsize(a, 16)
+        if idx != 1:
+            a.set_xticklabels([])
+            
+        
+    if not density:
+        axarr_1[1].set_ylabel('Number of cells')
+    else:
+        axarr_1[1].set_ylabel('Proportion of cells')
+
+    if key == 'neg_event_rate':
+        axarr_1[-1].set_xlabel('Negative event rate ' + '(1000 cells$^{-1}$ s$^{-1}$)')
+    elif key == 'neg_integ_rate':
+        axarr_1[-1].set_xlabel(f'Integrated event rate per {10**scale} cells ' + '(%$\cdot$s / s)')
+    else:
+        raise ValueError('wrong key')
+        
+    
+    fig_1.savefig(Path(figsave,f'TTX_1um_compare_density_{density}_{key}{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
+
+    if redo_stats:
+        p_pre_post_1,_,f1 = statsf.bootstrap_test(pre_1,post_1,function = function,plot = True,num_resamplings = num_resamplings, names = ['Pre TTX', 'Post 1 uM TTX'])
+        f1.savefig(Path(figsave,'bootstrap',f'bootstrap_pre_1_{key}{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
+        with open(Path(figsave, f'statistical_test_results_1uM_{key}.txt'),'w') as f:
+            f.write(f'{datetime.datetime.now()}\n')
+            f.write(f'Testing significance of second less than first for function {function_name}\n')
+            f.write(f'N cells pre: {len(pre_1)}\n')
+            f.write(f'N cells post: {len(post_1)}\n')
+            f.write(f'N slips pre: {len(np.unique(ppre_1["day_slip"]))}\n')
+            f.write(f'N slips post: {len(np.unique(ppost_1["day_slip"]))}\n')
+
+    
+            f.write(f'Num resamples: {num_resamplings}\n')
+            f.write(f'p pre-post {p_pre_post_1}\n')
+
+
+    
 
 
 def plot_events_TTX(df,use,TTX_level = 1,log = True,upper_lim = 6.6,lower_lim = 0, T = 0.2,nbins = 20,only_neg = True,histtype = 'bar'):

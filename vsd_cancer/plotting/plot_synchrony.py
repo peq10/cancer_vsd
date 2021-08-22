@@ -79,7 +79,7 @@ tc_filt=ndimage.gaussian_filter(tcs,(0,3))
 
 loc = 300,550
 
-ac = tc_filt[:,loc[0]:loc[1]]  < 0.99
+ac = tc_filt[:,loc[0]:loc[1]]  < 0.98
 
 roi_ids = np.where(np.sum(ac,-1) >0)[0]
 wh = np.where(ac)

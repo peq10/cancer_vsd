@@ -35,7 +35,7 @@ def bin_times(trains,binsize):
     '''
     Bins all the spikes for the whole time 
     '''
-    min_time = 0
+    min_time = 400*0.2
     max_time = np.max([np.max(x) for x in trains])
     time_bins = np.arange(min_time,max_time+binsize,binsize)
     binned_spikes = np.array([np.histogram(x,bins = time_bins)[0] for x in trains])

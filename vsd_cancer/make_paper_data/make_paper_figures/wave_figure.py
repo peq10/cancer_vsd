@@ -10,6 +10,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 
+import scipy.stats as stats
+
 import scipy.ndimage as ndimage
 
 from vsd_cancer.functions import correlation_functions as corrf
@@ -27,7 +29,8 @@ def make_figures(top_dir,save_dir,figure_dir,filetype = '.png'):
     
     
     plot_correlation_analysis(top_dir,save_dir,figsave,filetype)
-    plot_example_synchrony(top_dir,save_dir,figsave, filetype)
+    plot_example_synchrony(top_dir,save_dir,figsave, filetype, redo_boot = False)
+    plot_wave(top_dir,save_dir,figsave, filetype)
 
 
 
@@ -70,7 +73,7 @@ def plot_correlation_analysis(top_dir,save_dir,figsave, filetype):
     
     fig.savefig(Path(figsave,f'Correlation_binchange{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
 
-def plot_example_synchrony(top_dir,save_dir,figsave, filetype):
+def plot_example_synchrony(top_dir,save_dir,figsave, filetype, redo_boot = False):
     trial_string_use = 'cancer_20201207_slip1_area1_long_acq_corr_corr_long_acqu_blue_0.03465_green_0.07063_heated_to_37_1'
     initial_df = Path(top_dir,'analysis','long_acqs_20210428_experiments_correct.csv')
     df = pd.read_csv(initial_df)
@@ -228,19 +231,151 @@ def plot_example_synchrony(top_dir,save_dir,figsave, filetype):
     
     fig.savefig(Path(figsave,f'example_spike_trains{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
     
-    #now get an example bootstrap sampling
-    pairwise_true = np.mean(corrf.calculate_pairwise_corrs(binned_spikes))
-    pairwise_shuffled = []
-    for i in range(10**4):
-        [np.random.shuffle(x) for x in binned_spikes_shuffled]
-        pairwise_shuffled.append(np.mean(corrf.calculate_pairwise_corrs(binned_spikes_shuffled)))
+    
+    if redo_boot:
+        #now get an example bootstrap sampling
+        pairwise_true = np.mean(corrf.calculate_pairwise_corrs(binned_spikes))
+        pairwise_shuffled = []
+        for i in range(10**4):
+            [np.random.shuffle(x) for x in binned_spikes_shuffled]
+            pairwise_shuffled.append(np.mean(corrf.calculate_pairwise_corrs(binned_spikes_shuffled)))
+        
+        fig,ax = plt.subplots()
+        h = ax.hist(pairwise_shuffled,bins = 20)
+        ax.plot([pairwise_true,pairwise_true],[0,h[0].max()], '-.k', linewidth = 3)
+        
+        fig.savefig(Path(figsave,f'example_null_vs_corr{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
+
+
+def plot_wave(top_dir,save_dir,figsave, filetype):
+    
+    initial_df = Path(top_dir,'analysis','long_acqs_20201230_experiments_correct.csv')
+
+    df = pd.read_csv(initial_df)
+    for idx,data in enumerate(df.itertuples()):
+        if '20201216_slip1_area2_long_acq' in data.trial_string:
+            break
+        
+    trial_string = data.trial_string
+    trial_save = Path(save_dir,'ratio_stacks',trial_string)
+    
+    
+    
+    im = np.load(Path(trial_save,f'{trial_string}_im.npy'))
+    seg =  np.load(Path(trial_save,f'{trial_string}_seg.npy'))
+    
+    
+    
+    masks = canf.lab2masks(seg)
+    
+    T = 0.2
+    
+    
+    
+    
+    
+    tcs = np.load(Path(trial_save,f'{trial_string}_all_tcs.npy'))[:,-1000:-400]
+    tc_filt=ndimage.gaussian_filter(tcs,(0,3))
+    
+    loc = 300,550
+    
+    ac = tc_filt[:,loc[0]:loc[1]]  < 0.98
+    
+    roi_ids = np.where(np.sum(ac,-1) >0)[0]
+    wh = np.where(ac)
+    start_ids = wh[1][np.unique(wh[0],return_index = True)[1]]
+    
+    sort = np.argsort(start_ids)
+    roi_ids = roi_ids[sort]
+    start_ids = start_ids[sort]
+    
+    roi_t = tcs[roi_ids,:]
+    roi_t_filt = ndimage.gaussian_filter(roi_t,(0,1))
+    
+    #now plot the dist/time stuff
+    roi_masks = masks[roi_ids,...]
+    coms = np.array([ndimage.center_of_mass(mask) for mask in roi_masks])
+    
+    dists = np.sqrt((coms[:,0] - coms[0,0])**2 + (coms[:,1] - coms[0,1])**2)*1.04
+    times = np.argmin(roi_t_filt,axis = -1)*T
+    times -= times[0]
+    
+    sizes = np.sum(np.abs(roi_t[:,loc[0]:loc[1]]),-1)
+    sizes = np.min(roi_t[:,loc[0]:loc[1]],-1)
+    sizes -= np.mean(roi_t[:,loc[0]-20:loc[0]])
+    sizes *= 100
+    
+    fit = stats.linregress(times,dists)
     
     fig,ax = plt.subplots()
-    h = ax.hist(pairwise_shuffled,bins = 20)
-    ax.plot([pairwise_true,pairwise_true],[0,h[0].max()], '-.k', linewidth = 3)
+    ax.plot(times,fit.slope*times +fit.intercept,'k',linewidth = 2)
+    ax.plot(times,dists,'.b',markersize = 10,label = 'Cell event peaks')
+    ax.set_xlabel('Time (s)')
+    ax.set_ylabel('Distance ($\mathrm{\mu}$m)')
+    ax.set_xticks([0,5,10,15])
+    ax.set_yticks([0,250,500])
+    ax.text(0,400,f'Fit speed: {fit.slope:.0f}'+' $\mathrm{\mu}$m/s\nr$^2$ ='+f' {fit.rvalue**2:.2f}')
+    plt.legend(frameon = False, loc = (0,0.7))
+    pf.set_thickaxes(ax, 3)
+    pf.make_square_plot(ax)
+    pf.set_all_fontsize(ax, 14)
+    fig.savefig(Path(figsave,'../wave_figure2',f'speed_fit{filetype}'))
     
-    fig.savefig(Path(figsave,f'example_null_vs_corr{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
-
+    #plot distance/magnitude
+    fit2 = stats.linregress(dists,sizes)
+    fig,ax = plt.subplots()
+    ax.plot(dists,sizes,'.b',markersize = 10,label = 'Cell peak amplitudes')
+    ax.set_yticks([-6,-3,0])
+    ax.set_xticks([0,250,500])
+    ax.set_ylabel('Transient peak amplitude (%)')
+    ax.set_xlabel('Distance ($\mathrm{\mu}$m)')
+    pf.set_thickaxes(ax, 3)
+    pf.make_square_plot(ax)
+    pf.set_all_fontsize(ax, 14)
+    fig.savefig(Path(figsave,'../wave_figure2',f'size_plot{filetype}'))
+    
+    
+    sep = 20#
+    norm_dist = dists/dists.max()
+    num = roi_ids.shape[0]
+    cmap = matplotlib.cm.viridis
+    
+    fig = plt.figure(constrained_layout = True)
+    gs  = fig.add_gridspec(2,5)
+    ax = fig.add_subplot(gs[:,-2:])
+    colors = []
+    for i in range(num):
+        line = ax.plot(np.arange(roi_t.shape[-1])*T,(roi_t[i]-1)*100 + i*100/sep, color = cmap(i/num))
+        line2 = ax.plot(np.arange(roi_t.shape[-1])*T,(roi_t_filt[i]-1)*100 + i*100/sep, color = 'k')
+        colors.append(line[0].get_c())
+        ax.text(-60,(i-0.15)*100/sep,f'{i}',fontdict = {'fontsize':24},color = colors[i])
+    
+    
+    plt.axis('off')
+    pf.plot_scalebar(ax, 0, (tcs[:num].min()-1)*100 - 3, 20,3,thickness = 3)
+    
+    colors = (np.array(colors)*255).astype(np.uint8)
+    #colors = np.hstack([colors,np.ones((colors.shape[0],1))])
+    
+    over = roi_masks
+    struct = np.zeros((3,3,3))
+    struct[1,...] = 1
+    over = np.logical_xor(ndimage.binary_dilation(over,structure = struct,iterations = 2),over).astype(int)
+    over = np.sum(over[...,None]*colors[:,None,None,:],0).astype(np.uint8)
+    length = int(100/1.04)
+    
+    over[-20:-15,10:10+length] = np.ones(4,dtype = np.uint8)*255
+    
+    ax1 = fig.add_subplot(gs[:,:-2])
+    ax1.imshow(im,cmap = 'Greys_r')
+    ax1.imshow(over)
+    plt.axis('off')
+    pf.label_roi_centroids(ax1, roi_masks, colors/255)
+    
+    fig.savefig(Path(figsave,'../wave_figure2',f'wave_time_courses{filetype}'),bbox_inches = 'tight',dpi = 300)
+    
+    ex_roi = 185
+    ex_t = tcs[ex_roi]
 
 
 if __name__ == '__main__':

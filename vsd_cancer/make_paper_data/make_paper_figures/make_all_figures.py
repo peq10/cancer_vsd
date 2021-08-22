@@ -14,7 +14,7 @@ save_dir = Path(top_dir,'analysis','full')
 figure_dir = Path('/home/peter/Dropbox/Papers/cancer/v2/')
 initial_df = Path(top_dir,'analysis','long_acqs_20210428_experiments_correct.csv')
 
-filetype = '.eps'
+filetype = '.pdf'
 
 #figure 1
 if __name__ == '__main__':
@@ -34,14 +34,14 @@ if __name__ == '__main__':
     plt.show()
     
     import ttx_figure
-    ttx_figure.make_figures(initial_df,save_dir,figure_dir,filetype = filetype)
+    ttx_figure.make_figures(initial_df,save_dir,figure_dir,filetype = filetype, redo_stats = False)
     plt.show()
     
     import MCF10A_figure
-    MCF10A_figure.make_figures(initial_df,save_dir,figure_dir,filetype = filetype)
+    MCF10A_figure.make_figures(initial_df,save_dir,figure_dir,filetype = filetype, redo_stats = False)
     plt.show()
     import wave_figure
-    wave_figure.make_figures(initial_df,save_dir,figure_dir,filetype = filetype)
+    wave_figure.make_figures(top_dir,save_dir,figure_dir,filetype = filetype)
     plt.show()
 else:
     

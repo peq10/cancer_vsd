@@ -53,48 +53,59 @@ df['neg_integ_rate'] = -1*(df['neg_integrated_events'] )/(df['obs_length']*T)
 def f(arr):
     return np.percentile(95,arr)
 
-def plot_average_mda_mcf(mda,mcf,tgf, function = np.mean,num_resamplings = 10**5,scale = 4):
-
-    CI_mda,mda_resamplings = statsf.construct_CI(mda,5, num_resamplings = num_resamplings,function = function)
-    CI_mcf,mcf_resamplings = statsf.construct_CI(mcf, 5, num_resamplings = num_resamplings,function = function)
-    CI_tgf,tgf_resamplings = statsf.construct_CI(tgf,5, num_resamplings = num_resamplings,function = function)
+def plot_average_mda_mcf(mda,mcf,tgf, function = np.mean,num_resamplings = 10**5, scale = 3, density = True):
+  
+   
     
-    
-    
-    
-    p_mda_mcf = statsf.bootstrap_test(mda,mcf,function = function,plot = True,num_resamplings = num_resamplings, names = ['MDA-MB-231', 'MCF10A'])
-    p_mda_tgf = statsf.bootstrap_test(mda,tgf,function = function,plot = True,num_resamplings = num_resamplings, names = ['MDA-MB-231', 'MCF10A + TGF$\\beta$'])
-    p_mcf_tgf = statsf.bootstrap_test(tgf,mcf,function = function,plot = True,num_resamplings = num_resamplings, names = ['MCF10A + TGF$\\beta$', 'MCF10A'])
+    #p_mda_mcf = statsf.bootstrap_test(mda,mcf,function = function,plot = True,num_resamplings = num_resamplings, names = ['MDA-MB-231', 'MCF10A'])
+    #p_mda_tgf = statsf.bootstrap_test(mda,tgf,function = function,plot = True,num_resamplings = num_resamplings, names = ['MDA-MB-231', 'MCF10A + TGF$\\beta$'])
+    #p_mcf_tgf = statsf.bootstrap_test(tgf,mcf,function = function,plot = True,num_resamplings = num_resamplings, names = ['MCF10A + TGF$\\beta$', 'MCF10A'])
     
     
     #TODO print n cells etc. to a file
-    print(f'mda-mcf: {p_mda_mcf[0]}, mda_tgf: {p_mda_tgf[0]}, mcf-tgf: {p_mcf_tgf[0]}')
+    #print(f'mda-mcf: {p_mda_mcf[0]}, mda_tgf: {p_mda_tgf[0]}, mcf-tgf: {p_mcf_tgf[0]}')
+    
+    bins = np.histogram(np.concatenate((mda,mcf,tgf))*10**3,bins = 20)[1]
+    
+
+    fig,axarr = plt.subplots(nrows = 3)
+    c = 0.05
+    h0 = axarr[0].hist(mda*10**scale,bins = bins, log = True, density = density, label = 'MDA-MB-231', color = (c,c,c))
+    h1 = axarr[1].hist(mcf*10**scale,bins = bins, log = True,  density = density, label = 'MCF10A', color = (c,c,c))
+    h2 = axarr[2].hist(tgf*10**scale,bins = bins, log = True,  density = density, label = 'MCF10A+TGF$\\beta$', color = (c,c,c))
+    
+    ma = np.max([h0[0].max(),h1[0].max(),h2[0].max()])
+    
+    for idx,a in enumerate(axarr):
+        if not density:
+            a.set_ylim([0.6,10**4.5])
+            a.set_yticks(10**np.arange(0,4,3))
+        a.legend(frameon = False,loc = (0.4,0.4),fontsize = 16)
+        pf.set_all_fontsize(a, 16)
+        if idx != 2:
+            a.set_xticklabels([])
+            
+        
+    if not density:
+        axarr[1].set_ylabel('Number of cells')
+    else:
+        axarr[1].set_ylabel('Propotion of cells')
+
+    axarr[-1].set_xlabel(f'Integrated event rate per {10**scale} cells ' + '(%$\cdot$s / s)')
+
     
     
-    vals = np.array([function(mda),function(mcf),function(tgf)])*10**scale
-    print(vals)
-    errors = np.array([CI_mda,CI_mcf,CI_tgf])*10**scale
+    #pf.add_significance_bar(ax, p_mda_mcf[0], [0,0.975], np.array([1.05,1.075])*errors.max(), textLoc = 1.1*errors.max())
+    #pf.add_significance_bar(ax, p_mcf_tgf[0], [1.025,2], np.array([1.05,1.075])*errors.max(), textLoc = 1.1*errors.max())
+    #pf.add_significance_bar(ax, p_mda_tgf[0], [0,2], np.array([1.2,1.225])*errors.max(), textLoc = 1.25*errors.max())
     
-    fig,ax = plt.subplots()
-    pf.plot_errorbar(ax,vals,errors,linewidth = 2, join = False)
-    
-    sc_str = '10$^{-'+str(scale)+'}$'
-    ax.set_ylabel('Negative Event Rate\nper Cell (x'+sc_str+' s$^{-1}$)')
-    ax.set_xticks(range(len(vals)))
-    ax.set_xticklabels(['MDA-MB\n231', 'MCF10A', 'MCF10A\n+TGF$\\beta$' ])
-    
-    
-    pf.add_significance_bar(ax, p_mda_mcf[0], [0,0.975], np.array([1.05,1.075])*errors.max(), textLoc = 1.1*errors.max())
-    pf.add_significance_bar(ax, p_mcf_tgf[0], [1.025,2], np.array([1.05,1.075])*errors.max(), textLoc = 1.1*errors.max())
-    pf.add_significance_bar(ax, p_mda_tgf[0], [0,2], np.array([1.2,1.225])*errors.max(), textLoc = 1.25*errors.max())
-    
-    pf.set_all_fontsize(ax, 16)
-    pf.set_thickaxes(ax, 3)
-    pf.make_square_plot(ax)
+    #pf.set_all_fontsize(ax, 16)
+    #pf.set_thickaxes(ax, 3)
+    #pf.make_square_plot(ax)
     return fig
     
     
-def plot_MCF_summary(df,key = 'neg_event_rate', function = np.mean):
+def plot_MCF_summary(df,key = 'neg_integ_rate', function = np.mean):
     dfn = df.copy()
 
     mda = dfn[dfn.exp_stage == 'standard_none'][[key, 'day_slip', 'cell']]
