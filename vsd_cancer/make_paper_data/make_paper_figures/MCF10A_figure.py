@@ -19,8 +19,12 @@ import datetime
 
 import f.plotting_functions as pf
 
+import scipy.ndimage as ndimage
 
 from vsd_cancer.functions import stats_functions as statsf
+
+
+from vsd_cancer.functions import cancer_functions as canf
 
 def make_figures(initial_df,save_dir,figure_dir,filetype = '.png', redo_stats = False):
     figsave = Path(figure_dir,'10A_figure')
@@ -31,9 +35,84 @@ def make_figures(initial_df,save_dir,figure_dir,filetype = '.png', redo_stats = 
 
     plot_compare_mda(save_dir,figsave,filetype , 'neg_event_rate', np.mean, 'np.mean', scale = 3, density = False, redo_stats =redo_stats)
     plot_compare_mda(save_dir,figsave,filetype , 'neg_event_rate', np.mean, 'np.mean', scale = 3, density = True, redo_stats = False)
-    plot_compare_mda(save_dir,figsave,filetype , 'neg_integ_rate', np.mean, 'np.mean', scale = 3, density = False, redo_stats = redo_stats)
-    plot_compare_mda(save_dir,figsave,filetype , 'neg_integ_rate', np.mean, 'np.mean', scale = 3, density = True, redo_stats = False)
+    #plot_compare_mda(save_dir,figsave,filetype , 'neg_integ_rate', np.mean, 'np.mean', scale = 3, density = False, redo_stats = redo_stats)
+    #plot_compare_mda(save_dir,figsave,filetype , 'neg_integ_rate', np.mean, 'np.mean', scale = 3, density = True, redo_stats = False)
+    plot_example_and_tcs(save_dir,figsave, filetype)
 
+def plot_example_and_tcs(save_dir,figsave, filetype):
+    mc_str = 'cancer_20210119_slip2_area1_long_acq_corr_long_acq_blue_0.0454_green_0.0671_1'
+    tg_str = 'cancer_20210122_slip1_area3_long_acq_MCF10A_tgfbeta_long_acq_blue_0.02909_green_0.0672_1'
+    
+    tds = [mc_str,tg_str]
+    
+    at = []
+    att = []
+    T = 0.2
+    sep = 50
+    num_traces = 5
+    im_scalebar_length_um = 100
+    cells = [[185,105,109,191,149],[19,78, 51, 45, 71]]
+    #cells = [get_most_active_traces(5,initial_df,Path(data_dir,'ratio_stacks',mc_str),mc_str)[1],get_most_active_traces(5,initial_df,Path(data_dir,'ratio_stacks',tg_str),tg_str)[1]]
+    
+    for idx,t in enumerate(tds):
+        trial_save = Path(save_dir,'ratio_stacks',t)
+        
+        im = np.load(Path(trial_save,f'{t}_im.npy'))
+        
+        seg = np.load(Path(trial_save,f'{t}_seg.npy'))
+        mask = canf.lab2masks(seg)
+        
+        
+        tcs = np.load(Path(trial_save,f'{t}_all_tcs.npy'))
+        att.append(tcs)
+        
+        at.append(ndimage.gaussian_filter(tcs[cells[idx]],(0,3)))
+        
+        
+        tc_filt = ndimage.gaussian_filter(tcs[cells[idx]],(0,3)) 
+        tcs = tcs[cells[idx]]
+    
+        masks = mask[cells[idx]]
+    
+    
+    
+        cmap = matplotlib.cm.tab10    
+        
+    
+        fig = plt.figure(constrained_layout = True)
+        gs  = fig.add_gridspec(2,5)
+        ax = fig.add_subplot(gs[:,-2:])
+        colors = []
+        for i in range(num_traces):
+            ax.plot([0,tcs.shape[-1]*T],np.ones(2)*i*100/sep,'k',alpha = 0.5)
+            line = ax.plot(np.arange(tcs.shape[-1])*T,(tcs[i]-1)*100 + i*100/sep, color = cmap(i/num_traces))
+            _ = ax.plot(np.arange(tcs.shape[-1])*T,(tc_filt[i]-1)*100 + i*100/sep, color = 'k')
+            colors.append(line[0].get_c())
+    
+            ax.text(-10,(i-0.15)*100/sep,f'{i}',fontdict = {'fontsize':14},color = colors[i],ha = 'right',va = 'center')
+    
+        plt.axis('off')
+        pf.plot_scalebar(ax, 0, (tcs[:num_traces].min()-1)*100, 200,1,thickness = 3)
+        
+        colors = (np.array(colors)*255).astype(np.uint8)
+        #colors = np.hstack([colors,np.ones((colors.shape[0],1))])
+        
+        over = masks[:num_traces]
+        struct = np.zeros((3,3,3))
+        struct[1,...] = 1
+        over = np.logical_xor(ndimage.binary_dilation(over,structure = struct,iterations = 3),over).astype(int)
+        over = np.sum(over[...,None]*colors[:,None,None,:],0).astype(np.uint8)
+        length = int(im_scalebar_length_um/1.04)
+        
+        over[-20:-15,-length-10:-10] = np.ones(4,dtype = np.uint8)*255
+        
+        ax1 = fig.add_subplot(gs[:,:-2])
+        ax1.imshow(im,cmap = 'Greys_r')
+        ax1.imshow(over)
+        plt.axis('off')
+        pf.label_roi_centroids(ax1, masks[:num_traces,...], colors/255,fontdict = {'fontsize':8})
+        
+        fig.savefig(Path(figsave,'examples',f'MCF_TGF_Examples_{idx}{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
 
 def plot_compare_mda(save_dir,figsave,filetype , key, function, function_name, scale = 3, density = False, redo_stats = True,num_resamplings = 10**6):
     df = pd.read_csv(Path(save_dir,'non_ttx_active_df_by_cell.csv'))
@@ -60,7 +139,7 @@ def plot_compare_mda(save_dir,figsave,filetype , key, function, function_name, s
     tg = tgf[key].to_numpy()
     
     
-    bins = np.histogram(np.concatenate((md,mc,tg))*10**3,bins = 20)[1]
+    bins = np.histogram(np.concatenate((md,mc,tg))*10**3,bins = 10)[1]
     
 
     fig,axarr = plt.subplots(nrows = 3)
@@ -68,6 +147,9 @@ def plot_compare_mda(save_dir,figsave,filetype , key, function, function_name, s
     axarr[0].hist(md*10**scale,bins = bins, log = True, density = density, label = 'MDA-MB-231', color = (c,c,c))
     axarr[1].hist(mc*10**scale,bins = bins, log = True,  density = density, label = 'MCF10A', color = (c,c,c))
     axarr[2].hist(tg*10**scale,bins = bins, log = True,  density = density, label = 'MCF10A+TGF$\\beta$', color = (c,c,c))
+    
+    axarr[0].sharey(axarr[1])
+    axarr[2].sharey(axarr[1])
     
     for idx,a in enumerate(axarr):
         if not density:
@@ -91,7 +173,7 @@ def plot_compare_mda(save_dir,figsave,filetype , key, function, function_name, s
     else:
         raise ValueError('wrong key')
         
-    fig.savefig(Path(figsave,f'MCF_compare_density_{density}_{key}{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
+    fig.savefig(Path(figsave,'summary', f'MCF_compare_density_{density}_{key}{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
 
     if redo_stats:
         p_mda_mcf,_,f1 = statsf.bootstrap_test(md,mc,function = function,plot = True,num_resamplings = num_resamplings, names = ['MDA-MB-231', 'MCF10A'])
@@ -103,7 +185,7 @@ def plot_compare_mda(save_dir,figsave,filetype , key, function, function_name, s
         f3.savefig(Path(figsave,'bootstrap',f'bootstrap_tgf_MCF_{key}{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
         
         
-        with open(Path(figsave, f'statistical_test_results_{key}.txt'),'w') as f:
+        with open(Path(figsave,'summary', f'statistical_test_results_{key}.txt'),'w') as f:
             f.write(f'{datetime.datetime.now()}\n')
             f.write(f'Testing significance of second less than first for function {function_name}\n')
             f.write(f'N cells MDA: {len(md)}\n')
@@ -112,6 +194,10 @@ def plot_compare_mda(save_dir,figsave,filetype , key, function, function_name, s
             f.write(f'N slips MDA: {len(np.unique(mda["day_slip"]))}\n')
             f.write(f'N slips MCF: {len(np.unique(mcf["day_slip"]))}\n')
             f.write(f'N slips TGF: {len(np.unique(tgf["day_slip"]))}\n')
+            
+            f.write(f'231 mean rate: {np.mean(md)}')
+            f.write(f'MCF10A mean rate: {np.mean(mc)}')
+            f.write(f'MCF10A + TGFB mean rate: {np.mean(tg)}')
     
             f.write(f'Num resamples: {num_resamplings}\n')
             f.write(f'p MDA-MCF {p_mda_mcf}\n')
@@ -128,9 +214,9 @@ def plot_MCF_hist(save_dir,figsave,filetype):
     
     
 
-    log = [True,False]
-    only_neg = [True,False]
-    histtype = ['bar','step']
+    log = [True]
+    only_neg = [False]
+    histtype = ['bar']
 
     for l in log:
         for n in only_neg:
@@ -178,7 +264,7 @@ def plot_events_MCF(df,use,log = True,upper_lim = 6.6,lower_lim = 0, T = 0.2,nbi
     ax1 = plt.subplot(gs[1])
     ax1.hist(np.abs(neg['event_length'])*T,bins = length_bins,log = log,label = 'MCF10A',histtype = histtype)
     ax1.hist(np.abs(pos['event_length'])*T,bins = length_bins,log = log,label = 'MCF10A + TGF-$\\beta$',histtype = histtype)
-    ax1.set_xlabel('Event length (s)')
+    ax1.set_xlabel('Event duration (s)')
     ax1.set_ylabel('Observed Frequency')   
     ax1.legend(frameon = False)
     
@@ -189,14 +275,16 @@ def plot_events_MCF(df,use,log = True,upper_lim = 6.6,lower_lim = 0, T = 0.2,nbi
         norm = None
     
     ax2 = plt.subplot(gs[2])
-    ax2.hist2d(neg['event_amplitude']*100,neg['event_length']*T,bins = (amp_bins,length_bins),norm = norm)
+    h = ax2.hist2d(neg['event_amplitude']*100,neg['event_length']*T,bins = (amp_bins,length_bins),norm = norm)
+    plt.colorbar(h[3])
     ax2.set_xlabel('MCF10A event amplitude (% $\Delta$R/R$_0$)')    
-    ax2.set_ylabel('Event length (s)')
+    ax2.set_ylabel('Event duration (s)')
     
     ax3 = plt.subplot(gs[3])
-    ax3.hist2d(pos['event_amplitude']*100,pos['event_length']*T,bins = (amp_bins,length_bins),norm=norm)
-    ax3.set_xlabel('MCF10A + TGF-$\\beta$ event size (% $\Delta$R/R$_0$)')    
-    ax3.set_ylabel('Event length (s)')
+    h2 = ax3.hist2d(pos['event_amplitude']*100,pos['event_length']*T,bins = (amp_bins,length_bins),norm=norm)
+    plt.colorbar(h2[3])
+    ax3.set_xlabel('MCF10A + TGF-$\\beta$ event amplitude (% $\Delta$R/R$_0$)')    
+    ax3.set_ylabel('Event duration (s)')
     
     return fig
 if __name__ == '__main__':
@@ -204,4 +292,4 @@ if __name__ == '__main__':
     save_dir = Path(top_dir,'analysis','full')
     figure_dir = Path('/home/peter/Dropbox/Papers/cancer/v2/')
     initial_df = Path(top_dir,'analysis','long_acqs_20210428_experiments_correct.csv')
-    make_figures(initial_df,save_dir,figure_dir)
+    make_figures(initial_df,save_dir,figure_dir, redo_stats = True)

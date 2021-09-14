@@ -65,8 +65,11 @@ def make_spectral_shift_trace(figsave,save_dir,filetype,delta = 20,exc1 = 405,ex
     ax.plot([exc1,exc1],[0,1],'--k',linewidth = 3)
     ax.plot([exc2,exc2],[0,1],'--k',linewidth = 3)
     
-    ax.plot()
+    plot_spec(ax, ex_minus, 'Ex minus', '--b', linewidth = 3)
+    plot_spec(ax, em_minus, 'Em minus', '--r', linewidth = 3)
     
+    plot_spec(ax, ex_plus, 'Ex plus', '--b', linewidth = 3)
+    plot_spec(ax, em_plus, 'Em plus', '--r', linewidth = 3)
     ax.set_xlabel('Wavelength (nm)')
     ax.set_ylabel('Rel. Absorption/Emission')
     ax.set_xlim([380,800])
@@ -75,22 +78,11 @@ def make_spectral_shift_trace(figsave,save_dir,filetype,delta = 20,exc1 = 405,ex
     
     pf.set_thickaxes(ax, 3)
     pf.set_all_fontsize(ax, 16)
+    pf.make_square_plot(ax)
     
     fig.savefig(Path(figsave,f'regular_spectrum{filetype}'),bbox_inches = 'tight',transparent=True)
     #pf.make_square_plot(ax)
-    
-    l1 = plot_spec(ax, ex_minus, 'Ex plus', '--b', linewidth = 3)
-    l2 = plot_spec(ax, em_minus, 'Em plus', '--r', linewidth = 3)
-    
-    fig.savefig(Path(figsave,f'depol_spectrum{filetype}'),bbox_inches = 'tight',transparent=True)
-    
-    l1[0].remove()
-    l2[0].remove()
-    
-    l1 = plot_spec(ax, ex_plus, 'Ex plus', '--b', linewidth = 3)
-    l2 = plot_spec(ax, em_plus, 'Em plus', '--r', linewidth = 3)
-    
-    fig.savefig(Path(figsave,f'hyperpol_spectrum{filetype}'),bbox_inches = 'tight',transparent=True)
+
 
 
     

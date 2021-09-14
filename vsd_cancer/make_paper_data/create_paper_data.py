@@ -103,10 +103,15 @@ print('Getting mean brightnesses')
 import get_all_brightness
 #yget_all_brightness.get_mean_brightness(initial_df, data_dir)
 
-#THESE NEED TO BE MADE SO AUTOMATICALLY UPDATE DATAFRAME
-#import define_circle_rois
-#import apply_circle_rois
-#import apply_principle_use
+if False:
+    import define_circle_rois
+    define_circle_rois.define_circle_rois(top_dir,initial_df,data_dir,radius = 220,center = (246,256))
+
+
+    import apply_circle_rois
+    apply_circle_rois.apply_circle_exclusion(top_dir,data_dir,initial_df)
+
+
 
 print('Getting LED calibration...')
 import get_LED_calibration
@@ -123,7 +128,7 @@ if False:
                                   surrounds_z = 10,
                                   exclude_first = 400,
                                   tc_type = 'median',
-                                  exclude_circle = False,
+                                  exclude_circle = True,
                                   yilin_save = yilin_save)
 
 
@@ -141,11 +146,11 @@ if False:
 
 print('Exporting events...')
 import export_events
-export_events.export_events(initial_df, data_dir, thresh_idx,min_ttx_amp = 0)
+export_events.export_events(initial_df, data_dir, thresh_idx,min_ttx_amp = 0, amp_threshold = None)
 
 print('Making videos...')
 import make_corr_grey_vids
-make_corr_grey_vids.make_all_grey_vids(top_dir, data_dir, initial_df, Path(viewing_dir,'final_paper_after_user_input'), thresh_idx, redo = False, QCd = True, onlymcf = True)
+make_corr_grey_vids.make_all_grey_vids(top_dir, data_dir, initial_df, Path(viewing_dir,'final_paper_after_user_input'), thresh_idx, redo = False, QCd = True, onlymcf = False)
 
 
 import make_spike_trains

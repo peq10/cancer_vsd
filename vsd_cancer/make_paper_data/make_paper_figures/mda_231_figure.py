@@ -21,6 +21,8 @@ import matplotlib as mpl
 
 import seaborn as sns
 
+import datetime
+
 def make_figures(initial_df,save_dir,figure_dir,filetype = '.png'):
     figsave = Path(figure_dir,'231_figure')
     if not figsave.is_dir():
@@ -32,7 +34,7 @@ def make_figures(initial_df,save_dir,figure_dir,filetype = '.png'):
     df = pd.read_csv(initial_df)
     
     
-    if False:
+    if True:
         num_traces = 15
         sep = 25
         make_example_trace_fig(trial_string_use,num_traces,sep,df,save_dir,figsave,filetype)
@@ -48,6 +50,12 @@ def make_figures(initial_df,save_dir,figure_dir,filetype = '.png'):
 def plot_percent_quiet(save_dir,figsave,filetype):
     
     df = pd.read_csv(Path(save_dir,'non_ttx_active_df_by_cell.csv'))
+    df2 = pd.read_csv(Path(save_dir,'TTX_active_df_by_cell.csv'))
+    
+    df2 = df2[df2.stage == 'pre']
+    
+    
+    df = pd.concat([df,df2])
 
     T = 0.2
     
@@ -62,7 +70,7 @@ def plot_percent_quiet(save_dir,figsave,filetype):
     df['integ_rate'] = (df['integrated_events'])/(df['obs_length']*T)
     df['neg_integ_rate'] = -1*(df['neg_integrated_events'] )/(df['obs_length']*T)
     
-    mda = df[df.exp_stage == 'standard_none'][['neg_event_rate','day_slip']]
+    mda = df[[x in ['standard','TTX_10um','TTX_10um_washout','TTX_1um'] for x in df.expt]][['neg_event_rate','day_slip']]
     
     mda['active'] = 100*(mda['neg_event_rate'] > 0).astype(int)
     
@@ -71,6 +79,13 @@ def plot_percent_quiet(save_dir,figsave,filetype):
     active_rate = active_d.groupby('day_slip').mean()['neg_event_rate'].to_numpy()
     
     active = mda.groupby('day_slip').mean()['active'].to_numpy()
+    
+    with open(Path(figsave, 'event_rate_info.txt'),'w') as f:
+            f.write(f'{datetime.datetime.now()}\n')
+            f.write(f'Mean per coverslip active cell rate: {np.mean(active_rate)}')
+            f.write(f', SEM: {np.std(active_rate)/np.sqrt(len(active_rate))}\n')
+            f.write(f'n = {len(active_rate)}\n')
+    
     
     fig,ax4 = plt.subplots()
     #sns.violinplot(y=active,saturation = 0.5)
@@ -100,8 +115,8 @@ def plot_percent_quiet(save_dir,figsave,filetype):
     fig.savefig(Path(figsave,f'231_active_rates{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
     
     fig1,ax1 = plt.subplots()
-    ax1.hist(active_d.neg_event_rate*1000,bins = 20, log = True, color = (0.2,0.2,0.2))
-    ax1.set_xlabel('Event rate(active cells, x10$^3$ s$^{-1}$)')
+    ax1.hist(active_d.neg_event_rate*1000,bins = 10, log = True, color = (0.2,0.2,0.2))
+    ax1.set_xlabel('Event rate (active cells, x10$^3$ s$^{-1}$)')
     ax1.set_ylabel('Number of cells')
     pf.set_thickaxes(ax1, 3)
     pf.set_all_fontsize(ax1, 16)
@@ -170,9 +185,12 @@ def make_example_trace_fig(trial_string_use,num_traces,sep,df,save_dir,figsave,f
     
 
 
-    cmap = matplotlib.cm.viridis
+    cmap = matplotlib.cm.tab20
     
-    
+    with open(Path(figsave,'cell_ids.txt'),'w') as f:
+        f.write(f'{trial_string}\n')
+        for s in so:
+            f.write(f'{s}\n')
     
     
     fig = plt.figure(constrained_layout = True)
@@ -234,9 +252,52 @@ def plot_positive_negative_events(save_dir,figsave,filetype):
 
     fig4 = plot_events2(df,use,log = False)
     fig4.savefig(Path(figsave,f'231_histograms_no_log_both_pos{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
+    
+    get_example_event_locs(df, use, log = True)
 
 
+def get_example_event_locs(df,use,log = True,upper_lim = 6.6,lower_lim = 0, T = 0.2,nbins = 50, only_neg = True):
+    dfn = df.copy()
+    
+    
+    use_bool = np.array([np.any(x in use) for x in dfn.exp_stage])
+    dfn = dfn[use_bool]
+    
 
+    too_big = np.abs(dfn.event_amplitude) > 6.6/100
+    too_small =  np.abs(dfn.event_amplitude) < 0/100
+    dfn = dfn[np.logical_not(np.logical_or(too_big,too_small))]
+    
+    length_bins = np.histogram(dfn['event_length']*T,bins = nbins)[1]
+        
+    amp_bins = np.histogram(dfn['event_amplitude']*100,bins = nbins)[1]
+    
+    with open(Path(Path('/home/peter/Dropbox/Papers/cancer/v2/'),'231_figure','cell_ids.txt')) as f:
+        dat = f.readlines()
+    
+    trial_string = dat[0].strip()
+    cids = dat[1:]
+    cids = [int(x.strip()) for x in cids]    
+
+    dfn = dfn[dfn.trial_string == trial_string]
+    
+    trial_save = Path(Path('/home/peter/data/Firefly/cancer/analysis/full'),'ratio_stacks',trial_string)
+    tcs = np.load(Path(trial_save,f'{trial_string}_all_tcs.npy'))
+    
+    tcs = ndimage.gaussian_filter(tcs,(0,3))
+    
+    #now for each trace display where the things are binned 
+    for c in cids:
+        fig,ax = plt.subplots(nrows = 2)
+        ax[1].hist2d(dfn[dfn.cell_id == f'{trial_string}_cell_{c}'].event_amplitude*100,dfn[dfn.cell_id == f'{trial_string}_cell_{c}'].event_length*T,bins = (amp_bins,length_bins), norm = mpl.colors.LogNorm())
+        ax[0].plot(np.arange(tcs.shape[1])*T,tcs[c,:])
+        for data in dfn[dfn.cell_id == f'{trial_string}_cell_{c}'].itertuples():
+            ax[0].plot(data.event_time*T, tcs[c,:].max(),'.r')
+            
+        ax[1].set_xlabel(f'{trial_string}_cell_{c}')
+        fig.savefig(Path('/home/peter/Dropbox/Papers/cancer/v2/','231_figure/example_trace_bins',f'bins_cell_{c}.png'))
+        
+        dfn[dfn.cell_id == f'{trial_string}_cell_{c}'].to_csv(Path('/home/peter/Dropbox/Papers/cancer/v2/','231_figure/example_trace_bins',f'df_cell_{c}.csv'))
 
 
 def plot_events(df,use,log = True,upper_lim = 6.6,lower_lim = 0, T = 0.2,nbins = 50, only_neg = True):
@@ -288,14 +349,16 @@ def plot_events(df,use,log = True,upper_lim = 6.6,lower_lim = 0, T = 0.2,nbins =
         norm = None
     
     ax2 = plt.subplot(gs[2])
-    ax2.hist2d(np.abs(neg['event_amplitude'])*100,neg['event_length']*T,bins = (amp_bins,length_bins),norm = norm)
+    hh = ax2.hist2d(np.abs(neg['event_amplitude'])*100,neg['event_length']*T,bins = (amp_bins,length_bins),norm = norm)
+    plt.colorbar(hh[3])
 
     ax2.set_xlabel('Negative event amplitude (% $\Delta$R/R$_0$)')    
     ax2.set_ylabel('Event length (s)')
     
     ax3 = plt.subplot(gs[3])
 
-    ax3.hist2d(np.abs(pos['event_amplitude'])*100,pos['event_length']*T,bins = (amp_bins,length_bins),norm=norm)
+    hh2 = ax3.hist2d(np.abs(pos['event_amplitude'])*100,pos['event_length']*T,bins = (amp_bins,length_bins),norm=norm)
+    plt.colorbar(hh2[3])
     ax3.set_xlabel('Positive event size (% $\Delta$R/R$_0$)')    
     ax3.set_ylabel('Event length (s)')
     
@@ -354,8 +417,8 @@ def plot_events2(df,use,log = True,upper_lim = 6.6,lower_lim = 0, T = 0.2,nbins 
         norm = None
     
     ax2 = plt.subplot(gs[2])
-    ax2.hist2d(dfn['event_amplitude']*100,dfn['event_length']*T,bins = (amp_bins,length_bins),norm = norm)
-
+    hh = ax2.hist2d(dfn['event_amplitude']*100,dfn['event_length']*T,bins = (amp_bins,length_bins),norm = norm)
+    plt.colorbar(hh[3])
     ax2.set_xlabel('Event amplitude (% $\Delta$R/R$_0$)')    
     ax2.set_ylabel('Event length (s)')
     

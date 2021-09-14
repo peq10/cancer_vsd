@@ -82,7 +82,10 @@ def make_all_grey_vids(top_dir,save_dir,initial_df,viewing_dir,thresh_idx,downsa
     
     qc_df = pd.read_csv(Path(save_dir,'good_detections.csv'))
     
-    namend = '_overlay_no_user_input'
+    if QCd:
+        namend = '_overlay_with_user_input'
+    else:
+        namend = '_overlay_no_user_input'
     
     for idx,data in enumerate(df.itertuples()):
     
@@ -114,8 +117,9 @@ def make_all_grey_vids(top_dir,save_dir,initial_df,viewing_dir,thresh_idx,downsa
             print('doing all')
             bad_detections = [int(x.cell_id) for x in qc_df[qc_df.trial_string ==data.trial_string].itertuples() if bool(x.correct) == False]
             for x in bad_detections:
-                events['excluded_events'][x] = events[x]
-                del events[x]
+                if x not in events['excluded_circle_events'].keys():
+                    events['excluded_events'][x] = events[x]
+                    del events[x]
             
         if onlymcf and 'MCF' not in data.expt:
             continue

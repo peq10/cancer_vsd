@@ -65,8 +65,8 @@ def plot_correlation_analysis(top_dir,save_dir,figsave, filetype):
         #ax.loglog(binsizes[idx] + np.array([-1,1]),c[0]*np.ones(2),'k')
         #ax.loglog(binsizes[idx] + np.array([-1,1]),c[1]*np.ones(2),'k')
         
-    ax.set_xlabel('log(Correlation coefficient)')
-    ax.set_ylabel('log(Bin size)')
+    ax.set_ylabel('log10 Correlation coefficient')
+    ax.set_xlabel('log10 Bin size')
     plt.legend(frameon = False)
     pf.set_thickaxes(ax, 3)
     pf.set_all_fontsize(ax, 16)
@@ -148,7 +148,7 @@ def plot_example_synchrony(top_dir,save_dir,figsave, filetype, redo_boot = False
     
     
     
-    cmap = matplotlib.cm.viridis
+    cmap = matplotlib.cm.tab10
     
     
     
@@ -338,7 +338,7 @@ def plot_wave(top_dir,save_dir,figsave, filetype):
     sep = 20#
     norm_dist = dists/dists.max()
     num = roi_ids.shape[0]
-    cmap = matplotlib.cm.viridis
+    cmap = matplotlib.cm.tab10
     
     fig = plt.figure(constrained_layout = True)
     gs  = fig.add_gridspec(2,5)

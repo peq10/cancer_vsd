@@ -34,15 +34,19 @@ if __name__ == '__main__':
     plt.show()
     
     import ttx_figure
-    ttx_figure.make_figures(initial_df,save_dir,figure_dir,filetype = filetype, redo_stats = False)
+    ttx_figure.make_figures(initial_df,save_dir,figure_dir,filetype = filetype, redo_stats = True)
     plt.show()
     
     import MCF10A_figure
-    MCF10A_figure.make_figures(initial_df,save_dir,figure_dir,filetype = filetype, redo_stats = False)
+    MCF10A_figure.make_figures(initial_df,save_dir,figure_dir,filetype = filetype, redo_stats = True)
     plt.show()
     import wave_figure
     wave_figure.make_figures(top_dir,save_dir,figure_dir,filetype = filetype)
     plt.show()
+    
+    
+    import calculate_misc_results
+    calculate_misc_results.calculate_results(save_dir,figure_dir)
 else:
     
     from . import method_figure
@@ -68,5 +72,8 @@ else:
     MCF10A_figure.make_figures(initial_df,save_dir,figure_dir,filetype = filetype)
     
     from . import wave_figure
-    wave_figure.make_figures(initial_df,save_dir,figure_dir,filetype = filetype)
+    wave_figure.make_figures(top_dir,save_dir,figure_dir,filetype = filetype)
     plt.show()
+    
+    from . import calculate_misc_results
+    calculate_misc_results.calculate_results(save_dir,figure_dir)

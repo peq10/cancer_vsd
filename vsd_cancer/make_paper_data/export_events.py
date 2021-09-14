@@ -17,7 +17,7 @@ import scipy.ndimage as ndimage
 
 import pdb
 
-def export_events(initial_df,save_dir,thresh_idx,min_ttx_amp = 1):
+def export_events(initial_df,save_dir,thresh_idx,min_ttx_amp = 1, amp_threshold = None):
 
     df = pd.read_csv(initial_df)
     
@@ -247,8 +247,11 @@ def export_events(initial_df,save_dir,thresh_idx,min_ttx_amp = 1):
                 #remove too large events
                 eve_prop = eve_prop[np.abs(eve_prop[:,1])<0.066,:]
                 
-                n_pos_evs = len(eve_prop[:,1] > 0)
-                n_neg_evs = len(eve_prop[:,1] < 0)
+                if amp_threshold is not None:
+                    eve_prop = eve_prop[np.abs(eve_prop[:,1])>amp_threshold,:]
+                
+                n_pos_evs = np.sum(eve_prop[:,1] > 0)
+                n_neg_evs = np.sum(eve_prop[:,1] < 0)
                 sum_integ_evs = np.sum(np.abs(eve_prop[:,2]))
                 sum_neg_integ_evs = np.sum(eve_prop[eve_prop[:,1] < 0,2])
             elif c_id in dont_use:
@@ -352,8 +355,11 @@ def export_events(initial_df,save_dir,thresh_idx,min_ttx_amp = 1):
                 #remove too large events
                 eve_prop = eve_prop[np.abs(eve_prop[:,1])<0.066,:]
                 
-                n_pos_evs = len(eve_prop[:,1] > 0)
-                n_neg_evs = len(eve_prop[:,1] < 0)
+                if amp_threshold is not None:
+                    eve_prop = eve_prop[np.abs(eve_prop[:,1])>amp_threshold,:]
+                
+                n_pos_evs = np.sum(eve_prop[:,1] > 0)
+                n_neg_evs = np.sum(eve_prop[:,1] < 0)
                 sum_integ_evs = np.sum(np.abs(eve_prop[:,2]))
                 sum_neg_integ_evs = np.sum(eve_prop[eve_prop[:,1] < 0,2])
             elif c_id in dont_use:
