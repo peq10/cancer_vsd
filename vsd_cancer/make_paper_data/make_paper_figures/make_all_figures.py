@@ -47,6 +47,10 @@ if __name__ == '__main__':
     
     import calculate_misc_results
     calculate_misc_results.calculate_results(save_dir,figure_dir)
+    
+    
+    import make_videos
+    make_videos.make_all_videos(initial_df, save_dir,figure_dir)
 else:
     
     from . import method_figure
@@ -77,3 +81,6 @@ else:
     
     from . import calculate_misc_results
     calculate_misc_results.calculate_results(save_dir,figure_dir)
+    
+    from . import make_videos
+    make_videos.make_all_videos(initial_df, save_dir,figure_dir)

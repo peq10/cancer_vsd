@@ -157,7 +157,7 @@ import make_spike_trains
 make_spike_trains.export_spike_trains(data_dir,T = 0.2, only_neg = True)
 
 import bootstrap_correlation_analysis
-bootstrap_correlation_analysis.calculate_corrs(top_dir, data_dir,redo = False)
+bootstrap_correlation_analysis.calculate_corrs(top_dir, data_dir,redo = True)
 
 import make_paper_figures.make_all_figures
 

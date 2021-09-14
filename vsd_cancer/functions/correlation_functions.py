@@ -41,6 +41,9 @@ def bin_times(trains,binsize):
     binned_spikes = np.array([np.histogram(x,bins = time_bins)[0] for x in trains])
     binned_spikes[binned_spikes>1] = 1
     
+    if np.any(np.all(binned_spikes == 1,axis = 1)):
+        binned_spikes = np.pad(binned_spikes,((0,0),(1,0))) # this removes an error where the std is 0 so get nan 
+
     return binned_spikes
 
 
@@ -136,8 +139,12 @@ def resample_observations(all_trains, binsize, bootnum = 10**2):
         for idx,pairnum in enumerate(res):
             ids = pairs[pairnum]
             ccs[idx] = np.abs(np.corrcoef(binned[ids[0]][ids[1],:],binned[ids[0]][ids[2],:])[0,1])
+            if np.isnan(ccs[idx]):
+                raise ValueError('hmmm')
     
         resamp_means[idxx] = np.mean(ccs)
+        if np.isnan(resamp_means[idxx]):
+            raise ValueError('hmmm')
     
     return resamp_means
 
