@@ -282,6 +282,9 @@ def plot_wave(top_dir,save_dir,figsave, filetype):
     ac = tc_filt[:,loc[0]:loc[1]]  < 0.98
     
     roi_ids = np.where(np.sum(ac,-1) >0)[0]
+    
+    print(roi_ids)
+    
     wh = np.where(ac)
     start_ids = wh[1][np.unique(wh[0],return_index = True)[1]]
     

@@ -51,6 +51,9 @@ if __name__ == '__main__':
     
     import make_videos
     make_videos.make_all_videos(initial_df, save_dir,figure_dir)
+    
+    import plot_highk_washin
+    plot_highk_washin.plot_highk(top_dir, save_dir, figure_dir, initial_df)
 else:
     
     from . import method_figure
@@ -84,3 +87,6 @@ else:
     
     from . import make_videos
     make_videos.make_all_videos(initial_df, save_dir,figure_dir)
+    
+    from . import plot_highk_washin
+    plot_highk_washin.plot_highk(top_dir, save_dir, figure_dir, initial_df)

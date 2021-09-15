@@ -430,7 +430,7 @@ def plot_events_TTX(df,use,TTX_level = 1,log = True,upper_lim = 6.6,lower_lim = 
     ax1 = plt.subplot(gs[1])
     ax1.hist(np.abs(neg['event_length'])*T,bins = length_bins,log = log,label = 'Pre',histtype = histtype)
     ax1.hist(np.abs(pos['event_length'])*T,bins = length_bins,log = log,label = f'TTX {TTX_level}'+' $\mathrm{\mu}$M',histtype = histtype)
-    ax1.set_xlabel('Event length (s)')
+    ax1.set_xlabel('Event duration (s)')
     ax1.set_ylabel('Observed Frequency')   
     ax1.legend(frameon = False)
     
@@ -447,7 +447,7 @@ def plot_events_TTX(df,use,TTX_level = 1,log = True,upper_lim = 6.6,lower_lim = 
         h = ax2.hist2d(neg['event_amplitude']*100,neg['event_length']*T,bins = (amp_bins,length_bins),norm = norm)
     plt.colorbar(h[3])
     ax2.set_xlabel('Pre-TTX event amplitude (% $\Delta$R/R$_0$)')    
-    ax2.set_ylabel('Event length (s)')
+    ax2.set_ylabel('Event duration (s)')
     
     ax3 = plt.subplot(gs[3])
     if only_neg:
@@ -455,8 +455,21 @@ def plot_events_TTX(df,use,TTX_level = 1,log = True,upper_lim = 6.6,lower_lim = 
     else:
         h2 = ax3.hist2d(pos['event_amplitude']*100,pos['event_length']*T,bins = (amp_bins,length_bins),norm=norm)
     plt.colorbar(h2[3])
-    ax3.set_xlabel('Post-TTX event size (% $\Delta$R/R$_0$)')    
-    ax3.set_ylabel('Event length (s)')
+    ax3.set_xlabel('Post-TTX event amplitude (% $\Delta$R/R$_0$)')    
+    ax3.set_ylabel('Event duration (s)')
+    
+    #get number of events before/after TTX
+    thresh = -2
+    iid = np.argwhere(h[1] > thresh)[0][0]
+    n_events_pre = np.sum(h[0][:iid,:])
+    n_events_post = np.sum(h2[0][:iid,:])
+
+    with open(Path('/home/peter/Dropbox/Papers/cancer/v2/ttx_figure','num_bigneg_events.txt'),'w') as f:
+        f.write(f'{datetime.datetime.now()}\n')
+        f.write(f'Number events in bins up to edge at {h[1][iid]:.3f} %\n')
+        f.write(f'pre: {n_events_pre} \n')
+        f.write(f'post: {n_events_post} \n')
+    
     
     return fig
 
@@ -511,7 +524,7 @@ def plot_events_TTX_washout(df,use,log = True,upper_lim = 6.6,lower_lim = 0, T =
     ax1.hist(np.abs(neg['event_length'])*T,bins = length_bins,log = log,label = 'Pre', histtype = histtype)
     ax1.hist(np.abs(pos['event_length'])*T,bins = length_bins,log = log,label = 'TTX 10 $\mathrm{\mu}$M', histtype = histtype)
     ax1.hist(np.abs(wash['event_length'])*T,bins = length_bins,log = log,label = 'Washout', histtype = histtype)
-    ax1.set_xlabel('Event length (s)')
+    ax1.set_xlabel('Event duration (s)')
     ax1.set_ylabel('Observed Frequency')   
     ax1.legend(frameon = False)
     
@@ -529,7 +542,7 @@ def plot_events_TTX_washout(df,use,log = True,upper_lim = 6.6,lower_lim = 0, T =
         h = ax2.hist2d(neg['event_amplitude']*100,neg['event_length']*T,bins = (amp_bins,length_bins),norm = norm)
     plt.colorbar(h[3])
     ax2.set_xlabel('Pre-TTX event amplitude (% $\Delta$R/R$_0$)')    
-    ax2.set_ylabel('Event length (s)')
+    ax2.set_ylabel('Event duration (s)')
     
     ax3 = plt.subplot(gs[4])
     if only_neg:
@@ -537,8 +550,8 @@ def plot_events_TTX_washout(df,use,log = True,upper_lim = 6.6,lower_lim = 0, T =
     else:
         h2 = ax3.hist2d(pos['event_amplitude']*100,pos['event_length']*T,bins = (amp_bins,length_bins),norm=norm)
     plt.colorbar(h2[3])
-    ax3.set_xlabel('Post-TTX event size (% $\Delta$R/R$_0$)')    
-    ax3.set_ylabel('Event length (s)')
+    ax3.set_xlabel('Post-TTX Event amplitude (% $\Delta$R/R$_0$)')    
+    ax3.set_ylabel('Event duration (s)')
     
     ax3 = plt.subplot(gs[5])
     if only_neg:
@@ -546,8 +559,15 @@ def plot_events_TTX_washout(df,use,log = True,upper_lim = 6.6,lower_lim = 0, T =
     else:
         h3 = ax3.hist2d(wash['event_amplitude']*100,wash['event_length']*T,bins = (amp_bins,length_bins),norm=norm)
     plt.colorbar(h3[3])
-    ax3.set_xlabel('Washout event size (% $\Delta$R/R$_0$)')    
-    ax3.set_ylabel('Event length (s)')
+    ax3.set_xlabel('Washout Event amplitude (% $\Delta$R/R$_0$)')    
+    ax3.set_ylabel('Event duration (s)')
+    
+    #get number of events before/after TTX
+    thresh = -2
+    iid = np.argwhere(h[1] > thresh)[0][0]
+    n_events_pre = np.sum(h[0][:iid,:])
+    n_events_post = np.sum(h2[0][:iid,:])
+    n_events_wash = np.sum(h3[0][:iid,:])
     
     return fig
 

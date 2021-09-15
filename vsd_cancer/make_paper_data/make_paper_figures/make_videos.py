@@ -30,9 +30,9 @@ def make_all_videos(initial_df, save_dir,figure_dir, redo = True):
     example_trial = 'cancer_20201207_slip1_area1_long_acq_corr_corr_long_acqu_blue_0.03465_green_0.07063_heated_to_37_1'
     make_video_parts(example_trial,initial_df, save_dir,figsave,downsample = 2, start = 0, stop = None, cells = None)
     
-    raise ValueError('Gah not working yet!')
+
     wave_trial = 'cancer_20201216_slip1_area2_long_acq_long_acq_blue_0.0296_green_0.0765_heated_to_37_1'
-    make_video_parts(wave_trial,initial_df, save_dir,figsave,downsample = 2, start = 4000, stop = 5000, cells = None)
+    make_video_parts(wave_trial,initial_df, save_dir,figsave,downsample = 2, start = 4000, stop = 5000, cells = [64,71,184,190,221,223,231,235,236])
     
     
 
@@ -61,8 +61,7 @@ def make_video_parts(trial_string,initial_df, save_dir,figsave,downsample = 5, s
     st = st[::downsample]
     rat2 = rat2[::downsample]
     
-    if cells is not None:
-        raise ValueError()
+
     
     #color balance
     cmin = np.percentile(rat2,0.05)
@@ -80,10 +79,34 @@ def make_video_parts(trial_string,initial_df, save_dir,figsave,downsample = 5, s
     
     if not Path(figsave,trial_string).is_dir():
         Path(figsave,trial_string).mkdir(parents = True)
-    
-    tifffile.imsave(Path(figsave,trial_string,'stack.tif'),st)
-    tifffile.imsave(Path(figsave,trial_string,'ratio.tif'),rat2)
+        
+    if cells is not None:
+        masks = masks[cells,...]
+        struct = np.zeros((3,3,3))
+        struct[1,...] = 1
+        masks = np.logical_xor(masks,ndimage.binary_dilation(masks,iterations = 3,structure = struct))
+        overlay = np.sum(masks,0) > 0
+        
+        wh = np.where(overlay)
+        
+        tifffile.imsave(Path(figsave,trial_string,'stack.tif'),st)
+        tifffile.imsave(Path(figsave,trial_string,'ratio.tif'),rat2)        
+        
+        st = st[...,None]*np.ones((1,1,1,4),dtype = np.uint8)
+        st[:,wh[0],wh[1],:] = np.array([0,200,0,255])
+        
+        rat2 = rat2[...,None]*np.ones((1,1,1,4),dtype = np.uint8)
+        rat2[:,wh[0],wh[1],:] = np.array([0,200,0,255])
+
+        
+        tifffile.imsave(Path(figsave,trial_string,'stack_overlay.tif'),st)
+        tifffile.imsave(Path(figsave,trial_string,'ratio_overlay.tif'),rat2)
+        
+    else:
+        tifffile.imsave(Path(figsave,trial_string,'stack.tif'),st)
+        tifffile.imsave(Path(figsave,trial_string,'ratio.tif'),rat2)
   
+      
 
 
 if __name__ == '__main__':
