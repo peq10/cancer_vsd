@@ -80,7 +80,7 @@ def plot_example_synchrony(top_dir,save_dir,figsave, filetype, redo_boot = False
     num_traces = 15
     sep = 25
     
-    traces = np.array([0,2,3,4,6,8])
+    traces = np.array([0,2,3,10,6,8])
     
     
     T = 0.2
@@ -193,7 +193,7 @@ def plot_example_synchrony(top_dir,save_dir,figsave, filetype, redo_boot = False
     ax1.imshow(im,cmap = 'Greys_r')
     ax1.imshow(over)
     plt.axis('off')
-    pf.label_roi_centroids(ax1, masks[:num_traces,...], colors/255,fontdict = {'fontsize':8})
+    pf.label_roi_centroids(ax1, masks[:num_traces,...], colors/255,fontdict = {'fontsize':0})
     
     fig.savefig(Path(figsave,f'example_traces{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
     
@@ -351,7 +351,7 @@ def plot_wave(top_dir,save_dir,figsave, filetype):
         line = ax.plot(np.arange(roi_t.shape[-1])*T,(roi_t[i]-1)*100 + i*100/sep, color = cmap(i/num))
         line2 = ax.plot(np.arange(roi_t.shape[-1])*T,(roi_t_filt[i]-1)*100 + i*100/sep, color = 'k')
         colors.append(line[0].get_c())
-        ax.text(-60,(i-0.15)*100/sep,f'{i}',fontdict = {'fontsize':24},color = colors[i])
+        ax.text(-60,(i-0.15)*100/sep,f'{i}',fontdict = {'fontsize':14},color = colors[i])
     
     
     plt.axis('off')
@@ -373,7 +373,7 @@ def plot_wave(top_dir,save_dir,figsave, filetype):
     ax1.imshow(im,cmap = 'Greys_r')
     ax1.imshow(over)
     plt.axis('off')
-    pf.label_roi_centroids(ax1, roi_masks, colors/255)
+    pf.label_roi_centroids(ax1, roi_masks, colors/255,fontdict = {'fontsize':0})
     
     fig.savefig(Path(figsave,'../wave_figure2',f'wave_time_courses{filetype}'),bbox_inches = 'tight',dpi = 300)
     

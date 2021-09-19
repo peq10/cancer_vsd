@@ -11,6 +11,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import datetime
+import matplotlib.pyplot as plt
 
 def calculate_results(save_dir,figure_dir):
     calculate_proportion_active_FOV(save_dir,figure_dir)
@@ -62,10 +63,44 @@ def calculate_proportion_active_FOV(save_dir,figure_dir):
         f.write(f'SEM: {100*float(prop_active_tgf.active.sem()):.2f} %\n')
         f.write(f'Number of TGF coverslips: {len(prop_active_tgf.active)}\n')
     
-
+def calculate_number_per_fov(save_dir,figure_dir):
+    df = pd.read_csv(Path(save_dir,'..','long_acqs_20210428_experiments_correct.csv'))
+    
+    all_densities = []
+    
+    for data in df.itertuples():
+        if data.use != 'y':
+            continue
+        
+        if 'MCF' in data.expt:
+            continue
+        
+        trial_save = Path(save_dir,'ratio_stacks',data.trial_string)
+        
+        seg = np.load(Path(trial_save,f'{data.trial_string}_seg.npy'))
+        
+        seg = seg[50:-50,50:-50] # avoid edges
+        n_cells = seg.max() - 1
+        
+        area = seg.shape[0]*seg.shape[1]*1.04**2
+        
+        area_mm = area * ((10**-3)**2)
+        
+        cells_per_mm = n_cells/area_mm
+        
+        all_densities.append(cells_per_mm)
     
     
+    all_densities = np.array(all_densities)
+    print(np.percentile(all_densities,25))
+    print(np.percentile(all_densities,75))
+    print(np.median(all_densities))
     
+    with open(Path(figure_dir,'231_figure/cell_densities.txt'),'w') as f:
+        f.write(f'{datetime.datetime.now()}\n')
+        f.write(f'25 percentile per mm: {np.percentile(all_densities,25)}\n')
+        f.write(f'75 percentile per mm: {np.percentile(all_densities,75)}\n')
+        f.write(f'n per mm: {np.median(all_densities)}\n')
 
         
         
@@ -76,3 +111,4 @@ if __name__ == '__main__':
     save_dir = Path(top_dir,'analysis','full')
     figure_dir = Path('/home/peter/Dropbox/Papers/cancer/v2/')
     calculate_results(save_dir,figure_dir)
+    calculate_number_per_fov(save_dir,figure_dir)

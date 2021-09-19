@@ -122,7 +122,7 @@ get_led_powers.get_all_powers(initial_df,data_dir)
 
 print('Detecting events...')
 import get_events
-if False:
+if True:
     get_events.get_measure_events(initial_df,data_dir,
                                   thresh_range = np.arange(2,4.5,0.5),
                                   surrounds_z = 10,
@@ -140,7 +140,7 @@ make_corr_grey_vids.make_all_grey_vids(top_dir, data_dir, initial_df, Path(viewi
 
 
 print('Getting user input for good detections')
-if False:
+if True:
     import get_all_good_detections
     get_all_good_detections.get_user_event_input(initial_df,data_dir,Path(viewing_dir,'final_paper_before_user_input'),thresh_idx, redo = False)
 

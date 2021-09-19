@@ -227,7 +227,7 @@ def make_example_trace_fig(trial_string_use,num_traces,sep,df,save_dir,figsave,f
     ax1.imshow(im,cmap = 'Greys_r')
     ax1.imshow(over)
     plt.axis('off')
-    pf.label_roi_centroids(ax1, masks[:num_traces,...], colors/255,fontdict = {'fontsize':8})
+    pf.label_roi_centroids(ax1, masks[:num_traces,...], colors/255,fontdict = {'fontsize':0})
     
     fig.savefig(Path(figsave,f'example_tcs{filetype}'),bbox_inches = 'tight',dpi = 300,transparent = True)
     
@@ -436,4 +436,4 @@ if __name__ == '__main__':
     save_dir = Path(top_dir,'analysis','full')
     figure_dir = Path('/home/peter/Dropbox/Papers/cancer/v2/')
     initial_df = Path(top_dir,'analysis','long_acqs_20210428_experiments_correct.csv')
-    make_figures(initial_df,save_dir,figure_dir)
+    make_figures(initial_df,save_dir,figure_dir, filetype = '.pdf')
