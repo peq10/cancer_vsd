@@ -422,6 +422,32 @@ def plot_events2(df,use,log = True,upper_lim = 6.6,lower_lim = 0, T = 0.2,nbins 
     ax2.set_xlabel('Event amplitude (% $\Delta$R/R$_0$)')    
     ax2.set_ylabel('Event length (s)')
     
+    #get number of events before/after TTX
+    thresh = 2
+    iid = np.argwhere(hh[1] < -thresh)[-1][0]
+    iid2 = np.argwhere(hh[1] > thresh)[0][0]
+    n_events_neg = np.sum(hh[0][:iid,:])
+    n_events_pos = np.sum(hh[0][iid2:,:])
+
+    with open(Path('/home/peter/Dropbox/Papers/cancer/v2/231_figure','num_negpos_events.txt'),'w') as f:
+        f.write(f'{datetime.datetime.now()}\n')
+        f.write(f'Number events in bins up to edge at {hh[1][iid]:.3f} %\n')
+        f.write(f'neg: {n_events_neg} \n')
+        f.write(f'Number events in bins from edge at {hh[1][iid2]:.3f} %\n')
+        f.write(f'post: {n_events_pos} \n')
+
+    thresh = 1.5
+    iid = np.argwhere(hh[1] < -thresh)[-1][0]
+    iid2 = np.argwhere(hh[1] > thresh)[0][0]
+    n_events_neg = np.sum(hh[0][:iid,:])
+    n_events_pos = np.sum(hh[0][iid2:,:])
+
+    with open(Path('/home/peter/Dropbox/Papers/cancer/v2/231_figure','num_negpos_events.txt'),'a') as f:
+        f.write(f'{datetime.datetime.now()}\n')
+        f.write(f'Number events in bins up to edge at {hh[1][iid]:.3f} %\n')
+        f.write(f'neg: {n_events_neg} \n')
+        f.write(f'Number events in bins from edge at {hh[1][iid2]:.3f} %\n')
+        f.write(f'post: {n_events_pos} \n')
 
     
     

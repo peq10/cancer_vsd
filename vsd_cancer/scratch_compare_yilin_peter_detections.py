@@ -21,15 +21,15 @@ save_dir = Path(top_dir,'analysis','full')
 
 df1 = pd.read_csv(Path('/home/peter/data/Firefly/cancer/analysis/full/good_detections.csv'))
 
+ydfs = [pd.read_csv(x) for x in Path('/home/peter/data/Firefly/cancer/analysis/full/yilin_data/tcs_labels_yilin_latest').glob('*.csv')]
+df2 = pd.concat(ydfs)
 
-df2 = pd.read_csv(Path('/home/peter/data/Firefly/cancer/analysis/full/yilin_data/yilin_new/all_cell_labels_yilin.csv'))
-
-#df1 = df1[df1.correct == True]
-#df2 = df2[df2.video_new == 'y']
+df1 = df1[df1.correct == True]
+df2 = df2[df2.video == 'y']
 
 
-df1['cid'] = df1.trial_string + '_' + df1.cell_id.astype(int).astype(str)
-df2['cid'] = df2.trial_string + '_' + df2.id.astype(int).astype(str)
+df1['cid'] = df1.trial_string + '_cell_' + df1.cell_id.astype(int).astype(str)
+df2['cid'] = df2.trial_string + '_cell_' + df2.id.astype(int).astype(str)
 
 
 
@@ -42,6 +42,10 @@ all_cells = list(np.unique(mine + yilin))
 only_me = [x for x in mine if x not in yilin]
 
 only_yilin = [x for x in yilin if x not in mine]
+
+only_yilin_df = pd.DataFrame({'cell_id':only_yilin})
+
+only_yilin_df.to_csv(Path('/home/peter/data/Firefly/cancer/analysis/full/yilin_data/tcs_labels_yilin_latest/peter_doesnt_use.csv'))
 
 '''
 
