@@ -78,7 +78,7 @@ if redo:
     segment_cellpose.segment_cellpose(initial_df, data_dir, HPC_num = HPC_num, only_hand_rois = False)
 
 print('Making overlays...')
-if False:
+if True:
     import make_roi_overlays
     make_roi_overlays.make_all_overlay(initial_df, data_dir, Path(viewing_dir,'rois'), HPC_num = HPC_num)
 
@@ -101,9 +101,9 @@ get_dead_cells.make_all_raw_tc(initial_df, data_dir,redo = False, njobs = njobs,
 
 print('Getting mean brightnesses')
 import get_all_brightness
-#yget_all_brightness.get_mean_brightness(initial_df, data_dir)
+get_all_brightness.get_mean_brightness(initial_df, data_dir)
 
-if False:
+if True:
     import define_circle_rois
     define_circle_rois.define_circle_rois(top_dir,initial_df,data_dir,radius = 220,center = (246,256))
 
