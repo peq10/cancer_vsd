@@ -64,7 +64,7 @@ def bootstrap_test_2sided(control,test,function = np.mean,num_resamplings = 1000
     test one sided hypothesis that function(control) > function(test)
 
     '''
-    
+    raise NotImplementedError('This is not implemented')
     null = np.concatenate([control,test])
     
     control_resamp = ass.bootstrap(null,samples = len(control), bootnum = num_resamplings,bootfunc = function)
