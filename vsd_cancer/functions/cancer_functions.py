@@ -1000,10 +1000,10 @@ def get_tif_smr(
     smr_files = []
 
     for f in files:
-        
+
         parts = parts(f)
-        day_idx = parts.index('cancer') + 1
-        day = re.sub('\D','',parts[day_idx])
+        day_idx = parts.index("cancer") + 1
+        day = re.sub("\D", "", parts[day_idx])
 
         # reject non-date experiment (test etc.)
         try:
@@ -1019,10 +1019,9 @@ def get_tif_smr(
 
         tif_files.append(str(f))
 
-        
-        if str(day)[:4] == '2022':
-            #amanda and yilin saved in different format
-            smr = [x for x in f.parents[1].glob('*.smr')]
+        if str(day)[:4] == "2022":
+            # amanda and yilin saved in different format
+            smr = [x for x in f.parents[1].glob("*.smr")]
         else:
             # search parents for smr file from deepest to shallowest
             start = f.parts.index(day)
