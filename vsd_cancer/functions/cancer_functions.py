@@ -19,6 +19,7 @@ import pandas as pd
 import datetime
 import pdb
 
+import re
 
 import f.general_functions as gf
 import f.ephys_functions as ef
@@ -999,10 +1000,10 @@ def get_tif_smr(
     smr_files = []
 
     for f in files:
-
-        sf = str(f)
-        loc = sf.find("cancer/") + len("cancer/")
-        day = sf[loc : loc + 8]
+        
+        parts = parts(f)
+        day_idx = parts.index('cancer') + 1
+        day = re.sub('\D','',parts[day_idx])
 
         # reject non-date experiment (test etc.)
         try:
@@ -1018,13 +1019,18 @@ def get_tif_smr(
 
         tif_files.append(str(f))
 
-        # search parents for smr file from deepest to shallowest
-        start = f.parts.index(day)
-        for i in range(len(f.parts) - 1, start + 1, -1):
-            direc = Path(*f.parts[:i])
-            smr = [f for f in direc.glob("*.smr")]
-            if len(smr) != 0:
-                break
+        
+        if str(day)[:4] == '2022':
+            #amanda and yilin saved in different format
+            smr = [x for x in f.parents[1].glob('*.smr')]
+        else:
+            # search parents for smr file from deepest to shallowest
+            start = f.parts.index(day)
+            for i in range(len(f.parts) - 1, start + 1, -1):
+                direc = Path(*f.parts[:i])
+                smr = [f for f in direc.glob("*.smr")]
+                if len(smr) != 0:
+                    break
 
         smr_files.append([str(s) for s in smr])
 
