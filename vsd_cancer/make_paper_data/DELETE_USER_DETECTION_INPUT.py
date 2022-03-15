@@ -14,24 +14,30 @@ import shutil
 
 
 HPC = False
-top_dir = Path('/home/peter/data/Firefly/cancer')
-df_str = ''
+top_dir = Path("/home/peter/data/Firefly/cancer")
+df_str = ""
 HPC_num = None
 
-initial_df = Path(top_dir,'analysis',f'long_acqs_20210428_experiments_correct{df_str}.csv')
+initial_df = Path(
+    top_dir, "analysis", f"long_acqs_20210428_experiments_correct{df_str}.csv"
+)
 
 df = pd.read_csv(initial_df)
 
-save_dir = Path(top_dir,'analysis','full','ratio_stacks')
+save_dir = Path(top_dir, "analysis", "full", "ratio_stacks")
 
-to_dir = Path(top_dir,'analysis','full','ratio_stacks','old_user_input')
+to_dir = Path(top_dir, "analysis", "full", "ratio_stacks", "old_user_input")
 
 
 raise ValueError('WARNING"!! THIS WILL DELETE USER INPUT ABOUT GOOD DETECTIONS!!')
 
 
-user_inputs = [x for x in Path(save_dir).glob('./**/*good_detection_cell*') if 'old_user_input' not in str(x)]
+user_inputs = [
+    x
+    for x in Path(save_dir).glob("./**/*good_detection_cell*")
+    if "old_user_input" not in str(x)
+]
 
-#it actually moves it - but will overwrite old moves
+# it actually moves it - but will overwrite old moves
 for x in user_inputs:
-    shutil.move(x,Path(to_dir,x.stem+'.npy'))
+    shutil.move(x, Path(to_dir, x.stem + ".npy"))

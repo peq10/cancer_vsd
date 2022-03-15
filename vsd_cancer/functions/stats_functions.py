@@ -12,94 +12,129 @@ import warnings
 
 import numbers
 
-def construct_CI(array,level,function = np.mean,num_resamplings = 10000):
-    
-    resamplings = ass.bootstrap(array,bootnum = num_resamplings,samples = None, bootfunc = function) 
-        
-    #todo - check about percentile vs other bootstrap
-    CI = np.percentile(resamplings,level/2),np.percentile(resamplings,100-level/2)
-    
+
+def construct_CI(array, level, function=np.mean, num_resamplings=10000):
+
+    resamplings = ass.bootstrap(
+        array, bootnum=num_resamplings, samples=None, bootfunc=function
+    )
+
+    # todo - check about percentile vs other bootstrap
+    CI = (
+        np.percentile(resamplings, level / 2),
+        np.percentile(resamplings, 100 - level / 2),
+    )
+
     return CI, resamplings
 
-def bootstrap_test(control,test,function = np.mean,num_resamplings = 10000,plot = False, names = None):
-    '''
+
+def bootstrap_test(
+    control, test, function=np.mean, num_resamplings=10000, plot=False, names=None
+):
+    """
     test one sided hypothesis that function(control) > function(test)
 
-    '''
-    
-    null = np.concatenate([control,test])
-    
-    control_resamp = ass.bootstrap(null,samples = len(control), bootnum = num_resamplings,bootfunc = function)
-    test_resamp = ass.bootstrap(null,samples = len(test),bootnum = num_resamplings,bootfunc = function)
+    """
 
+    null = np.concatenate([control, test])
+
+    control_resamp = ass.bootstrap(
+        null, samples=len(control), bootnum=num_resamplings, bootfunc=function
+    )
+    test_resamp = ass.bootstrap(
+        null, samples=len(test), bootnum=num_resamplings, bootfunc=function
+    )
 
     diff = test_resamp - control_resamp
     res = function(test) - function(control)
-    
-    pvalue = len(diff[diff < res])/len(diff)
-    
+
+    pvalue = len(diff[diff < res]) / len(diff)
+
     if len(diff[diff < res]) == 0:
-        warnings.warn('Not enough resamples to resolve p this small')
-        pvalue = 1/num_resamplings #we can only resolve to be up to this val
-    
+        warnings.warn("Not enough resamples to resolve p this small")
+        pvalue = 1 / num_resamplings  # we can only resolve to be up to this val
+
     if plot:
         fig, ax = plt.subplots()
-        a = ax.hist(diff,bins = 50, label = 'Resampled Null differences')
+        a = ax.hist(diff, bins=50, label="Resampled Null differences")
         if not len(diff[diff < res]) == 0:
-            ax.plot([res,res],[0,a[0].max()], label  = f'Observed difference (p = {pvalue})')
+            ax.plot(
+                [res, res], [0, a[0].max()], label=f"Observed difference (p = {pvalue})"
+            )
         else:
-            ax.plot([res,res],[0,a[0].max()], label  = f'Observed difference (p < {pvalue}, floored)')
+            ax.plot(
+                [res, res],
+                [0, a[0].max()],
+                label=f"Observed difference (p < {pvalue}, floored)",
+            )
         if names is not None:
-            ax.set_xlabel(f'Mean {names[1]} - {names[0]}')
-        plt.legend(frameon = False)
-        
-        
-        
-        return pvalue, diff,fig
+            ax.set_xlabel(f"Mean {names[1]} - {names[0]}")
+        plt.legend(frameon=False)
+
+        return pvalue, diff, fig
     else:
-        return pvalue,diff
-    
-def bootstrap_test_2sided(control,test,function = np.mean,num_resamplings = 10000,plot = False, names = None):
-    '''
+        return pvalue, diff
+
+
+def bootstrap_test_2sided(
+    control, test, function=np.mean, num_resamplings=10000, plot=False, names=None
+):
+    """
     test one sided hypothesis that function(control) > function(test)
 
-    '''
-    raise NotImplementedError('This is not implemented')
-    null = np.concatenate([control,test])
-    
-    control_resamp = ass.bootstrap(null,samples = len(control), bootnum = num_resamplings,bootfunc = function)
-    test_resamp = ass.bootstrap(null,samples = len(test),bootnum = num_resamplings,bootfunc = function)
+    """
+    raise NotImplementedError("This is not implemented")
+    null = np.concatenate([control, test])
 
+    control_resamp = ass.bootstrap(
+        null, samples=len(control), bootnum=num_resamplings, bootfunc=function
+    )
+    test_resamp = ass.bootstrap(
+        null, samples=len(test), bootnum=num_resamplings, bootfunc=function
+    )
 
     diff = test_resamp - control_resamp
     res = function(test) - function(control)
-    
-    pvalue = len(diff[np.abs(diff) < np.abs(res)])/len(diff)
-    
+
+    pvalue = len(diff[np.abs(diff) < np.abs(res)]) / len(diff)
+
     if len(diff[np.abs(diff) < np.abs(res)]) == 0:
-        warnings.warn('Not enough resamples to resolve p this small')
-        pvalue = 1/num_resamplings #we can only resolve to be up to this val
-    
+        warnings.warn("Not enough resamples to resolve p this small")
+        pvalue = 1 / num_resamplings  # we can only resolve to be up to this val
+
     if plot:
         fig, ax = plt.subplots()
-        a = ax.hist(diff,bins = 50, label = 'Resampled Null differences')
+        a = ax.hist(diff, bins=50, label="Resampled Null differences")
         if not len(diff[np.abs(diff) < np.abs(res)]) == 0:
-            ax.plot([res,res],[0,a[0].max()], label  = f'Observed difference (p = {pvalue})')
+            ax.plot(
+                [res, res], [0, a[0].max()], label=f"Observed difference (p = {pvalue})"
+            )
         else:
-            ax.plot([res,res],[0,a[0].max()], label  = f'Observed difference (p < {pvalue}, floored)')
+            ax.plot(
+                [res, res],
+                [0, a[0].max()],
+                label=f"Observed difference (p < {pvalue}, floored)",
+            )
         if names is not None:
-            ax.set_xlabel(f'Mean {names[1]} - {names[0]}')
-        plt.legend(frameon = False)
-        
-        
-        
-        return pvalue, diff,fig
+            ax.set_xlabel(f"Mean {names[1]} - {names[0]}")
+        plt.legend(frameon=False)
+
+        return pvalue, diff, fig
     else:
-        return pvalue,diff
+        return pvalue, diff
 
 
-def qqplot(x, y, quantiles=None, interpolation='nearest', ax=None, rug=False,
-           rug_length=0.05, rug_kwargs=None, **kwargs):
+def qqplot(
+    x,
+    y,
+    quantiles=None,
+    interpolation="nearest",
+    ax=None,
+    rug=False,
+    rug_length=0.05,
+    rug_kwargs=None,
+    **kwargs,
+):
     """Draw a quantile-quantile plot for `x` versus `y`.
 
     Parameters
@@ -157,8 +192,8 @@ def qqplot(x, y, quantiles=None, interpolation='nearest', ax=None, rug=False,
     # Draw the rug plots if requested
     if rug:
         # Default rug plot settings
-        rug_x_params = dict(ymin=0, ymax=rug_length, c='gray', alpha=0.5)
-        rug_y_params = dict(xmin=0, xmax=rug_length, c='gray', alpha=0.5)
+        rug_x_params = dict(ymin=0, ymax=rug_length, c="gray", alpha=0.5)
+        rug_y_params = dict(xmin=0, xmax=rug_length, c="gray", alpha=0.5)
 
         # Override default setting by any user-specified settings
         if rug_kwargs is not None:
