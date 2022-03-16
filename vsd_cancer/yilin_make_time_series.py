@@ -14,12 +14,12 @@ file = Path(
 
 
 stack = tifffile.imread(file)
-
+print("loaded stack")
 ratio_stack = canf.stack2rat(stack, blue=0)
-
+print("made ratio")
 
 im = np.mean(stack[:100:2], 0)
-
+print("made image")
 model = models.Cellpose(gpu=False, model_type="cyto")
 masks, flows, styles, diams = model.eval([im], diameter=30, channels=[0, 0])
 
