@@ -15,7 +15,9 @@ import pandas as pd
 from vsd_cancer.functions import cancer_functions as canf
 
 
-def load_all_long(df_file, save_dir, redo=True, HPC_num=None, raise_err=False):
+def load_all_long(
+    df_file, save_dir, redo=True, HPC_num=None, raise_err=False, use_SMR=True
+):
 
     df = pd.read_csv(df_file)
 
@@ -50,10 +52,15 @@ def load_all_long(df_file, save_dir, redo=True, HPC_num=None, raise_err=False):
         else:
             washin = False
 
+        if use_SMR:  # hack so I don't have to adapt for amanda and yilin new format yet
+            SMR = str(data.SMR_file)
+        else:
+            SMR = "not_a_file"
+
         try:
             result_dict = canf.load_and_slice_long_ratio(
                 data.tif_file,
-                str(data.SMR_file),
+                SMR,
                 T_approx=3 * 10 ** -3,
                 fs=5,
                 washin=washin,

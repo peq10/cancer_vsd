@@ -49,9 +49,7 @@ if not data_dir.is_dir():
 
 
 print("Hello world")
-initial_df = Path(
-    top_dir, "analysis", f"long_acqs_20210428_experiments_correct{df_str}.csv"
-)
+initial_df = Path(top_dir, "analysis", "long_acqs_20220319_HPC_labelled.csv")
 
 if HPC:
     df_ = pd.read_csv(initial_df)
@@ -62,7 +60,7 @@ if not yilins_computer:
     import load_all_long
 
     processed_df, failed_df = load_all_long.load_all_long(
-        initial_df, data_dir, redo=False, HPC_num=HPC_num
+        initial_df, data_dir, redo=True, HPC_num=HPC_num
     )
     # the failed only works when not redoing
     processed_df.to_csv(Path(data_dir, initial_df.stem + "_loaded_long.csv"))
