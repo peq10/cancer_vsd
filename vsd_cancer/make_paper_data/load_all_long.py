@@ -61,7 +61,7 @@ def load_all_long(
             result_dict = canf.load_and_slice_long_ratio(
                 data.tif_file,
                 SMR,
-                T_approx=3 * 10 ** -3,
+                T_approx=3 * 10**-3,
                 fs=5,
                 washin=washin,
             )
@@ -137,7 +137,7 @@ def load_failed(failed_df_file, save_dir):
         result_dict = canf.load_and_slice_long_ratio(
             data.tif_file,
             str(data.SMR_file),
-            T_approx=3 * 10 ** -3,
+            T_approx=3 * 10**-3,
             fs=5,
             washin=washin,
         )
@@ -200,7 +200,7 @@ def load_all_long_washin(df_file, save_dir, redo=True, HPC_num=None, raise_err=F
             result_dict = canf.load_and_slice_long_ratio(
                 data.tif_file,
                 str(data.SMR_file),
-                T_approx=3 * 10 ** -3,
+                T_approx=3 * 10**-3,
                 fs=5,
                 washin=washin,
                 nofilt=True,

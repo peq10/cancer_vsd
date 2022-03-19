@@ -89,55 +89,76 @@ def calculate_proportion_active_FOV(save_dir, figure_dir):
 def calculate_number_per_fov(save_dir, figure_dir):
     df = pd.read_csv(Path(save_dir, "..", "long_acqs_20210428_experiments_correct.csv"))
 
-<<<<<<< HEAD
-def calculate_proportion_active_FOV(save_dir,figure_dir):
-    
-    df = pd.read_csv(Path(save_dir,'non_ttx_active_df_by_cell.csv'))
-    df2 = pd.read_csv(Path(save_dir,'TTX_active_df_by_cell.csv'))
-    
-    df2 = df2[df2.stage == 'pre']
-    
-    df = pd.concat([df,df2])
-    
-    df['active'] =  (df.n_neg_events + df.n_pos_events) > 0
-    df['prop_pos'] =  df.n_pos_events/(df.n_neg_events + df.n_pos_events)
-    df['prop_neg'] =  df.n_neg_events/(df.n_neg_events + df.n_pos_events)
-    df['day_slip'] = df.day.astype(str) + '_' + df.slip.astype(str)
-    
-    df['neg_event_rate'] = (df['n_neg_events'] )/(df['obs_length']*0.2)
-    
-    mda = df[['MCF' not in x for x in df.expt]]
-    prop_active_mda = mda[['active','neg_event_rate','prop_pos','prop_neg','day_slip','expt']].groupby(['day_slip','expt']).agg(['mean'])
-    
-    with open(Path(figure_dir,'231_figure/proportion_active.txt'),'w') as f:
-        f.write(f'{datetime.datetime.now()}\n')
-        f.write(f'Mean proportion active: {100*float(prop_active_mda.active.mean()):.2f} %, ')
-        f.write(f'SEM: {100*float(prop_active_mda.active.sem()):.2f} %\n')        
-        f.write(f'proportion negative: {100*float(prop_active_mda.prop_neg.mean()):.2f} %\n')
-        f.write(f'proportion positive: {100*float(prop_active_mda.prop_pos.mean()):.2f} %\n')
-        f.write(f'Number of coverslips: {len(prop_active_mda.active)}\n')
-    
-    mcf = df[[x == 'MCF10A' for x in df.expt]]
-    prop_active_mcf = mcf[['active','neg_event_rate','prop_pos','prop_neg','day_slip','expt']].groupby(['day_slip','expt']).agg(['mean'])
-    
-    tgf = df[[x == 'MCF10A_TGFB' for x in df.expt]]
-    prop_active_tgf = tgf[['active','neg_event_rate','prop_pos','prop_neg','day_slip','expt']].groupby(['day_slip','expt']).agg(['mean'])
-    
-    with open(Path(figure_dir,'10A_figure/proportion_active_10a.txt'),'w') as f:
-        f.write(f'{datetime.datetime.now()}\n')
-        f.write(f'MCF Mean proportion active: {100*float(prop_active_mcf.active.mean()):.2f} %, ')
-        f.write(f'SEM: {100*float(prop_active_mcf.active.sem()):.2f} %\n')
-        f.write(f'Number of MCF coverslips: {len(prop_active_mcf.active)}\n')
-        
-        f.write(f'TGF Mean proportion active: {100*float(prop_active_tgf.active.mean()):.2f} %, ')
-        f.write(f'SEM: {100*float(prop_active_tgf.active.sem()):.2f} %\n')
-        f.write(f'Number of TGF coverslips: {len(prop_active_tgf.active)}\n')
-    
-def calculate_number_per_fov(save_dir,figure_dir):
-    df = pd.read_csv(Path(save_dir,'..','long_acqs_20210428_experiments_correct.csv'))
-    
-=======
->>>>>>> d6ad039a3158c610353be5ed215a3373962a2ab1
+
+def calculate_proportion_active_FOV(save_dir, figure_dir):
+
+    df = pd.read_csv(Path(save_dir, "non_ttx_active_df_by_cell.csv"))
+    df2 = pd.read_csv(Path(save_dir, "TTX_active_df_by_cell.csv"))
+
+    df2 = df2[df2.stage == "pre"]
+
+    df = pd.concat([df, df2])
+
+    df["active"] = (df.n_neg_events + df.n_pos_events) > 0
+    df["prop_pos"] = df.n_pos_events / (df.n_neg_events + df.n_pos_events)
+    df["prop_neg"] = df.n_neg_events / (df.n_neg_events + df.n_pos_events)
+    df["day_slip"] = df.day.astype(str) + "_" + df.slip.astype(str)
+
+    df["neg_event_rate"] = (df["n_neg_events"]) / (df["obs_length"] * 0.2)
+
+    mda = df[["MCF" not in x for x in df.expt]]
+    prop_active_mda = (
+        mda[["active", "neg_event_rate", "prop_pos", "prop_neg", "day_slip", "expt"]]
+        .groupby(["day_slip", "expt"])
+        .agg(["mean"])
+    )
+
+    with open(Path(figure_dir, "231_figure/proportion_active.txt"), "w") as f:
+        f.write(f"{datetime.datetime.now()}\n")
+        f.write(
+            f"Mean proportion active: {100*float(prop_active_mda.active.mean()):.2f} %, "
+        )
+        f.write(f"SEM: {100*float(prop_active_mda.active.sem()):.2f} %\n")
+        f.write(
+            f"proportion negative: {100*float(prop_active_mda.prop_neg.mean()):.2f} %\n"
+        )
+        f.write(
+            f"proportion positive: {100*float(prop_active_mda.prop_pos.mean()):.2f} %\n"
+        )
+        f.write(f"Number of coverslips: {len(prop_active_mda.active)}\n")
+
+    mcf = df[[x == "MCF10A" for x in df.expt]]
+    prop_active_mcf = (
+        mcf[["active", "neg_event_rate", "prop_pos", "prop_neg", "day_slip", "expt"]]
+        .groupby(["day_slip", "expt"])
+        .agg(["mean"])
+    )
+
+    tgf = df[[x == "MCF10A_TGFB" for x in df.expt]]
+    prop_active_tgf = (
+        tgf[["active", "neg_event_rate", "prop_pos", "prop_neg", "day_slip", "expt"]]
+        .groupby(["day_slip", "expt"])
+        .agg(["mean"])
+    )
+
+    with open(Path(figure_dir, "10A_figure/proportion_active_10a.txt"), "w") as f:
+        f.write(f"{datetime.datetime.now()}\n")
+        f.write(
+            f"MCF Mean proportion active: {100*float(prop_active_mcf.active.mean()):.2f} %, "
+        )
+        f.write(f"SEM: {100*float(prop_active_mcf.active.sem()):.2f} %\n")
+        f.write(f"Number of MCF coverslips: {len(prop_active_mcf.active)}\n")
+
+        f.write(
+            f"TGF Mean proportion active: {100*float(prop_active_tgf.active.mean()):.2f} %, "
+        )
+        f.write(f"SEM: {100*float(prop_active_tgf.active.sem()):.2f} %\n")
+        f.write(f"Number of TGF coverslips: {len(prop_active_tgf.active)}\n")
+
+
+def calculate_number_per_fov(save_dir, figure_dir):
+    df = pd.read_csv(Path(save_dir, "..", "long_acqs_20210428_experiments_correct.csv"))
+
     all_densities = []
 
     for data in df.itertuples():
@@ -154,9 +175,9 @@ def calculate_number_per_fov(save_dir,figure_dir):
         seg = seg[50:-50, 50:-50]  # avoid edges
         n_cells = seg.max() - 1
 
-        area = seg.shape[0] * seg.shape[1] * 1.04 ** 2
+        area = seg.shape[0] * seg.shape[1] * 1.04**2
 
-        area_mm = area * ((10 ** -3) ** 2)
+        area_mm = area * ((10**-3) ** 2)
 
         cells_per_mm = n_cells / area_mm
 

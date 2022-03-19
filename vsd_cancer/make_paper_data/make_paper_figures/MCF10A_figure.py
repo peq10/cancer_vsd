@@ -169,7 +169,7 @@ def plot_compare_mda(
     scale=3,
     density=False,
     redo_stats=True,
-    num_resamplings=10 ** 6,
+    num_resamplings=10**6,
 ):
     df = pd.read_csv(Path(save_dir, "non_ttx_active_df_by_cell.csv"))
 
@@ -194,12 +194,12 @@ def plot_compare_mda(
     mc = mcf[key].to_numpy()
     tg = tgf[key].to_numpy()
 
-    bins = np.histogram(np.concatenate((md, mc, tg)) * 10 ** 3, bins=10)[1]
+    bins = np.histogram(np.concatenate((md, mc, tg)) * 10**3, bins=10)[1]
 
     fig, axarr = plt.subplots(nrows=3)
     c = 0.05
     axarr[0].hist(
-        md * 10 ** scale,
+        md * 10**scale,
         bins=bins,
         log=True,
         density=density,
@@ -207,7 +207,7 @@ def plot_compare_mda(
         color=(c, c, c),
     )
     axarr[1].hist(
-        mc * 10 ** scale,
+        mc * 10**scale,
         bins=bins,
         log=True,
         density=density,
@@ -215,7 +215,7 @@ def plot_compare_mda(
         color=(c, c, c),
     )
     axarr[2].hist(
-        tg * 10 ** scale,
+        tg * 10**scale,
         bins=bins,
         log=True,
         density=density,
@@ -228,7 +228,7 @@ def plot_compare_mda(
 
     for idx, a in enumerate(axarr):
         if not density:
-            a.set_ylim([0.6, 10 ** 4.5])
+            a.set_ylim([0.6, 10**4.5])
             a.set_yticks(10 ** np.arange(0, 4, 3))
         a.legend(frameon=False, loc=(0.4, 0.4), fontsize=16)
         pf.set_all_fontsize(a, 16)
@@ -455,81 +455,71 @@ def plot_events_MCF(
 
     return fig
 
-<<<<<<< HEAD
+
 def look_at_diff_tgf_lengths(save_dir):
-    
+
     T = 0.2
-    df = pd.read_csv(Path(save_dir,'non_ttx_active_df_by_cell.csv'))
-    key = 'neg_event_rate'
-    df['active'] =  ((df.n_neg_events + df.n_pos_events) > 0).astype(int)
-    df['prop_pos'] =  df.n_pos_events/(df.n_neg_events + df.n_pos_events)
-    df['prop_neg'] =  df.n_neg_events/(df.n_neg_events + df.n_pos_events)
-    df['prop_pos'] =  df.n_pos_events/(df.n_neg_events + df.n_pos_events)
-    df['prop_neg'] =  df.n_neg_events/(df.n_neg_events + df.n_pos_events)
-    df['day_slip'] = df.day.astype(str) + '_' + df.slip.astype(str)
-    
-    df['exp_stage'] = df.expt + '_' + df.stage
-    df['day_slip'] = df.day.astype(str) + '_' + df.slip.astype(str) 
-    
-    df['neg_event_rate'] = (df['n_neg_events'] )/(df['obs_length']*0.2)
-    
-    
-    tgf = df[df.exp_stage == 'MCF10A_TGFB_none']
-    
+    df = pd.read_csv(Path(save_dir, "non_ttx_active_df_by_cell.csv"))
+    key = "neg_event_rate"
+    df["active"] = ((df.n_neg_events + df.n_pos_events) > 0).astype(int)
+    df["prop_pos"] = df.n_pos_events / (df.n_neg_events + df.n_pos_events)
+    df["prop_neg"] = df.n_neg_events / (df.n_neg_events + df.n_pos_events)
+    df["prop_pos"] = df.n_pos_events / (df.n_neg_events + df.n_pos_events)
+    df["prop_neg"] = df.n_neg_events / (df.n_neg_events + df.n_pos_events)
+    df["day_slip"] = df.day.astype(str) + "_" + df.slip.astype(str)
+
+    df["exp_stage"] = df.expt + "_" + df.stage
+    df["day_slip"] = df.day.astype(str) + "_" + df.slip.astype(str)
+
+    df["neg_event_rate"] = (df["n_neg_events"]) / (df["obs_length"] * 0.2)
+
+    tgf = df[df.exp_stage == "MCF10A_TGFB_none"]
+
     tgf_active = tgf[tgf.active == 1]
 
+    # just use a lookup for the length of TGF treatment
+    # from Mar email: I started to treat the cells with TGFb on sunday 7th March at 5pm
+    tgf_lookup = {20210122: 48, 20210312: 5 * 24, 20210313: 6 * 24, 20210314: 7 * 24}
 
-    
-
-    #just use a lookup for the length of TGF treatment
-    #from Mar email: I started to treat the cells with TGFb on sunday 7th March at 5pm
-    tgf_lookup = {20210122: 48,20210312: 5*24, 20210313: 6*24, 20210314: 7*24}
-    
     def sem(x):
-        return np.std(x)/np.sqrt(len(x))
-    
-    prop_active_tgf = tgf[['active','neg_event_rate','day']].groupby(['day']).agg([np.mean, sem])
+        return np.std(x) / np.sqrt(len(x))
 
-    rate_tgf_active = tgf_active[['neg_event_rate','day']].groupby(['day']).agg([np.mean, sem])
+    prop_active_tgf = (
+        tgf[["active", "neg_event_rate", "day"]].groupby(["day"]).agg([np.mean, sem])
+    )
 
+    rate_tgf_active = (
+        tgf_active[["neg_event_rate", "day"]].groupby(["day"]).agg([np.mean, sem])
+    )
 
-    
-    fig,ax1 = plt.subplots()
-    fig2,ax2 = plt.subplots()
-    fig3,ax3 = plt.subplots()
-    for data1,data2 in zip(prop_active_tgf.itertuples(), rate_tgf_active.itertuples()):
+    fig, ax1 = plt.subplots()
+    fig2, ax2 = plt.subplots()
+    fig3, ax3 = plt.subplots()
+    for data1, data2 in zip(prop_active_tgf.itertuples(), rate_tgf_active.itertuples()):
         x1 = tgf_lookup[data1.Index]
         x2 = tgf_lookup[data2.Index]
-        mean_active = data1._1*100
+        mean_active = data1._1 * 100
         mean_rate = data2._1
         mean_rate_all = data1._3
-        
 
-        sem_active = data1._2*100
+        sem_active = data1._2 * 100
         sem_rate = data2._2
         sem_rate_all = data1._4
-        
-        ax1.errorbar(x1,mean_active, yerr = sem_active)
-        ax2.errorbar(x2,mean_rate,yerr = sem_rate)
-        ax3.errorbar(x2,mean_rate_all,yerr = sem_rate_all)
-        
-    ax1.set_xlabel('Time in TGFB')
-    ax1.set_ylabel('% active cells')
-    ax2.set_xlabel('Time in TGFB')
-    ax2.set_ylabel('Mean neg event rate\n(active cells)')
-    
-    ax3.set_xlabel('Time in TGFB')
-    ax3.set_ylabel('Mean neg event rate\n(all cells)')
+
+        ax1.errorbar(x1, mean_active, yerr=sem_active)
+        ax2.errorbar(x2, mean_rate, yerr=sem_rate)
+        ax3.errorbar(x2, mean_rate_all, yerr=sem_rate_all)
+
+    ax1.set_xlabel("Time in TGFB")
+    ax1.set_ylabel("% active cells")
+    ax2.set_xlabel("Time in TGFB")
+    ax2.set_ylabel("Mean neg event rate\n(active cells)")
+
+    ax3.set_xlabel("Time in TGFB")
+    ax3.set_ylabel("Mean neg event rate\n(all cells)")
 
     return 0
 
-if __name__ == '__main__':
-    top_dir = Path('/home/peter/data/Firefly/cancer')
-    save_dir = Path(top_dir,'analysis','full')
-    figure_dir = Path('/home/peter/Dropbox/Papers/cancer/v2/')
-    initial_df = Path(top_dir,'analysis','long_acqs_20210428_experiments_correct.csv')
-    make_figures(initial_df,save_dir,figure_dir, redo_stats = True)
-=======
 
 if __name__ == "__main__":
     top_dir = Path("/home/peter/data/Firefly/cancer")
@@ -537,4 +527,3 @@ if __name__ == "__main__":
     figure_dir = Path("/home/peter/Dropbox/Papers/cancer/v2/")
     initial_df = Path(top_dir, "analysis", "long_acqs_20210428_experiments_correct.csv")
     make_figures(initial_df, save_dir, figure_dir, redo_stats=True)
->>>>>>> d6ad039a3158c610353be5ed215a3373962a2ab1

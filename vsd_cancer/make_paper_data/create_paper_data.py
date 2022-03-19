@@ -65,7 +65,7 @@ if not yilins_computer:
     )
     # the failed only works when not redoing
     processed_df.to_csv(Path(data_dir, initial_df.stem + "_loaded_long.csv"))
-    
+
     if not HPC:
         # look at failed
         failed_df = load_all_long.detect_failed(initial_df, data_dir)

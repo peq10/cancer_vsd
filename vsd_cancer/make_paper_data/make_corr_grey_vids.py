@@ -172,7 +172,7 @@ def make_all_grey_vids(
         y -= circle_data.circle_roi_center_y.values[0]
         x -= circle_data.circle_roi_center_x.values[0]
 
-        r = np.sqrt(x ** 2 + y ** 2)
+        r = np.sqrt(x**2 + y**2)
         exc = r > circle_data.circle_roi_radius.values[0]
         exc_outline = np.logical_xor(~exc, ndimage.binary_dilation(~exc, iterations=3))
         out_wh = np.where(exc_outline)
