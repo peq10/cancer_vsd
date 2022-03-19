@@ -106,6 +106,7 @@ make_all_t_courses.make_all_tc(
     initial_df, data_dir, redo=False, njobs=njobs, HPC_num=HPC_num, only_hand_rois=False
 )
 
+"""
 
 import make_all_cell_free_t_courses
 
@@ -230,3 +231,4 @@ import make_paper_figures.make_all_figures
 
 
 print("Finished successfully")
+"""

@@ -44,14 +44,9 @@ n_frames = []
 for data in df.itertuples():
     s = data.tif_file
 
-    dates.append(
-        s[
-            s.find("/cancer/")
-            + len("/cancer/") : s.find("/cancer/")
-            + len("/cancer/")
-            + 8
-        ]
-    )
+    par = Path(s).parts
+
+    dates.append(par[par.index("cancer") + 1][-8:])
     slips.append(s[s.find("slip") + len("slip") : s.find("slip") + len("slip") + 1])
 
     if "area" in s:
