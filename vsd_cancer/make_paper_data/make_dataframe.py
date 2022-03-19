@@ -47,6 +47,7 @@ for data in df.itertuples():
     par = Path(s).parts
 
     dates.append(par[par.index("cancer") + 1][-8:])
+    print(dates[-1])
     slips.append(s[s.find("slip") + len("slip") : s.find("slip") + len("slip") + 1])
 
     if "area" in s:

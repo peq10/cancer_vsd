@@ -50,7 +50,7 @@ if not data_dir.is_dir():
 
 
 print("Hello world")
-initial_df = Path(top_dir, "analysis", "long_acqs_20220319_HPC_labelled.csv")
+initial_df = Path(top_dir, "analysis", "long_acqs_20220319_experiments.csv")
 
 if HPC:
     df_ = pd.read_csv(initial_df)
@@ -61,24 +61,25 @@ if not yilins_computer:
     import load_all_long
 
     processed_df, failed_df = load_all_long.load_all_long(
-        initial_df, data_dir, redo=True, HPC_num=HPC_num
+        initial_df, data_dir, redo=False, HPC_num=HPC_num, use_SMR=False
     )
     # the failed only works when not redoing
     processed_df.to_csv(Path(data_dir, initial_df.stem + "_loaded_long.csv"))
+    
+    if not HPC:
+        # look at failed
+        failed_df = load_all_long.detect_failed(initial_df, data_dir)
+        failed_df.to_csv(Path(data_dir, initial_df.stem + "_failed_loaded_long.csv"))
 
-    # look at failed
-    failed_df = load_all_long.detect_failed(initial_df, data_dir)
-    failed_df.to_csv(Path(data_dir, initial_df.stem + "_failed_loaded_long.csv"))
+        # try to redo failed
+        load_all_long.load_failed(
+            Path(data_dir, initial_df.stem + "_failed_loaded_long.csv"), data_dir
+        )
 
-    # try to redo failed
-    load_all_long.load_failed(
-        Path(data_dir, initial_df.stem + "_failed_loaded_long.csv"), data_dir
-    )
-
-    # do no filt for wash in
-    _, _ = load_all_long.load_all_long_washin(
-        initial_df, data_dir, redo=False, HPC_num=HPC_num
-    )
+        # do no filt for wash in
+        _, _ = load_all_long.load_all_long_washin(
+            initial_df, data_dir, redo=False, HPC_num=HPC_num
+        )
 
 
 print("Segmenting...")
@@ -102,7 +103,7 @@ print("Extracting time series...")
 import make_all_t_courses
 
 make_all_t_courses.make_all_tc(
-    initial_df, data_dir, redo=False, njobs=njobs, HPC_num=HPC_num, only_hand_rois=False
+    initial_df, data_dir, redo=True, njobs=1, HPC_num=HPC_num, only_hand_rois=False
 )
 
 """
