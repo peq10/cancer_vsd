@@ -53,7 +53,7 @@ def calculate_proportion_active_FOV(save_dir,figure_dir):
     tgf = df[[x == 'MCF10A_TGFB' for x in df.expt]]
     prop_active_tgf = tgf[['active','neg_event_rate','prop_pos','prop_neg','day_slip','expt']].groupby(['day_slip','expt']).agg(['mean'])
     
-    with open(Path(figure_dir,'10A_figure/proportion_active.txt'),'w') as f:
+    with open(Path(figure_dir,'10A_figure/proportion_active_10a.txt'),'w') as f:
         f.write(f'{datetime.datetime.now()}\n')
         f.write(f'MCF Mean proportion active: {100*float(prop_active_mcf.active.mean()):.2f} %, ')
         f.write(f'SEM: {100*float(prop_active_mcf.active.sem()):.2f} %\n')

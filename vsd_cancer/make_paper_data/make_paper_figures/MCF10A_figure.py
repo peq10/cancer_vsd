@@ -287,6 +287,74 @@ def plot_events_MCF(df,use,log = True,upper_lim = 6.6,lower_lim = 0, T = 0.2,nbi
     ax3.set_ylabel('Event duration (s)')
     
     return fig
+
+def look_at_diff_tgf_lengths(save_dir):
+    
+    T = 0.2
+    df = pd.read_csv(Path(save_dir,'non_ttx_active_df_by_cell.csv'))
+    key = 'neg_event_rate'
+    df['active'] =  ((df.n_neg_events + df.n_pos_events) > 0).astype(int)
+    df['prop_pos'] =  df.n_pos_events/(df.n_neg_events + df.n_pos_events)
+    df['prop_neg'] =  df.n_neg_events/(df.n_neg_events + df.n_pos_events)
+    df['prop_pos'] =  df.n_pos_events/(df.n_neg_events + df.n_pos_events)
+    df['prop_neg'] =  df.n_neg_events/(df.n_neg_events + df.n_pos_events)
+    df['day_slip'] = df.day.astype(str) + '_' + df.slip.astype(str)
+    
+    df['exp_stage'] = df.expt + '_' + df.stage
+    df['day_slip'] = df.day.astype(str) + '_' + df.slip.astype(str) 
+    
+    df['neg_event_rate'] = (df['n_neg_events'] )/(df['obs_length']*0.2)
+    
+    
+    tgf = df[df.exp_stage == 'MCF10A_TGFB_none']
+    
+    tgf_active = tgf[tgf.active == 1]
+
+
+    
+
+    #just use a lookup for the length of TGF treatment
+    #from Mar email: I started to treat the cells with TGFb on sunday 7th March at 5pm
+    tgf_lookup = {20210122: 48,20210312: 5*24, 20210313: 6*24, 20210314: 7*24}
+    
+    def sem(x):
+        return np.std(x)/np.sqrt(len(x))
+    
+    prop_active_tgf = tgf[['active','neg_event_rate','day']].groupby(['day']).agg([np.mean, sem])
+
+    rate_tgf_active = tgf_active[['neg_event_rate','day']].groupby(['day']).agg([np.mean, sem])
+
+
+    
+    fig,ax1 = plt.subplots()
+    fig2,ax2 = plt.subplots()
+    fig3,ax3 = plt.subplots()
+    for data1,data2 in zip(prop_active_tgf.itertuples(), rate_tgf_active.itertuples()):
+        x1 = tgf_lookup[data1.Index]
+        x2 = tgf_lookup[data2.Index]
+        mean_active = data1._1*100
+        mean_rate = data2._1
+        mean_rate_all = data1._3
+        
+
+        sem_active = data1._2*100
+        sem_rate = data2._2
+        sem_rate_all = data1._4
+        
+        ax1.errorbar(x1,mean_active, yerr = sem_active)
+        ax2.errorbar(x2,mean_rate,yerr = sem_rate)
+        ax3.errorbar(x2,mean_rate_all,yerr = sem_rate_all)
+        
+    ax1.set_xlabel('Time in TGFB')
+    ax1.set_ylabel('% active cells')
+    ax2.set_xlabel('Time in TGFB')
+    ax2.set_ylabel('Mean neg event rate\n(active cells)')
+    
+    ax3.set_xlabel('Time in TGFB')
+    ax3.set_ylabel('Mean neg event rate\n(all cells)')
+
+    return 0
+
 if __name__ == '__main__':
     top_dir = Path('/home/peter/data/Firefly/cancer')
     save_dir = Path(top_dir,'analysis','full')
