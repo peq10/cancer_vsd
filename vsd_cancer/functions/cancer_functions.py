@@ -995,13 +995,13 @@ def get_tif_smr(
     else:
         HPC = False
 
-    files = Path(topdir).glob("./**/*.tif")
+    files = Path(topdir).glob("./**/*.ome.tif")
     tif_files = []
     smr_files = []
 
     for f in files:
 
-        parts = parts(f)
+        parts = f.parts
         day_idx = parts.index("cancer") + 1
         day = re.sub("\D", "", parts[day_idx])
 

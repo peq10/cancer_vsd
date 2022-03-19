@@ -6,7 +6,7 @@ from cellpose import models
 
 from pathlib import Path
 
-import cancer_functions as canf
+from vsd_cancer.functions import cancer_functions as canf
 
 file = Path(
     "/rds/general/user/peq10/home/firefly_link/cancer/cancer20220309/slip1/area1/long_acq/cancer20220309_slip1_area1_long_acq_blue_0.112_green_0.0673_L453_1/cancer20220309_slip1_area1_long_acq_blue_0.112_green_0.0673_L453_1_MMStack_Default.ome.tif"
