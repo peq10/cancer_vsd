@@ -31,7 +31,7 @@ prev_sorted = Path(top_dir, "analysis", "long_acqs_20201230_sorted.csv")
 
 
 df = canf.get_tif_smr(
-    top_dir, save_file, "20210301", None, prev_sorted=None, only_long=True
+    top_dir, save_file, "20220101", None, prev_sorted=None, only_long=True
 )
 
 dates = []
@@ -71,8 +71,8 @@ for data in df.itertuples():
         n_fr = len(meta) - 1
         n_frames.append(n_fr)
     except FileNotFoundError:
-        nf_fr = -1
-        n_frames.append(n_fr)
+        n_fr = -1
+        n_frames.append(-1)
 
     if n_fr != 10000:
         print(s)
