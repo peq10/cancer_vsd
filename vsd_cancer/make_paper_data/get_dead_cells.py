@@ -18,7 +18,7 @@ from vsd_cancer.functions import cancer_functions as canf
 def make_all_raw_tc(df_file, save_dir, redo=True, njobs=10, HPC_num=None):
     df = pd.read_csv(df_file)
 
-    if redo:
+    if redo or HPC_num is not None:
         redo_from = 0
     else:
         redo_from = np.load(

@@ -91,7 +91,7 @@ if redo:
     )
 
 print("Making overlays...")
-if True:
+if redo:
     import make_roi_overlays
 
     make_roi_overlays.make_all_overlay(
@@ -103,27 +103,27 @@ print("Extracting time series...")
 import make_all_t_courses
 
 make_all_t_courses.make_all_tc(
-    initial_df, data_dir, redo=True, njobs=1, HPC_num=HPC_num, only_hand_rois=False
+    initial_df, data_dir, redo=redo, njobs=1, HPC_num=HPC_num, only_hand_rois=False
 )
 
 
 import make_all_cell_free_t_courses
 
 make_all_cell_free_t_courses.make_all_cellfree_tc(
-    initial_df, data_dir, redo=False, HPC_num=HPC_num
+    initial_df, data_dir, redo=redo, HPC_num=HPC_num
 )
 
 print("Extracting FOV time series...")
 import make_full_fov_t_courses
 
 make_full_fov_t_courses.make_all_FOV_tc(
-    initial_df, data_dir, redo=False, HPC_num=HPC_num
+    initial_df, data_dir, redo=redo, HPC_num=HPC_num
 )
 
 import get_dead_cells
 
 get_dead_cells.make_all_raw_tc(
-    initial_df, data_dir, redo=False, njobs=njobs, HPC_num=HPC_num
+    initial_df, data_dir, redo=redo, njobs=njobs, HPC_num=HPC_num
 )
 
 

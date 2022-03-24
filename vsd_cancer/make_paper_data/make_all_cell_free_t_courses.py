@@ -17,13 +17,16 @@ from vsd_cancer.functions import cancer_functions as canf
 def make_all_cellfree_tc(df_file, save_dir, redo=True, HPC_num=None):
     df = pd.read_csv(df_file)
 
-    if redo:
+    if redo or HPC_num is not None:
         redo_from = 0
     else:
-        redo_from = np.load(
-            Path(save_dir, f"{df_file.stem}_redo_from_make_all_cellfree_tc.npy")
-        )
-        print(f"{len(df) - redo_from} to do")
+        try:
+            redo_from = np.load(
+                Path(save_dir, f"{df_file.stem}_redo_from_make_all_cellfree_tc.npy")
+            )
+            print(f"{len(df) - redo_from} to do")
+        except FileNotFoundError:
+            redo_from = 0
 
     for idx, data in enumerate(df.itertuples()):
         if HPC_num is not None:  # allows running in parallel on HPC
