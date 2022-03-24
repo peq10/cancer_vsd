@@ -49,7 +49,7 @@ def make_all_raw_tc(df_file, save_dir, redo=True, njobs=10, HPC_num=None):
             LED = np.load(Path(trial_save, f"{trial_string}_LED_powers.npy"))
         except Exception as err:
             print(Path(trial_save, f"{trial_string}_LED_powers.npy"))
-            raise err
+            LED = [0.5, 1]  # hacking in for yilin
 
         if LED[0] < LED[1]:
             blue = 0
