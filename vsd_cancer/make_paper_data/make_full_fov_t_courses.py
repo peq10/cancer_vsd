@@ -14,7 +14,7 @@ import pandas as pd
 def make_all_FOV_tc(df_file, save_dir, redo=True, HPC_num=None):
     df = pd.read_csv(df_file)
 
-    if redo:
+    if redo or HPC_num is not None:
         redo_from = 0
     else:
         redo_from = np.load(
