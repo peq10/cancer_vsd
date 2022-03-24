@@ -36,12 +36,16 @@ def get_measure_events(
     MCF_overlap=0.3,
     MCF_simultaneous=3,
     yilin_save=False,
+    HPC_num=None,
 ):
 
     df = pd.read_csv(initial_df)
     for idx, data in enumerate(df.itertuples()):
         # if idx != 34:
         #    continue
+        if HPC_num is not None:  # allows running in parallel on HPC
+            if idx != HPC_num:
+                continue
 
         trial_string = data.trial_string
         print(trial_string)
