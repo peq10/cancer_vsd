@@ -15,7 +15,10 @@ from pathlib import Path
 from vsd_cancer.functions import cancer_functions as canf
 
 
-def define_circle_rois(top_dir, initial_df, save_dir, radius=220, center=(246, 256)):
+def define_circle_rois(
+    top_dir, initial_df, save_dir, radius=220, center=(246, 256), HPC_num=None
+):
+
     df = pd.read_csv(initial_df)
 
     rois = []
@@ -38,4 +41,9 @@ def define_circle_rois(top_dir, initial_df, save_dir, radius=220, center=(246, 2
     roi_df["circle_roi_center_x"] = circle_roi_centers[:, 0]
     roi_df["circle_roi_center_y"] = circle_roi_centers[:, 1]
     roi_df["circle_roi_radius"] = radius
-    roi_df.to_csv(Path(save_dir, "roi_df.csv"))
+
+    if HPC_num is not None:  # only want it saving once
+        if not Path(save_dir, "roi_df.csv").is_file():
+            roi_df.to_csv(Path(save_dir, "roi_df.csv"))
+    else:
+        roi_df.to_csv(Path(save_dir, "roi_df.csv"))

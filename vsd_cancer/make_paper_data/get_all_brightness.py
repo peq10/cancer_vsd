@@ -17,7 +17,10 @@ from vsd_cancer.functions import cancer_functions as canf
 def get_mean_brightness(df_file, save_dir, HPC_num=None):
     df = pd.read_csv(df_file)
 
-    for data in df.itertuples():
+    for idx, data in enumerate(df.itertuples()):
+        if HPC_num is not None:  # allows running in parallel on HPC
+            if idx != HPC_num:
+                continue
         trial_string = data.trial_string
         trial_save = Path(save_dir, "ratio_stacks", trial_string)
         seg = np.load(Path(trial_save, f"{trial_string}_seg.npy"))

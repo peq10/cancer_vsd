@@ -15,10 +15,14 @@ from pathlib import Path
 from vsd_cancer.functions import cancer_functions as canf
 
 
-def apply_circle_exclusion(top_dir, save_dir, initial_df):
+def apply_circle_exclusion(top_dir, save_dir, initial_df, HPC_num=None):
 
     df = pd.read_csv(Path(save_dir, "roi_df.csv"))
     for idx, data in enumerate(df.itertuples()):
+        if HPC_num is not None:  # allows running in parallel on HPC
+            if idx != HPC_num:
+                continue
+
         trial_string = data.trial_string
         print(trial_string)
 
