@@ -123,7 +123,7 @@ make_full_fov_t_courses.make_all_FOV_tc(
 import get_dead_cells
 
 get_dead_cells.make_all_raw_tc(
-    initial_df, data_dir, redo=redo, njobs=njobs, HPC_num=HPC_num
+    initial_df, data_dir, redo=redo, njobs=1, HPC_num=HPC_num
 )
 
 
