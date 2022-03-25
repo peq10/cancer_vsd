@@ -24,6 +24,9 @@ def load_all_long(
     if redo == True:
         failed = []
         redo_from = 0
+    elif HPC_num is not None:
+        redo_from = 0
+        failed = []
     else:
         redo_from = np.load(Path(save_dir, f"{df_file.stem}_redo_from.npy"))
         try:
