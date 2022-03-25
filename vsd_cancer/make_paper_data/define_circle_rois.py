@@ -24,6 +24,7 @@ def define_circle_rois(
     HPC_num=None,
     redo=False,
 ):
+    # TODO only save once to avoid race condition
     if HPC_num is not None:  # only want it saving once
         if Path(save_dir, f"{initial_df.stem}_roi_df.csv").is_file() and not redo:
             return 0
@@ -51,8 +52,4 @@ def define_circle_rois(
     roi_df["circle_roi_center_y"] = circle_roi_centers[:, 1]
     roi_df["circle_roi_radius"] = radius
 
-    if HPC_num is not None:  # only want it saving once
-        if not Path(save_dir, f"{initial_df.stem}_roi_df.csv").is_file():
-            roi_df.to_csv(Path(save_dir, f"{initial_df.stem}_roi_df.csv"))
-    else:
-        roi_df.to_csv(Path(save_dir, f"{initial_df.stem}_roi_df.csv"))
+    roi_df.to_csv(Path(save_dir, f"{initial_df.stem}_roi_df.csv"))
