@@ -21,7 +21,8 @@ if "peq10" in str(home):
     top_dir = Path(Path.home(), "firefly_link/cancer")
     df_str = "_HPC"
     HPC_num = int(sys.argv[1]) - 1  # allows running on HPC with data parallelism
-    redo = bool(sys.argv[2])
+    redo = bool(int(sys.argv[2]))
+    print(f"Redoing: {redo}")
     yilins_computer = False
     yilin_save = False
 elif os.name == "nt":
