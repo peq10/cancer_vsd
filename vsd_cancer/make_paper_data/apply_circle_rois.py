@@ -46,13 +46,15 @@ def apply_circle_exclusion(top_dir, save_dir, initial_df, HPC_num=None):
             np.sum(np.logical_and(exc[None, ...], masks), axis=(-2, -1)) > 0.1 * mask_sz
         )
 
+        save_file = Path(trial_save, f"{trial_string}_circle_excluded_rois.npy")
+        print(save_file)
         np.save(
-            Path(trial_save, f"{trial_string}_circle_excluded_rois.npy"),
+            save_file,
             intersect_idx.ravel(),
         )
 
-        plt.imshow(seg + exc * seg.max())
-        plt.show()
+        # plt.imshow(seg + exc * seg.max())
+        # plt.show()
 
 
 if __name__ == "__main__":
