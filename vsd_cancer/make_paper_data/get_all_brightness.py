@@ -22,12 +22,12 @@ def get_mean_brightness(df_file, save_dir, HPC_num=None, redo=True):
             if idx != HPC_num:
                 continue
 
+        trial_string = data.trial_string
+        trial_save = Path(save_dir, "ratio_stacks", trial_string)
         trial_save_path = Path(trial_save, f"{trial_string}_mean_brightness.npy")
         if trial_save_path.is_file() and not redo:
             continue
 
-        trial_string = data.trial_string
-        trial_save = Path(save_dir, "ratio_stacks", trial_string)
         seg = np.load(Path(trial_save, f"{trial_string}_seg.npy"))
         seg = seg > 0
         wh = np.where(seg)
