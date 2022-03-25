@@ -22,7 +22,7 @@ def make_all_tc(
 ):
     df = pd.read_csv(df_file)
 
-    if redo:
+    if redo or HPC_num is not None:
         redo_from = 0
     else:
         redo_from = np.load(Path(save_dir, f"{df_file.stem}_redo_from_make_all_tc.npy"))
