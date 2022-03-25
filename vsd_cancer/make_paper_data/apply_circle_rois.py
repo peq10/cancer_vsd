@@ -22,7 +22,7 @@ def apply_circle_exclusion(top_dir, save_dir, initial_df, HPC_num=None):
         if HPC_num is not None:  # allows running in parallel on HPC
             if idx != HPC_num:
                 continue
-
+        print(f"HPC_num = {HPC_num}")
         trial_string = data.trial_string
         print(trial_string)
 

@@ -133,8 +133,9 @@ print("Getting mean brightnesses")
 import get_all_brightness
 
 get_all_brightness.get_mean_brightness(initial_df, data_dir, HPC_num=HPC_num)
-
+print(f"HPC_num = {HPC_num}")
 if True:
+    print("Defining circle exclusion")
     import define_circle_rois
 
     define_circle_rois.define_circle_rois(
@@ -143,10 +144,11 @@ if True:
 
     import apply_circle_rois
 
+    print("Applying circle exclusion")
     apply_circle_rois.apply_circle_exclusion(
         top_dir, data_dir, initial_df, HPC_num=HPC_num
     )
-
+    print(f"HPC_num = {HPC_num}")
 
 if False:
     print("Getting LED calibration...")
@@ -161,6 +163,7 @@ if False:
 print("Detecting events...")
 import get_events
 
+print(f"HPC_num = {HPC_num}")
 if True:
     get_events.get_measure_events(
         initial_df,
@@ -179,6 +182,7 @@ thresh_idx = 1
 print("Making videos...")
 import make_corr_grey_vids
 
+print(f"HPC_num = {HPC_num}")
 make_corr_grey_vids.make_all_grey_vids(
     top_dir,
     data_dir,

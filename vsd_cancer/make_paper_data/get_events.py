@@ -47,6 +47,7 @@ def get_measure_events(
             if idx != HPC_num:
                 continue
 
+        print(f"HPC_num = {HPC_num}")
         trial_string = data.trial_string
         print(trial_string)
         trial_save = Path(save_dir, "ratio_stacks", trial_string)
