@@ -94,9 +94,8 @@ def make_all_grey_vids(
     df = pd.read_csv(initial_df)
     roi_df = pd.read_csv(Path(save_dir, "roi_df.csv"))
 
-    qc_df = pd.read_csv(Path(save_dir, "good_detections.csv"))
-
     if QCd:
+        qc_df = pd.read_csv(Path(save_dir, "good_detections.csv"))
         namend = "_overlay_with_user_input"
     else:
         namend = "_overlay_no_user_input"
