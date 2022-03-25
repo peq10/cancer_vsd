@@ -92,7 +92,7 @@ def make_all_grey_vids(
     HPC_num=None,
 ):
     df = pd.read_csv(initial_df)
-    roi_df = pd.read_csv(Path(save_dir, f"{initial_df.stem}roi_df.csv"))
+    roi_df = pd.read_csv(Path(save_dir, f"{initial_df.stem}_roi_df.csv"))
 
     if QCd:
         qc_df = pd.read_csv(Path(save_dir, "good_detections.csv"))
