@@ -23,6 +23,7 @@ if "peq10" in str(home):
     HPC_num = int(sys.argv[1]) - 1  # allows running on HPC with data parallelism
     redo = bool(sys.argv[2])
     yilins_computer = False
+    yilin_save = False
 elif os.name == "nt":
     HPC = False
     top_dir = Path("G:/")
