@@ -1,6 +1,6 @@
 #PBS -lwalltime=02:00:00
 #PBS -lselect=1:ncpus=1:mem=64gb
-#PBS -J 3-4
+#PBS -J 1-254
 
 LOGFILE=/rds/general/user/peq10/home/firefly_link/cancer/analysis/code_2022/cancer_vsd/vsd_cancer/make_paper_data/HPC_scripts/workdir/$PBS_ARRAY_INDEX.log
 
