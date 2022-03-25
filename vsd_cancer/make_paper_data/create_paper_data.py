@@ -139,13 +139,21 @@ if True:
     import define_circle_rois
 
     define_circle_rois.define_circle_rois(
-        top_dir, initial_df, data_dir, radius=220, center=(246, 256), HPC_num=HPC_num
+        top_dir,
+        initial_df,
+        data_dir,
+        radius=220,
+        center=(246, 256),
+        HPC_num=HPC_num,
+        redo=redo,
     )
 
     import apply_circle_rois
 
     print("Applying circle exclusion")
-    apply_circle_rois.apply_circle_exclusion(top_dir, data_dir, initial_df)
+    apply_circle_rois.apply_circle_exclusion(
+        top_dir, data_dir, initial_df, HPC_num=HPC_num
+    )
     print(f"HPC_num = {HPC_num}")
 
 if False:
