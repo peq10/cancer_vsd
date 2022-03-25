@@ -145,9 +145,7 @@ if True:
     import apply_circle_rois
 
     print("Applying circle exclusion")
-    apply_circle_rois.apply_circle_exclusion(
-        top_dir, data_dir, initial_df, HPC_num=HPC_num
-    )
+    apply_circle_rois.apply_circle_exclusion(top_dir, data_dir, initial_df)
     print(f"HPC_num = {HPC_num}")
 
 if False:
