@@ -89,6 +89,7 @@ def make_all_grey_vids(
     redo=False,
     QCd=False,
     onlymcf=False,
+    HPC_num=None,
 ):
     df = pd.read_csv(initial_df)
     roi_df = pd.read_csv(Path(save_dir, "roi_df.csv"))
@@ -101,6 +102,9 @@ def make_all_grey_vids(
         namend = "_overlay_no_user_input"
 
     for idx, data in enumerate(df.itertuples()):
+        if HPC_num is not None:  # allows running in parallel on HPC
+            if idx != HPC_num:
+                continue
 
         trial_string = data.trial_string
         trial_save = Path(save_dir, "ratio_stacks", trial_string)
