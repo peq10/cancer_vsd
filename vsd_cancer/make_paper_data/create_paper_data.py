@@ -247,3 +247,22 @@ if HPC_num is None:
     import make_paper_figures.make_all_figures
 
     print("Finished successfully")
+else:
+    # Temporary to get first pass answers mark alll detections as quality controlled
+
+    import fake_get_all_good_detections
+
+    fake_get_all_good_detections.get_user_event_input(
+        initial_df,
+        data_dir,
+        Path(viewing_dir, "final_paper_before_user_input"),
+        thresh_idx,
+        redo=False,
+    )
+
+    print("Exporting events...")
+    import export_events
+
+    export_events.export_events(
+        initial_df, data_dir, thresh_idx, min_ttx_amp=0, amp_threshold=None
+    )

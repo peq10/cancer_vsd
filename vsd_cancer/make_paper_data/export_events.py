@@ -22,9 +22,9 @@ def export_events(initial_df, save_dir, thresh_idx, min_ttx_amp=1, amp_threshold
 
     df = pd.read_csv(initial_df)
 
-    user_input_df = pd.read_csv(Path(save_dir, "good_detections.csv"))
-
-    user_input_df.to_csv(Path(save_dir, "good_detections_debug_new.csv"))
+    user_input_df = pd.read_csv(
+        Path(save_dir, f"{initial_df.stem}_good_detections.csv")
+    )
 
     all_cell_id = []
     all_cell_x = []
@@ -209,7 +209,7 @@ def export_events(initial_df, save_dir, thresh_idx, min_ttx_amp=1, amp_threshold
         }
     )
 
-    TTX_df.to_csv(Path(save_dir, "TTX_active_df.csv"))
+    TTX_df.to_csv(Path(save_dir, f"{initial_df.stem}_TTX_active_df.csv"))
 
     # now do per cell events
 
@@ -313,7 +313,7 @@ def export_events(initial_df, save_dir, thresh_idx, min_ttx_amp=1, amp_threshold
         }
     )
 
-    TTX_df2.to_csv(Path(save_dir, "TTX_active_df_by_cell.csv"))
+    TTX_df2.to_csv(Path(save_dir, f"{initial_df.stem}_TTX_active_df_by_cell.csv"))
 
     # now do per cell events for non ttx
 
@@ -426,4 +426,4 @@ def export_events(initial_df, save_dir, thresh_idx, min_ttx_amp=1, amp_threshold
         }
     )
 
-    df3.to_csv(Path(save_dir, "non_ttx_active_df_by_cell.csv"))
+    df3.to_csv(Path(save_dir, f"{initial_df.stem}_non_ttx_active_df_by_cell.csv"))
