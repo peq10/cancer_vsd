@@ -102,6 +102,6 @@ def get_user_event_input(initial_df, save_dir, viewing_dir, thresh_idx, redo=Tru
                             np.save(ffiile, True)
                             print(f"Done {ffiile}")
 
-                        detected_frame.loc[detections, "correct"] = detection_real
+                        detected_frame.loc[detections, "correct"] = True
                         detections += 1
     detected_frame.to_csv(Path(save_dir, f"{initial_df.stem}_good_detections.csv"))
