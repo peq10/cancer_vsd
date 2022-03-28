@@ -118,6 +118,7 @@ def make_all_grey_vids(
             and not redo
             and trial_string not in redo_trials
         ):
+            print("Video exists, not redoing")
             continue
 
         try:
@@ -151,7 +152,7 @@ def make_all_grey_vids(
         if (
             np.all([type(x) == str for x in events.keys()])
             and np.all([type(x) == str for x in events["excluded_events"].keys()])
-            and True
+            and False
         ):
             continue
 
