@@ -197,3 +197,4 @@ def make_all_grey_vids(
         tifffile.imsave(
             Path(viewing_dir, f"{data.trial_string}{namend}.tif"), gf.to_8_bit(rat2)
         )
+        print("saved video")
