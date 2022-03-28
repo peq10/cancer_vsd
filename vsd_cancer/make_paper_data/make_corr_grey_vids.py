@@ -152,7 +152,7 @@ def make_all_grey_vids(
         if (
             np.all([type(x) == str for x in events.keys()])
             and np.all([type(x) == str for x in events["excluded_events"].keys()])
-            and False
+            and QCd
         ):
             continue
 
