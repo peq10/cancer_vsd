@@ -110,6 +110,7 @@ def make_all_grey_vids(
         print(trial_string)
 
         if data.use == "n":
+            print("use is n")
             continue
 
         if (
