@@ -33,6 +33,14 @@ elif os.name == "nt":
     yilin_save = True
     yilins_computer = True
     njobs = 6
+elif "quickep" in str(home):
+    HPC = False
+    top_dir = Path("/Volumes/peq10/home/firefly_link/cancer")
+    df_str = ""
+    HPC_num = None
+    yilin_save = False
+    yilins_computer = False
+    njobs = 10
 else:
     HPC = False
     top_dir = Path("/home/peter/data/Firefly/cancer")
@@ -55,10 +63,13 @@ print("Hello world")
 initial_df = Path(
     top_dir, "analysis", "long_acqs_20220319_experiments_cell_labelled_complete.csv"
 )
-
+redo_vid = False
 if HPC:
     df_ = pd.read_csv(initial_df)
     print(f"Doing {df_.iloc[HPC_num].tif_file}")
+
+    if df_.iloc[HPC_num].expt == "L468":
+        redo_vid = True
 
 
 print("Loading tif...")
@@ -198,7 +209,7 @@ make_corr_grey_vids.make_all_grey_vids(
     initial_df,
     Path(viewing_dir, "final_paper_before_user_input"),
     thresh_idx,
-    redo=redo,
+    redo=redo_vid,
     QCd=False,
     HPC_num=HPC_num,
 )
