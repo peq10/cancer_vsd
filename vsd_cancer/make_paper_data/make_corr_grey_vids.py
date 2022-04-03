@@ -154,6 +154,7 @@ def make_all_grey_vids(
             and np.all([type(x) == str for x in events["excluded_events"].keys()])
             and QCd
         ):
+            print("Not making a QCd vid as no events detected")
             continue
 
         # if time.time() - os.path.getmtime(Path(viewing_dir,data.use, f'{data.trial_string}{namend}.tif')) < 10*60 and False:

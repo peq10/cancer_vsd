@@ -60,6 +60,10 @@ if HPC:
     df_ = pd.read_csv(initial_df)
     print(f"Doing {df_.iloc[HPC_num].tif_file}")
 
+    if df_.iloc[HPC_num].expt == "L468":
+        redo = True
+        print("Redoing 468s")
+
 print("Loading tif...")
 if not yilins_computer:
     import load_all_long
