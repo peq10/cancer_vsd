@@ -104,7 +104,17 @@ def get_measure_events(
                     excluded_circle=excluded_circle,
                     excluded_dead=dead_idx,
                 )
-
+            elif data.expt in ["L468"]:
+                events = canf.get_events_exclude_simultaneous_events(
+                    tc,
+                    std,
+                    z_score=detection_thresh,
+                    max_events=simultaneous * 4,
+                    overlap=overlap,
+                    exclude_first=exclude_first,
+                    excluded_circle=excluded_circle,
+                    excluded_dead=dead_idx,
+                )
             else:
                 events = canf.get_events_exclude_simultaneous_events(
                     tc,
