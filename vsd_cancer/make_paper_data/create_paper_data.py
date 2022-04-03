@@ -53,16 +53,13 @@ if not data_dir.is_dir():
 
 print("Hello world")
 initial_df = Path(
-    top_dir, "analysis", "long_acqs_20220319_experiments_cell_labelled.csv"
+    top_dir, "analysis", "long_acqs_20220319_experiments_cell_labelled_complete.csv"
 )
 
 if HPC:
     df_ = pd.read_csv(initial_df)
     print(f"Doing {df_.iloc[HPC_num].tif_file}")
 
-    if df_.iloc[HPC_num].expt == "L468":
-        redo = True
-        print("Redoing 468s")
 
 print("Loading tif...")
 if not yilins_computer:
