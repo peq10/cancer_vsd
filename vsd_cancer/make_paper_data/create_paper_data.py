@@ -140,7 +140,7 @@ import get_all_brightness
 
 get_all_brightness.get_mean_brightness(initial_df, data_dir, HPC_num=HPC_num)
 print(f"HPC_num = {HPC_num}")
-if True:
+if False:
     print("Defining circle exclusion")
     import define_circle_rois
 
@@ -176,7 +176,7 @@ print("Detecting events...")
 import get_events
 
 print(f"HPC_num = {HPC_num}")
-if True:
+if redo:
     get_events.get_measure_events(
         initial_df,
         data_dir,
@@ -201,7 +201,7 @@ make_corr_grey_vids.make_all_grey_vids(
     initial_df,
     Path(viewing_dir, "final_paper_before_user_input"),
     thresh_idx,
-    redo=False,
+    redo=redo,
     QCd=False,
     HPC_num=HPC_num,
 )
