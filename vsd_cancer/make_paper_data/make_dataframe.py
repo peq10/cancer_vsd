@@ -31,7 +31,7 @@ prev_sorted = Path(top_dir, "analysis", "long_acqs_20201230_sorted.csv")
 
 
 df = canf.get_tif_smr(
-    top_dir, save_file, "20220101", None, prev_sorted=None, only_long=True
+    top_dir, save_file, "20220317", None, prev_sorted=None, only_long=True
 )
 
 dates = []
