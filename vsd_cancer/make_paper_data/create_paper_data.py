@@ -25,6 +25,17 @@ if "peq10" in str(home):
     print(f"Redoing: {redo}")
     yilins_computer = False
     yilin_save = False
+elif "ys5320" in str(home):
+    HPC = True
+    top_dir = Path(Path.home(), "firefly_link/cancer")
+    df_str = "_HPC"
+    HPC_num = (
+        int(sys.argv[1]) - 1
+    )  # allows running on HPC with data parallelism with Yilin
+    redo = bool(int(sys.argv[2]))
+    print(f"Redoing: {redo}")
+    yilins_computer = False
+    yilin_save = False
 elif os.name == "nt":
     HPC = False
     top_dir = Path("G:/")
@@ -65,13 +76,7 @@ redo_vid = False
 if HPC:
     df_ = pd.read_csv(initial_df)
     print(f"Doing {df_.iloc[HPC_num].tif_file}")
-
-    if df_.iloc[HPC_num].expt == "L468":
-        redo_vid = True
-    else:
-        import sys
-
-        sys.exit()
+    redo_vid = redo
 
 
 print("Loading tif...")
@@ -150,7 +155,7 @@ import get_all_brightness
 
 get_all_brightness.get_mean_brightness(initial_df, data_dir, HPC_num=HPC_num)
 print(f"HPC_num = {HPC_num}")
-if False:
+if True:
     print("Defining circle exclusion")
     import define_circle_rois
 
