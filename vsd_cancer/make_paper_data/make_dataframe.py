@@ -16,6 +16,10 @@ if "peq10" in str(home):
     HPC = True
     top_dir = Path(home, "firefly_link/cancer")
     savestr = "_HPC"
+elif "ys5320" in str(home):
+    HPC = True
+    top_dir = Path(home, "firefly_link/cancer")
+    savestr = "_HPC"
 else:
     HPC = False
     top_dir = Path(home, "data/Firefly/cancer")

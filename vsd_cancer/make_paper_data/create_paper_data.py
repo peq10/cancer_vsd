@@ -71,7 +71,7 @@ if not data_dir.is_dir():
 
 
 print("Hello world")
-initial_df = Path(top_dir, "analysis", "long_acqs_20220407_HPC_labelled_complete.csv")
+initial_df = Path(top_dir, "analysis", "long_acqs_20220420_HPC_labelled_complete.csv")
 redo_vid = False
 if HPC:
     df_ = pd.read_csv(initial_df)
