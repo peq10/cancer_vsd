@@ -40,7 +40,7 @@ if not data_dir.is_dir():
     
 print("Reading summary df.")
 
-initial_df = Path(top_dir, "analysis", "long_acqs_20220319_experiments_cell_labelled_complete.csv")
+initial_df = Path(top_dir, "analysis", "long_acqs_20220420_HPC_labelled_complete.csv")
 
 df_sum = pd.read_csv(initial_df)
 
@@ -135,5 +135,5 @@ for line in df_sum.expt.unique():
     active_tcs_filt.sort_values(by=['expt'], inplace=True)
     
     print('exporting all_tcs_filt and active_tcs_filt.')
-    all_tcs_filt.to_csv(Path(save_dir,f'all_tcs_filt_20220319_{line}.csv'))
-    active_tcs_filt.to_csv(Path(save_dir,f'active_tcs_filt_20220319_{line}.csv'))
+    all_tcs_filt.to_csv(Path(save_dir,f'all_tcs_filt_20220420_{line}.csv'))
+    active_tcs_filt.to_csv(Path(save_dir,f'active_tcs_filt_20220420_{line}.csv'))
