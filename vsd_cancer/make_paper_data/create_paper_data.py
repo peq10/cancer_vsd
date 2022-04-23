@@ -25,6 +25,14 @@ if "peq10" in str(home):
     print(f"Redoing: {redo}", flush=True)
     yilins_computer = False
     yilin_save = False
+
+    initial_df = Path(
+        top_dir,
+        "analysis",
+        "correct_dataframes",
+        "20220423_original_and_review.csv",
+    )
+
 elif "ys5320" in str(home):
     HPC = True
     top_dir = Path(Path.home(), "firefly_link/cancer")
@@ -36,6 +44,14 @@ elif "ys5320" in str(home):
     print(f"Redoing: {redo}", flush=True)
     yilins_computer = False
     yilin_save = False
+
+    initial_df = Path(
+        top_dir,
+        "analysis",
+        "correct_dataframes",
+        "long_acqs_20220420_HPC_labelled_complete.csv",
+    )
+
 elif os.name == "nt":
     HPC = False
     top_dir = Path("G:/")
@@ -70,12 +86,6 @@ if not data_dir.is_dir():
 
 
 print("Analysis started", flush=True)
-initial_df = Path(
-    top_dir,
-    "analysis",
-    "correct_dataframes",
-    "long_acqs_20220420_HPC_labelled_complete.csv",
-)
 
 intermed_files_dir = Path(data_dir, f"{initial_df.stem}_intermediate_files")
 if not intermed_files_dir.is_dir():
