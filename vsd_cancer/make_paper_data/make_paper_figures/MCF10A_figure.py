@@ -169,7 +169,7 @@ def plot_compare_mda(
     scale=3,
     density=False,
     redo_stats=True,
-    num_resamplings=10 ** 6,
+    num_resamplings=10**6,
 ):
     df = pd.read_csv(Path(save_dir, "non_ttx_active_df_by_cell.csv"))
 
@@ -194,12 +194,12 @@ def plot_compare_mda(
     mc = mcf[key].to_numpy()
     tg = tgf[key].to_numpy()
 
-    bins = np.histogram(np.concatenate((md, mc, tg)) * 10 ** 3, bins=10)[1]
+    bins = np.histogram(np.concatenate((md, mc, tg)) * 10**3, bins=10)[1]
 
     fig, axarr = plt.subplots(nrows=3)
     c = 0.05
     axarr[0].hist(
-        md * 10 ** scale,
+        md * 10**scale,
         bins=bins,
         log=True,
         density=density,
@@ -207,7 +207,7 @@ def plot_compare_mda(
         color=(c, c, c),
     )
     axarr[1].hist(
-        mc * 10 ** scale,
+        mc * 10**scale,
         bins=bins,
         log=True,
         density=density,
@@ -215,7 +215,7 @@ def plot_compare_mda(
         color=(c, c, c),
     )
     axarr[2].hist(
-        tg * 10 ** scale,
+        tg * 10**scale,
         bins=bins,
         log=True,
         density=density,
@@ -228,7 +228,7 @@ def plot_compare_mda(
 
     for idx, a in enumerate(axarr):
         if not density:
-            a.set_ylim([0.6, 10 ** 4.5])
+            a.set_ylim([0.6, 10**4.5])
             a.set_yticks(10 ** np.arange(0, 4, 3))
         a.legend(frameon=False, loc=(0.4, 0.4), fontsize=16)
         pf.set_all_fontsize(a, 16)

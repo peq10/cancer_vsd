@@ -69,10 +69,12 @@ def get_user_event_input(initial_df, save_dir, viewing_dir, thresh_idx, redo=Tru
             # manually check finds
             if idx == use_idx:
                 if np.any(np.array(sum_current) != 0):
-                    vidpath = [
-                        x for x in Path(viewing_dir).glob(f"./**/*{trial_string}*")
-                    ][0]
-
+                    # vidpath = [
+                    #    x for x in Path(viewing_dir).glob(f"./**/*{trial_string}*")
+                    # ][0]
+                    vidpath = Path(
+                        viewing_dir, f"{data.trial_string}_overlay_no_user_input.tif"
+                    )
                     active_cells = [x for x in results["events"][idx] if type(x) != str]
                     locs = np.round(
                         [ndimage.center_of_mass(seg == x + 1) for x in active_cells]

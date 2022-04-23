@@ -1,5 +1,5 @@
 def cc(times_spikes_pre, times_spikes_post, binsize):
-    """ Calculates the Pearson's correlation coefficient between two spike trains
+    """Calculates the Pearson's correlation coefficient between two spike trains
     Inputs are:
     times_spikes_pre - array with time points in which the presynaptic neuron fired
     times_spikes_post - array with time points in which the postsynaptic neuron fired

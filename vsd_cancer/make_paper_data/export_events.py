@@ -23,7 +23,11 @@ def export_events(initial_df, save_dir, thresh_idx, min_ttx_amp=1, amp_threshold
     df = pd.read_csv(initial_df)
 
     user_input_df = pd.read_csv(
-        Path(save_dir, f"{initial_df.stem}_good_detections.csv")
+        Path(
+            save_dir,
+            f"{initial_df.stem}_intermediate_files",
+            f"{initial_df.stem}_good_detections.csv",
+        )
     )
 
     all_cell_id = []

@@ -183,7 +183,7 @@ def get_user_event_input(initial_df, save_dir, viewing_dir, thresh_idx, redo=Tru
 
 
 if __name__ == "__main__":
-    top_dir = Path("Z:/Firefly/cancer")
+    top_dir = Path(Path.home(), "firefly_link/cancer")
     df_str = ""
     save_dir = Path(top_dir, "analysis", "full")
     viewing_dir = Path(top_dir, "analysis", "full", "tif_viewing")
@@ -191,7 +191,7 @@ if __name__ == "__main__":
         top_dir,
         "analysis",
         "correct_dataframes",
-        f"long_acqs_20220420_experiments_cell_labelled.csv",
+        "long_acqs_20220420_HPC_labelled_complete.csv",
     )
     data_dir = Path(top_dir, "analysis", "full")
     viewing_dir = Path(

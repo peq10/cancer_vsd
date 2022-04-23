@@ -24,12 +24,12 @@ def calculate_corrs(top_dir, save_dir, redo=False):
         p_vals = []
         null_dists = []
         for binsize in binsizes:
-            CI, resamp = corrf.get_corr_CIs(all_trains, binsize, 5, bootnum=10 ** 3)
+            CI, resamp = corrf.get_corr_CIs(all_trains, binsize, 5, bootnum=10**3)
 
             CIs.append(CI)
             resamplings.append(resamp)
 
-            pv, nd = corrf.calculate_p_value(all_trains, binsize, bootnum=10 ** 3)
+            pv, nd = corrf.calculate_p_value(all_trains, binsize, bootnum=10**3)
             p_vals.append(pv)
             null_dists.append(nd)
             print(f"Binsize: {binsize}, p = {pv}")

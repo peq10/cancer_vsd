@@ -92,10 +92,20 @@ def make_all_grey_vids(
     HPC_num=None,
 ):
     df = pd.read_csv(initial_df)
-    roi_df = pd.read_csv(Path(save_dir, f"{initial_df.stem}_roi_df.csv"))
+    roi_df = pd.read_csv(
+        Path(
+            save_dir,
+            f"{initial_df.stem}_intermediate_files",
+            f"{initial_df.stem}_roi_df.csv",
+        )
+    )
 
     if QCd:
-        qc_df = pd.read_csv(Path(save_dir, "good_detections.csv"))
+        qc_df = pd.read_csv(
+            Path(
+                save_dir, f"{initial_df.stem}_intermediate_files", "good_detections.csv"
+            )
+        )
         namend = "_overlay_with_user_input"
     else:
         namend = "_overlay_no_user_input"
@@ -178,7 +188,7 @@ def make_all_grey_vids(
         y -= circle_data.circle_roi_center_y.values[0]
         x -= circle_data.circle_roi_center_x.values[0]
 
-        r = np.sqrt(x ** 2 + y ** 2)
+        r = np.sqrt(x**2 + y**2)
         exc = r > circle_data.circle_roi_radius.values[0]
         exc_outline = np.logical_xor(~exc, ndimage.binary_dilation(~exc, iterations=3))
         out_wh = np.where(exc_outline)

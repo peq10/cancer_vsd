@@ -43,7 +43,7 @@ def make_all_raw_tc(df_file, save_dir, redo=True, njobs=10, HPC_num=None):
             if idx < redo_from:
                 continue
         elif not redo and HPC_num is not None:
-            if Path(trial_save, f"{trial_string}_all_cellfree_tc.npy").is_file():
+            if Path(trial_save, f"{trial_string}_raw_tc.npy").is_file():
                 continue
 
         seg = np.load(Path(trial_save, f"{trial_string}_seg.npy"))

@@ -45,7 +45,8 @@ def make_all_cellfree_tc(df_file, save_dir, redo=True, HPC_num=None):
             if idx < redo_from:
                 continue
         elif not redo and HPC_num is not None:
-            if Path(trial_save, f"{trial_string}_all_cellfree_tc.npy").is_file():
+            if Path(trial_save, f"{trial_string}_cellfree_tc.npy").is_file():
+                print("Skipping cellfree tcs")
                 continue
 
         seg = np.load(Path(trial_save, f"{trial_string}_seg.npy"))

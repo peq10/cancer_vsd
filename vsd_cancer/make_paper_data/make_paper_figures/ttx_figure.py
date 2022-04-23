@@ -259,7 +259,7 @@ def plot_washout_summary(
     figsave,
     filetype,
     redo_stats=True,
-    num_resamplings=10 ** 6,
+    num_resamplings=10**6,
     key="neg_event_rate",
     function=np.mean,
     function_name="np.mean",
@@ -279,12 +279,12 @@ def plot_washout_summary(
     ppost = dfn[dfn.stage == "post"][[key, "day_slip"]]
     wwash = dfn[dfn.stage == "washout"][[key, "day_slip"]]
 
-    bins = np.histogram(np.concatenate((pre, post, wash)) * 10 ** 3, bins=10)[1]
+    bins = np.histogram(np.concatenate((pre, post, wash)) * 10**3, bins=10)[1]
 
     fig, axarr = plt.subplots(nrows=3)
     c = 0.05
     axarr[0].hist(
-        pre * 10 ** scale,
+        pre * 10**scale,
         bins=bins,
         log=True,
         density=density,
@@ -292,7 +292,7 @@ def plot_washout_summary(
         color=(c, c, c),
     )
     axarr[1].hist(
-        post * 10 ** scale,
+        post * 10**scale,
         bins=bins,
         log=True,
         density=density,
@@ -300,7 +300,7 @@ def plot_washout_summary(
         color=(c, c, c),
     )
     axarr[2].hist(
-        wash * 10 ** scale,
+        wash * 10**scale,
         bins=bins,
         log=True,
         density=density,
@@ -312,7 +312,7 @@ def plot_washout_summary(
 
     for idx, a in enumerate(axarr):
         if not density:
-            a.set_ylim([0.6, 10 ** 4.5])
+            a.set_ylim([0.6, 10**4.5])
             a.set_yticks(10 ** np.arange(0, 4, 3))
         a.legend(frameon=False, loc=(0.4, 0.4), fontsize=16)
         pf.set_all_fontsize(a, 16)
@@ -423,7 +423,7 @@ def plot_TTX_summary(
     figsave,
     filetype,
     redo_stats=True,
-    num_resamplings=10 ** 6,
+    num_resamplings=10**6,
     key="neg_event_rate",
     function=np.mean,
     function_name="np.mean",
@@ -446,13 +446,13 @@ def plot_TTX_summary(
     ppre_1 = dfn[dfn.exp_stage == "TTX_1um_pre"][[key, "day_slip"]]
     ppost_1 = dfn[dfn.exp_stage == "TTX_1um_post"][[key, "day_slip"]]
 
-    bins_10 = np.histogram(np.concatenate((pre_10, post_10)) * 10 ** 3, bins=10)[1]
-    bins_1 = np.histogram(np.concatenate((pre_1, post_1)) * 10 ** 3, bins=10)[1]
+    bins_10 = np.histogram(np.concatenate((pre_10, post_10)) * 10**3, bins=10)[1]
+    bins_1 = np.histogram(np.concatenate((pre_1, post_1)) * 10**3, bins=10)[1]
 
     fig_10, axarr_10 = plt.subplots(nrows=2)
     c = 0.05
     axarr_10[0].hist(
-        pre_10 * 10 ** scale,
+        pre_10 * 10**scale,
         bins=bins_10,
         log=True,
         density=density,
@@ -460,7 +460,7 @@ def plot_TTX_summary(
         color=(c, c, c),
     )
     axarr_10[1].hist(
-        post_10 * 10 ** scale,
+        post_10 * 10**scale,
         bins=bins_10,
         log=True,
         density=density,
@@ -471,7 +471,7 @@ def plot_TTX_summary(
 
     for idx, a in enumerate(axarr_10):
         if not density:
-            a.set_ylim([0.6, 10 ** 4.5])
+            a.set_ylim([0.6, 10**4.5])
             a.set_yticks(10 ** np.arange(0, 4, 3))
         a.legend(frameon=False, loc=(0.4, 0.4), fontsize=16)
         pf.set_all_fontsize(a, 16)
@@ -537,7 +537,7 @@ def plot_TTX_summary(
     fig_1, axarr_1 = plt.subplots(nrows=2)
     c = 0.05
     axarr_1[0].hist(
-        pre_1 * 10 ** scale,
+        pre_1 * 10**scale,
         bins=bins_1,
         log=True,
         density=density,
@@ -545,7 +545,7 @@ def plot_TTX_summary(
         color=(c, c, c),
     )
     axarr_1[1].hist(
-        post_1 * 10 ** scale,
+        post_1 * 10**scale,
         bins=bins_1,
         log=True,
         density=density,
@@ -556,7 +556,7 @@ def plot_TTX_summary(
 
     for idx, a in enumerate(axarr_1):
         if not density:
-            a.set_ylim([0.6, 10 ** 4.5])
+            a.set_ylim([0.6, 10**4.5])
             a.set_yticks(10 ** np.arange(0, 4, 3))
         a.legend(frameon=False, loc=(0.4, 0.4), fontsize=16)
         pf.set_all_fontsize(a, 16)

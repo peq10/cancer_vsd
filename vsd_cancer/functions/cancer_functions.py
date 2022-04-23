@@ -519,7 +519,7 @@ def parse_time(metadata_time):
 
 
 def lin_time(time):
-    return float(time[0]) * 60 ** 2 + float(time[1]) * 60 + float(time[2])
+    return float(time[0]) * 60**2 + float(time[1]) * 60 + float(time[2])
 
 
 def get_stack_offset(fname, ephys_start):
@@ -591,7 +591,7 @@ def get_steps_image_ephys(im_dir, ephys_fname):
         stacks[idx, ...] = stack
 
     metadata = load_tif_metadata(files[0])
-    T = float(metadata["FrameKey-0-0-0"]["HamamatsuHam_DCAM-Exposure"]) * 10 ** -3
+    T = float(metadata["FrameKey-0-0-0"]["HamamatsuHam_DCAM-Exposure"]) * 10**-3
 
     cam = ephys_dict["cam"]
     cam = cam[
@@ -795,7 +795,7 @@ def get_all_frame_times(metadict):
             .split(" ")[1]
             .split(":")
         )
-        time = float(time[0]) * 60 ** 2 + float(time[1]) * 60 + float(time[2])
+        time = float(time[0]) * 60**2 + float(time[1]) * 60 + float(time[2])
         times.append(time)
 
     frames, times = gf.sort_zipped_lists([frames, times])
@@ -804,7 +804,7 @@ def get_all_frame_times(metadict):
 
 
 def load_and_slice_long_ratio(
-    stack_fname, ephys_fname, T_approx=3 * 10 ** -3, fs=5, washin=False, nofilt=False
+    stack_fname, ephys_fname, T_approx=3 * 10**-3, fs=5, washin=False, nofilt=False
 ):
     stack = tifffile.imread(stack_fname)
 
