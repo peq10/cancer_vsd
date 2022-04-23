@@ -25,7 +25,13 @@ def make_all_tc(
     if redo or HPC_num is not None:
         redo_from = 0
     else:
-        redo_from = np.load(Path(save_dir, f"{df_file.stem}_redo_from_make_all_tc.npy"))
+        redo_from = np.load(
+            Path(
+                save_dir,
+                f"{df_file.stem}_intermediate_files",
+                f"{df_file.stem}_redo_from_make_all_tc.npy",
+            )
+        )
         print(f"{len(df) - redo_from} to do")
 
     for idx, data in enumerate(df.itertuples()):
@@ -174,5 +180,10 @@ def make_all_tc(
         redo_from += 1
         if not only_hand_rois:
             np.save(
-                Path(save_dir, f"{df_file.stem}_redo_from_make_all_tc.npy"), redo_from
+                Path(
+                    save_dir,
+                    f"{df_file.stem}_intermediate_files",
+                    f"{df_file.stem}_redo_from_make_all_tc.npy",
+                ),
+                redo_from,
             )

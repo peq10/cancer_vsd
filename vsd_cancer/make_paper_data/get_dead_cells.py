@@ -22,7 +22,11 @@ def make_all_raw_tc(df_file, save_dir, redo=True, njobs=10, HPC_num=None):
         redo_from = 0
     else:
         redo_from = np.load(
-            Path(save_dir, f"{df_file.stem}_redo_from_make_all_raw_tc.npy")
+            Path(
+                save_dir,
+                f"{df_file.stem}_intermediate_files",
+                f"{df_file.stem}_redo_from_make_all_raw_tc.npy",
+            )
         )
         print(f"{len(df) - redo_from} to do")
 
@@ -74,5 +78,10 @@ def make_all_raw_tc(df_file, save_dir, redo=True, njobs=10, HPC_num=None):
         print(f"Saved {trial_string}")
         redo_from += 1
         np.save(
-            Path(save_dir, f"{df_file.stem}_redo_from_make_all_raw_tc.npy"), redo_from
+            Path(
+                save_dir,
+                f"{df_file.stem}_intermediate_files",
+                f"{df_file.stem}_redo_from_make_all_raw_tc.npy",
+            ),
+            redo_from,
         )

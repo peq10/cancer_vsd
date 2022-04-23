@@ -63,4 +63,6 @@ def get_all_powers(initial_df, save_dir):
 
     LED_df = pd.DataFrame({"trial": trials, "blue": all_blue, "green": all_green})
 
-    LED_df.to_csv(Path(save_dir, "LED_powers_mw_mm2.csv"))
+    LED_df.to_csv(
+        Path(save_dir, f"{initial_df.stem}_intermediate_files", "LED_powers_mw_mm2.csv")
+    )

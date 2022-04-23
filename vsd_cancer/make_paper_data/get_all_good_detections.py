@@ -19,46 +19,6 @@ import cv2
 
 redo_trials = []
 
-redo_trials2 = [
-    "cancer_20210313_slip7_area1_long_acq_MCF10A_TGFBETA_37deg_long_acq_blue_0.06681_green_0.07975_1",
-    "cancer_20210313_slip5_area3_long_acq_MCF10A_TGFB_37deg_long_acq_blue_0.06681_green_0.07975_1",
-    "cancer_20210313_slip4_area2_long_acq_corr_MCF10A_37deg_long_acq_blue_0.039_green_0.04734_1",
-    "cancer_20210313_slip1_area3_long_acq_MCF10A_TGFB_37deg_long_acq_blue_0.0506_green_0.097_1",
-    "cancer_20210122_slip5_area3_long_acq_MCF10A_tgfbeta_long_acq_blue_0.0378_green_0.0791_illum_feedback_on_1",
-    "cancer_20210122_slip5_area2_long_acq_MCF10A_tgfbeta_long_acq_blue_0.0378_green_0.0791_illum_feedback_on_1",
-    "cancer_20210122_slip4_area2_long_acq_MCF10A_tgfbeta_long_acq_blue_0.0378_green_0.0791_illum_feedback_on_2",
-    "cancer_20210122_slip4_area1_long_acq_MCF10A_tgfbeta_long_acq_blue_0.0378_green_0.0791_illum_feedback_on_1",
-    "cancer_20210122_slip2_area1_long_acq_MCF10A_tgfbeta_long_acq_blue_0.02909_green_0.0672_1",
-    "cancer_20210122_slip1_area1_long_acq_MCF10A_tgfbeta_long_acq_blue_0.02909_green_0.0672_1",
-]
-
-redo_trials_old = [
-    "cancer_20210119_slip2_area1_long_acq_corr_long_acq_blue_0.0454_green_0.0671_1_overlay",
-    "cancer_20210119_slip3_area2_long_acq_long_acq_blue_0.0454_green_0.0671_1",
-    "cancer_20210119_slip4_area2_long_acq_long_acq_blue_0.0454_green_0.0671_1",
-    "cancer_20210312_slip4_area3_long_acq_corr_MCF10A_36deg_long_acq_blue_0.0425_green_0.097_1",
-    "cancer_20210312_slip4_area4_long_acq_corr_MCF10A_36deg_long_acq_blue_0.0425_green_0.097_1",
-    "cancer_20210312_slip5_area3_long_acq_corr_corr_MCF10A_TGFB_36deg_long_acq_blue_0.0425_green_0.097_1",
-    "cancer_20210313_slip1_area1_long_acq_MCF10A_TGFB_37deg_long_acq_blue_0.0506_green_0.097_1",
-    "cancer_20210313_slip1_area2_long_acq_MCF10A_TGFB_37deg_long_acq_blue_0.0506_green_0.097_1",
-    "cancer_20210313_slip1_area3_long_acq_MCF10A_TGFB_37deg_long_acq_blue_0.0506_green_0.097_1",
-    "cancer_20210313_slip2_area1_long_acq_MCF10A_37deg_long_acq_blue_0.0506_green_0.097_1",
-    "cancer_20210313_slip2_area3_long_acq_MCF10A_37deg_long_acq_blue_0.0506_green_0.097_1",
-    "cancer_20210313_slip2_area4_long_acq_MCF10A_37deg_long_acq_blue_0.0506_green_0.097_1",
-    "cancer_20210313_slip3_area3_long_acq_MCF10A_TGFB_37deg_long_acq_blue_0.0311_green_0.0489_1",
-    "cancer_20210313_slip5_area2_long_acq_MCF10A_TGFB_37deg_long_acq_blue_0.06681_green_0.07975_1",
-    "cancer_20210314_slip1_area1_long_acq_MCF10A_37deg_long_acq_blue_0.06681_green_0.07975_1",
-    "cancer_20210314_slip3_area1_long_acq_MCF10A_37deg_long_acq_blue_0.06681_green_0.07975_1",
-    "cancer_20210314_slip4_area1_long_acq_MCF10A_TGFB_37deg_long_acq_blue_0.06681_green_0.07975_1",
-    "cancer_20210314_slip4_area3_long_acq_MCF10A_TGFB_37deg_long_acq_blue_0.06681_green_0.07975_1",
-    "cancer_20210314_slip5_area3_long_acq_MCF10A_37deg_long_acq_blue_0.06681_green_0.07975_1",
-    "cancer_20210314_slip6_area2_long_acq_MCF10A_TGFB_37deg_long_acq_blue_0.06681_green_0.07975_1",
-    "cancer_20210314_slip7_area2_long_acq_MCF10A_37deg_long_acq_blue_0.06681_green_0.07975_1",
-    "cancer_20210314_slip7_area3_long_acq_MCF10A_37deg_long_acq_blue_0.06681_green_0.07975_1",
-    "cancer_20210314_slip8_area1_long_acq_MCF10A_37deg_long_acq_blue_0.06681_green_0.07975_1",
-    "cancer_20210314_slip8_area2_long_acq_MCF10A_37deg_long_acq_blue_0.06681_green_0.07975_1",
-]
-
 
 def get_user_event_input(initial_df, save_dir, viewing_dir, thresh_idx, redo=True):
     """
@@ -92,9 +52,6 @@ def get_user_event_input(initial_df, save_dir, viewing_dir, thresh_idx, redo=Tru
 
         if results["excluded_circle"] is not None:
             cell_ids = [x for x in cell_ids if x not in results["excluded_circle"]]
-
-        # if trial_string == 'cancer_20210314_slip2_area3_long_acq_MCF10A_TGFB_37deg_long_acq_blue_0.06681_green_0.07975_1':
-        #    pdb.set_trace()
 
         for idx, thresh_level_dict in enumerate(results["events"]):
 
@@ -216,16 +173,25 @@ def get_user_event_input(initial_df, save_dir, viewing_dir, thresh_idx, redo=Tru
 
                         detected_frame.loc[detections, "correct"] = detection_real
                         detections += 1
-    detected_frame.to_csv(Path(save_dir, f"{initial_df.stem}_good_detections.csv"))
+    detected_frame.to_csv(
+        Path(
+            save_dir,
+            f"{initial_df.stem}_intermediate_files",
+            f"{initial_df.stem}_good_detections.csv",
+        )
+    )
 
 
 if __name__ == "__main__":
-    top_dir = Path("/home/peter/data/Firefly/cancer")
+    top_dir = Path("Z:/Firefly/cancer")
     df_str = ""
     save_dir = Path(top_dir, "analysis", "full")
     viewing_dir = Path(top_dir, "analysis", "full", "tif_viewing")
     initial_df = Path(
-        top_dir, "analysis", f"long_acqs_20210428_experiments_correct{df_str}.csv"
+        top_dir,
+        "analysis",
+        "correct_dataframes",
+        f"long_acqs_20220420_experiments_cell_labelled.csv",
     )
     data_dir = Path(top_dir, "analysis", "full")
     viewing_dir = Path(

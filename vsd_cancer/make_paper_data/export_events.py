@@ -115,7 +115,13 @@ def export_events(initial_df, save_dir, thresh_idx, min_ttx_amp=1, amp_threshold
         }
     )
 
-    event_df.to_csv(Path(save_dir, "all_events_df.csv"))
+    event_df.to_csv(
+        Path(
+            save_dir,
+            f"{initial_df.stem}_intermediate_files",
+            f"{initial_df.stem}_all_events_df.csv",
+        )
+    )
 
     # now get the number of active cells for TTX
 
@@ -209,7 +215,13 @@ def export_events(initial_df, save_dir, thresh_idx, min_ttx_amp=1, amp_threshold
         }
     )
 
-    TTX_df.to_csv(Path(save_dir, f"{initial_df.stem}_TTX_active_df.csv"))
+    TTX_df.to_csv(
+        Path(
+            save_dir,
+            f"{initial_df.stem}_intermediate_files",
+            f"{initial_df.stem}_TTX_active_df.csv",
+        )
+    )
 
     # now do per cell events
 
@@ -313,7 +325,13 @@ def export_events(initial_df, save_dir, thresh_idx, min_ttx_amp=1, amp_threshold
         }
     )
 
-    TTX_df2.to_csv(Path(save_dir, f"{initial_df.stem}_TTX_active_df_by_cell.csv"))
+    TTX_df2.to_csv(
+        Path(
+            save_dir,
+            f"{initial_df.stem}_intermediate_files",
+            f"{initial_df.stem}_TTX_active_df_by_cell.csv",
+        )
+    )
 
     # now do per cell events for non ttx
 
@@ -426,4 +444,10 @@ def export_events(initial_df, save_dir, thresh_idx, min_ttx_amp=1, amp_threshold
         }
     )
 
-    df3.to_csv(Path(save_dir, f"{initial_df.stem}_non_ttx_active_df_by_cell.csv"))
+    df3.to_csv(
+        Path(
+            save_dir,
+            f"{initial_df.stem}_intermediate_files",
+            f"{initial_df.stem}_non_ttx_active_df_by_cell.csv",
+        )
+    )

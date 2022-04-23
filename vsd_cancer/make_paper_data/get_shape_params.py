@@ -48,4 +48,10 @@ def get_all_shape_params(initial_df, save_dir):
 
         results = pd.DataFrame(di)
 
-        results.to_csv(Path(trial_save, f"{trial_string}_cell_morphologies.csv"))
+        results.to_csv(
+            Path(
+                trial_save,
+                f"{initial_df.stem}_intermediate_files",
+                f"{trial_string}_cell_morphologies.csv",
+            )
+        )

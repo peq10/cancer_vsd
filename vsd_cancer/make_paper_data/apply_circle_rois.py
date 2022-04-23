@@ -35,7 +35,7 @@ def apply_circle_exclusion(top_dir, save_dir, initial_df, HPC_num=None):
         y -= data.circle_roi_center_y
         x -= data.circle_roi_center_x
 
-        r = np.sqrt(x ** 2 + y ** 2)
+        r = np.sqrt(x**2 + y**2)
         exc = r > data.circle_roi_radius
 
         masks = canf.lab2masks(seg)

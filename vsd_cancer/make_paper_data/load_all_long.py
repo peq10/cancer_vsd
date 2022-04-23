@@ -28,9 +28,19 @@ def load_all_long(
         redo_from = 0
         failed = []
     else:
-        redo_from = np.load(Path(save_dir, f"{df_file.stem}_redo_from.npy"))
+        redo_from = np.load(
+            Path(
+                save_dir,
+                f"{df_file.stem}_intermediate_files",
+                f"{df_file.stem}_redo_from.npy",
+            )
+        )
         try:
-            failed = list(pd.read_csv(Path(save_dir, "failed.csv")).index)
+            failed = list(
+                pd.read_csv(
+                    Path(save_dir, f"{df_file.stem}_intermediate_files", "failed.csv")
+                ).index
+            )
         except FileNotFoundError:
             failed = []
 
@@ -64,7 +74,7 @@ def load_all_long(
             result_dict = canf.load_and_slice_long_ratio(
                 data.tif_file,
                 SMR,
-                T_approx=3 * 10 ** -3,
+                T_approx=3 * 10**-3,
                 fs=5,
                 washin=washin,
             )
@@ -78,7 +88,9 @@ def load_all_long(
                 print(err)
                 failed.append(data.Index)
                 redo_from += 1
-                fail_df = Path(save_dir, "failed.csv")
+                fail_df = Path(
+                    save_dir, f"{df_file.stem}_intermediate_files", "failed.csv"
+                )
                 df.loc[failed].to_csv(fail_df, mode="a", header=not fail_df.is_file())
 
                 continue
@@ -97,7 +109,14 @@ def load_all_long(
 
         print(f"Saved {trial_string}")
         redo_from += 1
-        np.save(Path(save_dir, f"{df_file.stem}_redo_from.npy"), redo_from)
+        np.save(
+            Path(
+                save_dir,
+                f"{df_file.stem}_intermediate_files",
+                f"{df_file.stem}_redo_from.npy",
+            ),
+            redo_from,
+        )
 
     if failed != []:
         df.loc[failed].to_csv(Path(save_dir, "failed.csv"))
@@ -115,7 +134,9 @@ def detect_failed(df_file, save_dir):
         trial_save = Path(save_dir, "ratio_stacks", trial_string)
         if not Path(trial_save, f"{trial_string}_ratio_stack.npy").is_file():
             failed_df = failed_df.append(df.loc[data.Index])
-    failed_df.to_csv(Path(save_dir, "actual_failed.csv"))
+    failed_df.to_csv(
+        Path(save_dir, f"{df_file.stem}_intermediate_files", "actual_failed.csv")
+    )
     return failed_df
 
 
@@ -140,7 +161,7 @@ def load_failed(failed_df_file, save_dir):
         result_dict = canf.load_and_slice_long_ratio(
             data.tif_file,
             str(data.SMR_file),
-            T_approx=3 * 10 ** -3,
+            T_approx=3 * 10**-3,
             fs=5,
             washin=washin,
         )
@@ -172,9 +193,23 @@ def load_all_long_washin(df_file, save_dir, redo=True, HPC_num=None, raise_err=F
         failed = []
         redo_from = 0
     else:
-        redo_from = np.load(Path(save_dir, f"{df_file.stem}_redo_from_washin.npy"))
+        redo_from = np.load(
+            Path(
+                save_dir,
+                f"{df_file.stem}_intermediate_files",
+                f"{df_file.stem}_redo_from_washin.npy",
+            )
+        )
         try:
-            failed = list(pd.read_csv(Path(save_dir, "failed_washin.csv")).index)
+            failed = list(
+                pd.read_csv(
+                    Path(
+                        save_dir,
+                        f"{df_file.stem}_intermediate_files",
+                        "failed_washin.csv",
+                    )
+                ).index
+            )
         except FileNotFoundError:
             failed = []
 
@@ -203,7 +238,7 @@ def load_all_long_washin(df_file, save_dir, redo=True, HPC_num=None, raise_err=F
             result_dict = canf.load_and_slice_long_ratio(
                 data.tif_file,
                 str(data.SMR_file),
-                T_approx=3 * 10 ** -3,
+                T_approx=3 * 10**-3,
                 fs=5,
                 washin=washin,
                 nofilt=True,
@@ -218,7 +253,9 @@ def load_all_long_washin(df_file, save_dir, redo=True, HPC_num=None, raise_err=F
                 print(err)
                 failed.append(data.Index)
                 redo_from += 1
-                fail_df = Path(save_dir, "failed_washin.csv")
+                fail_df = Path(
+                    save_dir, f"{df_file.stem}_intermediate_files", "failed_washin.csv"
+                )
                 df.loc[failed].to_csv(fail_df, mode="a", header=not fail_df.is_file())
 
                 continue
@@ -237,10 +274,19 @@ def load_all_long_washin(df_file, save_dir, redo=True, HPC_num=None, raise_err=F
 
         print(f"Saved {trial_string}")
         redo_from += 1
-        np.save(Path(save_dir, f"{df_file.stem}_redo_from_washin.npy"), redo_from)
+        np.save(
+            Path(
+                save_dir,
+                f"{df_file.stem}_intermediate_files",
+                f"{df_file.stem}_redo_from_washin.npy",
+            ),
+            redo_from,
+        )
 
     if failed != []:
-        df.loc[failed].to_csv(Path(save_dir, "failed_washin.csv"))
+        df.loc[failed].to_csv(
+            Path(save_dir, f"{df_file.stem}_intermediate_files", "failed_washin.csv")
+        )
 
     not_failed = [i for i in df.index if i not in failed]
 

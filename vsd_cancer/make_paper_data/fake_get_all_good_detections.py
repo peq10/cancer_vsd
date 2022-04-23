@@ -104,4 +104,10 @@ def get_user_event_input(initial_df, save_dir, viewing_dir, thresh_idx, redo=Tru
 
                         detected_frame.loc[detections, "correct"] = True
                         detections += 1
-    detected_frame.to_csv(Path(save_dir, f"{initial_df.stem}_good_detections.csv"))
+    detected_frame.to_csv(
+        Path(
+            save_dir,
+            f"{initial_df.stem}_intermediate_files",
+            f"{initial_df.stem}_good_detections.csv",
+        )
+    )
