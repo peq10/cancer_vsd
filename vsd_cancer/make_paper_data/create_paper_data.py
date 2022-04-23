@@ -70,7 +70,9 @@ if not data_dir.is_dir():
 
 
 print("Hello world")
-initial_df = Path(top_dir, "analysis", "long_acqs_20220420_HPC_labelled_complete.csv")
+initial_df = Path(
+    top_dir, "analysis", "correct_dataframes", "20220423_original_and_review.csv"
+)
 
 intermed_files_dir = Path(data_dir, f"{initial_df.stem}_intermediate_files")
 if not intermed_files_dir.is_dir():
