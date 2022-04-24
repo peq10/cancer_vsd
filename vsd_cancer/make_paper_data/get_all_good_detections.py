@@ -86,14 +86,12 @@ def get_user_event_input(initial_df, save_dir, viewing_dir, thresh_idx, redo=Tru
                             times[idxxx][0, :] / 2
                         )
                         ffiile = Path(
-                            trial_save, f"{trial_string}_good_detection_cell_{ce}.npy"
+                            trial_save,
+                            f"{trial_string}_NEW_good_detection_cell_{ce}.npy",
                         )
                         # also make a small video around cell
                         if (
-                            Path(
-                                trial_save,
-                                f"{trial_string}_good_detection_cell_{ce}.npy",
-                            ).is_file()
+                            ffiile.is_file()
                             and not redo
                             and data.trial_string not in redo_trials
                         ):
