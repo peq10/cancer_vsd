@@ -294,9 +294,9 @@ if HPC_num is None:
 else:
     # Temporary to get first pass answers mark alll detections as quality controlled
 
-    import fake_get_all_good_detections
+    import extract_user_input
 
-    fake_get_all_good_detections.get_user_event_input(
+    extract_user_input.get_user_event_input(
         initial_df,
         data_dir,
         Path(viewing_dir, "final_paper_before_user_input"),
