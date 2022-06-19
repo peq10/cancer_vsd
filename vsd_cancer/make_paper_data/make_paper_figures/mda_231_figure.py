@@ -115,7 +115,7 @@ def plot_percent_quiet(save_dir, figsave, filetype):
     fig, ax = plt.subplots()
     # sns.violinplot(y=active,saturation = 0.5)
     # ax4.plot(np.random.normal(loc = 1,scale = scale,size = sens.shape[0]),sens[:,-1],'.k',markersize = 12)
-    sns.swarmplot(y=active_rate * 10 ** 3, ax=ax, color="k", size=7)
+    sns.swarmplot(y=active_rate * 10**3, ax=ax, color="k", size=7)
     ax.xaxis.set_visible(False)
     ax.set_ylabel("Mean event rate\n(active cells, x10$^3$ s$^{-1}$)")
     pf.set_thickaxes(ax, 3, remove=["top", "right", "bottom"])

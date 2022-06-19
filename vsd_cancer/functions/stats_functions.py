@@ -171,7 +171,7 @@ def qqplot(
     kwargs : dict of keyword arguments
         Keyword arguments to pass to matplotlib.axes.Axes.scatter() when drawing
         the q-q plot.
-        
+
     https://stats.stackexchange.com/questions/403652/two-sample-quantile-quantile-plot-in-python
     """
     # Get current axes if none are provided

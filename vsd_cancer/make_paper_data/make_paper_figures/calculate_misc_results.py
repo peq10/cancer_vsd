@@ -105,9 +105,9 @@ def calculate_number_per_fov(save_dir, figure_dir):
         seg = seg[50:-50, 50:-50]  # avoid edges
         n_cells = seg.max() - 1
 
-        area = seg.shape[0] * seg.shape[1] * 1.04 ** 2
+        area = seg.shape[0] * seg.shape[1] * 1.04**2
 
-        area_mm = area * ((10 ** -3) ** 2)
+        area_mm = area * ((10**-3) ** 2)
 
         cells_per_mm = n_cells / area_mm
 

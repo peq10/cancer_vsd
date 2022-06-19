@@ -34,7 +34,7 @@ def get_trains(spike_trains):
 
 def bin_times(trains, binsize):
     """
-    Bins all the spikes for the whole time 
+    Bins all the spikes for the whole time
     """
     min_time = 400 * 0.2
     max_time = np.max([np.max(x) for x in trains])
@@ -109,7 +109,7 @@ def plot_raster(trains, binsize=1):
         plt.plot((t - min_time) / binsize, np.ones_like(t) + idx, ".")
 
 
-def resample_observations(all_trains, binsize, bootnum=10 ** 2):
+def resample_observations(all_trains, binsize, bootnum=10**2):
     """
     Resamopling from all pairs to understand the 95% CIs
     """
@@ -151,7 +151,7 @@ def resample_observations(all_trains, binsize, bootnum=10 ** 2):
     return resamp_means
 
 
-def resample_observations_both(all_trains, binsize, bootnum=10 ** 2):
+def resample_observations_both(all_trains, binsize, bootnum=10**2):
     """
     Resamopling from all pairs to understand the 95% CIs
     """
@@ -198,7 +198,7 @@ def resample_observations_both(all_trains, binsize, bootnum=10 ** 2):
 
 
 def get_ratio_corr_CIs(
-    all_trains, binsize, level, bootnum=10 ** 3, shuffle=False, plot=True
+    all_trains, binsize, level, bootnum=10**3, shuffle=False, plot=True
 ):
     resamp, resamp_null = resample_observations_both(all_trains, binsize)
 
@@ -208,7 +208,7 @@ def get_ratio_corr_CIs(
     return CI, resamp, resamp_null
 
 
-def get_corr_CIs(all_trains, binsize, level, bootnum=10 ** 3, shuffle=False, plot=True):
+def get_corr_CIs(all_trains, binsize, level, bootnum=10**3, shuffle=False, plot=True):
     resamplings = resample_observations(all_trains, binsize, bootnum=bootnum)
 
     # todo - check about percentile vs other bootstrap
@@ -226,7 +226,7 @@ def get_corr_CIs(all_trains, binsize, level, bootnum=10 ** 3, shuffle=False, plo
     return CI, resamplings
 
 
-def calculate_p_value(all_trains, binsize, bootnum=10 ** 2):
+def calculate_p_value(all_trains, binsize, bootnum=10**2):
 
     nulls = get_null_hypoth(all_trains, binsize, repeats=bootnum)
     null_dist = np.array([np.mean(x) for x in nulls])

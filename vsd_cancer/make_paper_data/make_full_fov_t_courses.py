@@ -40,6 +40,7 @@ def make_all_FOV_tc(df_file, save_dir, redo=True, HPC_num=None):
                 continue
         elif not redo and HPC_num is not None:
             if Path(trial_save, f"{trial_string}_full_fov_tc.npy").is_file():
+                print("Skipping FOV tc")
                 continue
 
         stack = np.load(Path(trial_save, f"{trial_string}_ratio_stack.npy")).astype(
@@ -55,7 +56,7 @@ def make_all_FOV_tc(df_file, save_dir, redo=True, HPC_num=None):
         np.save(Path(trial_save, f"{trial_string}_full_fov_tc.npy"), tc)
         np.save(Path(trial_save, f"{trial_string}_full_fov_std.npy"), std)
 
-        print(f"Saved {trial_string}")
+        print(f"Saved {trial_string} FOV TC")
         redo_from += 1
         np.save(
             Path(

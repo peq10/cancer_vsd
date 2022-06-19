@@ -116,7 +116,7 @@ def load_steps_ephys2(stack_fname, ephys_fname):
         sliced_cam = np.reshape(cam, (13, 100))
         stack = np.reshape(stack, (13, 100) + stack.shape[-2:])
 
-        T_approx = 3 * 10 ** -3
+        T_approx = 3 * 10**-3
 
         # extract LED powers (use slightly longer segment)
         idx1, idx2 = ef.time_to_idx(
@@ -165,7 +165,7 @@ def cam_check_steps(cam, cam_id, times, n_frames):
     except ValueError:
         return False
 
-    if diff.max() - diff.min() < 3 * 10 ** -3:
+    if diff.max() - diff.min() < 3 * 10**-3:
         return True
     else:
         return False

@@ -18,7 +18,7 @@ from vsd_cancer.functions import cancer_functions as canf
 
 
 def make_all_tc(
-    df_file, save_dir, redo=True, njobs=2, HPC_num=None, only_hand_rois=False
+    df_file, save_dir, redo=True, njobs=1, HPC_num=None, only_hand_rois=False
 ):
     df = pd.read_csv(df_file)
 
@@ -52,7 +52,10 @@ def make_all_tc(
                 continue
         elif not redo and HPC_num is not None:
             if Path(trial_save, f"{trial_string}_all_tcs.npy").is_file():
+                print("Skipping doing tcs")
                 continue
+            else:
+                print("doing tcs")
 
         seg = np.load(Path(trial_save, f"{trial_string}_seg.npy"))
 
@@ -64,6 +67,7 @@ def make_all_tc(
         eroded_masks = ndimage.binary_erosion(masks, structure)
         # also make eroded masks to avoid movement artefacts around outside
 
+        print("Creating time courses")
         stack = np.load(Path(trial_save, f"{trial_string}_ratio_stack.npy")).astype(
             np.float64
         )

@@ -22,9 +22,17 @@ if "peq10" in str(home):
     df_str = "_HPC"
     HPC_num = int(sys.argv[1]) - 1  # allows running on HPC with data parallelism
     redo = bool(int(sys.argv[2]))
-    print(f"Redoing: {redo}")
+    print(f"Redoing: {redo}", flush=True)
     yilins_computer = False
     yilin_save = False
+
+    initial_df = Path(
+        top_dir,
+        "analysis",
+        "correct_dataframes",
+        "20220423_original_and_review.csv",
+    )
+
 elif "ys5320" in str(home):
     HPC = True
     top_dir = Path(Path.home(), "firefly_link/cancer")
@@ -33,9 +41,17 @@ elif "ys5320" in str(home):
         int(sys.argv[1]) - 1
     )  # allows running on HPC with data parallelism with Yilin
     redo = bool(int(sys.argv[2]))
-    print(f"Redoing: {redo}")
+    print(f"Redoing: {redo}", flush=True)
     yilins_computer = False
     yilin_save = False
+
+    initial_df = Path(
+        top_dir,
+        "analysis",
+        "correct_dataframes",
+        "long_acqs_20220420_HPC_labelled_complete.csv",
+    )
+
 elif os.name == "nt":
     HPC = False
     top_dir = Path("G:/")
@@ -69,10 +85,7 @@ if not data_dir.is_dir():
     data_dir.mkdir()
 
 
-print("Hello world")
-initial_df = Path(
-    top_dir, "analysis", "correct_dataframes", "20220423_original_and_review.csv"
-)
+print("Analysis started", flush=True)
 
 intermed_files_dir = Path(data_dir, f"{initial_df.stem}_intermediate_files")
 if not intermed_files_dir.is_dir():
@@ -82,11 +95,11 @@ if not intermed_files_dir.is_dir():
 redo_vid = False
 if HPC:
     df_ = pd.read_csv(initial_df)
-    print(f"Doing {df_.iloc[HPC_num].tif_file}")
+    print(f"Doing {df_.iloc[HPC_num].tif_file}", flush=True)
     redo_vid = redo
 
 
-print("Loading tif...")
+print("Loading tif...", flush=True)
 if not yilins_computer:
     import load_all_long
 
@@ -115,7 +128,7 @@ if not yilins_computer:
         )
 
 
-print("Segmenting...")
+print("Segmenting...", flush=True)
 if redo:
     import segment_cellpose
 
@@ -123,7 +136,7 @@ if redo:
         initial_df, data_dir, HPC_num=HPC_num, only_hand_rois=False
     )
 
-print("Making overlays...")
+print("Making overlays...", flush=True)
 if redo:
     import make_roi_overlays
 
@@ -132,7 +145,7 @@ if redo:
     )
 
 
-print("Extracting time series...")
+print("Extracting time series...", flush=True)
 import make_all_t_courses
 
 make_all_t_courses.make_all_tc(
@@ -140,19 +153,21 @@ make_all_t_courses.make_all_tc(
 )
 
 
+print("Extracting cell free time series...", flush=True)
 import make_all_cell_free_t_courses
 
 make_all_cell_free_t_courses.make_all_cellfree_tc(
     initial_df, data_dir, redo=redo, HPC_num=HPC_num
 )
 
-print("Extracting FOV time series...")
+print("Extracting FOV time series...", flush=True)
 import make_full_fov_t_courses
 
 make_full_fov_t_courses.make_all_FOV_tc(
     initial_df, data_dir, redo=redo, HPC_num=HPC_num
 )
 
+print("Extracting dead cells...", flush=True)
 import get_dead_cells
 
 get_dead_cells.make_all_raw_tc(
@@ -160,13 +175,13 @@ get_dead_cells.make_all_raw_tc(
 )
 
 
-print("Getting mean brightnesses")
+print("Getting mean brightnesses", flush=True)
 import get_all_brightness
 
 get_all_brightness.get_mean_brightness(initial_df, data_dir, HPC_num=HPC_num)
 print(f"HPC_num = {HPC_num}")
 if True:
-    print("Defining circle exclusion")
+    print("Defining circle exclusion", flush=True)
     import define_circle_rois
 
     define_circle_rois.define_circle_rois(
@@ -181,7 +196,7 @@ if True:
 
     import apply_circle_rois
 
-    print("Applying circle exclusion")
+    print("Applying circle exclusion", flush=True)
     apply_circle_rois.apply_circle_exclusion(
         top_dir, data_dir, initial_df, HPC_num=HPC_num
     )
@@ -197,10 +212,10 @@ if False:
 
     get_led_powers.get_all_powers(initial_df, data_dir)
 
-print("Detecting events...")
+print("Detecting events...", flush=True)
 import get_events
 
-print(f"HPC_num = {HPC_num}")
+print(f"HPC_num = {HPC_num}", flush=True)
 if redo:
     get_events.get_measure_events(
         initial_df,
@@ -216,10 +231,10 @@ if redo:
 
 
 thresh_idx = 1
-print("Making videos...")
+print("Making videos...", flush=True)
 import make_corr_grey_vids
 
-print(f"HPC_num = {HPC_num}")
+print(f"HPC_num = {HPC_num}", flush=True)
 make_corr_grey_vids.make_all_grey_vids(
     top_dir,
     data_dir,
@@ -232,7 +247,7 @@ make_corr_grey_vids.make_all_grey_vids(
 )
 
 
-print("Getting user input for good detections")
+print("Getting user input for good detections", flush=True)
 if HPC_num is None:
     import get_all_good_detections
 
@@ -289,7 +304,7 @@ else:
         redo=False,
     )
 
-    print("Exporting events...")
+    print("Exporting events...", flush=True)
     import export_events
 
     export_events.export_events(

@@ -120,7 +120,7 @@ mean_rs = np.array(mean_rs)
 
 sens = np.array(sens)
 
-sens = sens * 100 ** 2
+sens = sens * 100**2
 
 
 disp = slice(10, 140, 1), slice(169, 222, 1)

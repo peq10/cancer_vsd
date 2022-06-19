@@ -24,7 +24,7 @@ def get_LED_calibration(top_dir, save_dir):
         "/media/peter/bigdata/Firefly/cancer/brightness_cal_20201228/calibration.smr",
     ]
     sizes = np.array([[393, 430], [255, 270]])
-    sizes = np.pi * ((sizes * 10 ** -3) / 2) ** 2
+    sizes = np.pi * ((sizes * 10**-3) / 2) ** 2
 
     dates = [20201113, 20201228]
 

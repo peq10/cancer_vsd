@@ -269,7 +269,7 @@ def plot_example_synchrony(top_dir, save_dir, figsave, filetype, redo_boot=False
         # now get an example bootstrap sampling
         pairwise_true = np.mean(corrf.calculate_pairwise_corrs(binned_spikes))
         pairwise_shuffled = []
-        for i in range(10 ** 4):
+        for i in range(10**4):
             [np.random.shuffle(x) for x in binned_spikes_shuffled]
             pairwise_shuffled.append(
                 np.mean(corrf.calculate_pairwise_corrs(binned_spikes_shuffled))

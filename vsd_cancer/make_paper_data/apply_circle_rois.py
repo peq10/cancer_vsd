@@ -17,7 +17,13 @@ from vsd_cancer.functions import cancer_functions as canf
 
 def apply_circle_exclusion(top_dir, save_dir, initial_df, HPC_num=None):
 
-    df = pd.read_csv(Path(save_dir, f"{initial_df.stem}_roi_df.csv"))
+    df = pd.read_csv(
+        Path(
+            save_dir,
+            f"{initial_df.stem}_intermediate_files",
+            f"{initial_df.stem}_roi_df.csv",
+        )
+    )
     for idx, data in enumerate(df.itertuples()):
         if HPC_num is not None:  # allows running in parallel on HPC
             if idx != HPC_num:
