@@ -33,15 +33,23 @@ def make_figures(initial_df, save_dir, figure_dir, filetype=".png"):
         figsave.mkdir()
 
     df = pd.read_csv(
-        Path(save_dir, "original_submission_non_ttx_active_df_by_cell.csv")
+        Path(
+            save_dir,
+            "20220423_original_and_review_intermediate_files/20220423_original_and_review_non_ttx_active_df_by_cell.csv",
+        )
     )
-    df2 = pd.read_csv(Path(save_dir, "original_submission_TTX_active_df_by_cell.csv"))
+    df2 = pd.read_csv(
+        Path(
+            save_dir,
+            "20220423_original_and_review_intermediate_files/20220423_original_and_review_TTX_active_df_by_cell.csv",
+        )
+    )
     df2 = df2[df2.stage == "pre"]
 
     df3 = pd.read_csv(
         Path(
             save_dir,
-            "long_acqs_20220319_experiments_cell_labelled_complete_non_ttx_active_df_by_cell.csv",
+            "long_acqs_20220420_HPC_labelled_complete_intermediate_files/long_acqs_20220420_HPC_labelled_complete_non_ttx_active_df_by_cell.csv",
         )
     )
 
@@ -117,8 +125,8 @@ def make_figures(initial_df, save_dir, figure_dir, filetype=".png"):
 
 if __name__ == "__main__":
 
-    top_dir = Path("/Volumes/peq10/home/firefly_link/cancer")
+    top_dir = Path("/mnt/rds/home/firefly_link/cancer")
     save_dir = Path(top_dir, "analysis", "full")
-    figure_dir = Path("/Users/quickep/Dropbox (Personal)/Papers/cancer/v2/")
+    figure_dir = Path("/home/peter/Dropbox/Papers/cancer/reviews")
     initial_df = Path(top_dir, "analysis", "long_acqs_20210428_experiments_correct.csv")
     make_figures(initial_df, save_dir, figure_dir, filetype=".pdf")

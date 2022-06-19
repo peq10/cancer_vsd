@@ -169,7 +169,7 @@ def plot_compare_mda(
     scale=3,
     density=False,
     redo_stats=True,
-    num_resamplings=10 ** 6,
+    num_resamplings=10**6,
 ):
     df = pd.read_csv(Path(save_dir, "non_ttx_active_df_by_cell.csv"))
 
@@ -186,6 +186,10 @@ def plot_compare_mda(
     df["integ_rate"] = (df["integrated_events"]) / (df["obs_length"] * T)
     df["neg_integ_rate"] = -1 * (df["neg_integrated_events"]) / (df["obs_length"] * T)
 
+    if True:
+        print("ONLY LOOKING AT LONG TIMES")
+        df = df[df.day != 20210122]
+
     mda = df[df.exp_stage == "standard_none"][[key, "day_slip"]]
     mcf = df[df.exp_stage == "MCF10A_none"][[key, "day_slip"]]
     tgf = df[df.exp_stage == "MCF10A_TGFB_none"][[key, "day_slip"]]
@@ -194,12 +198,12 @@ def plot_compare_mda(
     mc = mcf[key].to_numpy()
     tg = tgf[key].to_numpy()
 
-    bins = np.histogram(np.concatenate((md, mc, tg)) * 10 ** 3, bins=10)[1]
+    bins = np.histogram(np.concatenate((md, mc, tg)) * 10**3, bins=10)[1]
 
     fig, axarr = plt.subplots(nrows=3)
     c = 0.05
     axarr[0].hist(
-        md * 10 ** scale,
+        md * 10**scale,
         bins=bins,
         log=True,
         density=density,
@@ -207,7 +211,7 @@ def plot_compare_mda(
         color=(c, c, c),
     )
     axarr[1].hist(
-        mc * 10 ** scale,
+        mc * 10**scale,
         bins=bins,
         log=True,
         density=density,
@@ -215,7 +219,7 @@ def plot_compare_mda(
         color=(c, c, c),
     )
     axarr[2].hist(
-        tg * 10 ** scale,
+        tg * 10**scale,
         bins=bins,
         log=True,
         density=density,
@@ -228,7 +232,7 @@ def plot_compare_mda(
 
     for idx, a in enumerate(axarr):
         if not density:
-            a.set_ylim([0.6, 10 ** 4.5])
+            a.set_ylim([0.6, 10**4.5])
             a.set_yticks(10 ** np.arange(0, 4, 3))
         a.legend(frameon=False, loc=(0.4, 0.4), fontsize=16)
         pf.set_all_fontsize(a, 16)
@@ -330,6 +334,10 @@ def plot_MCF_hist(save_dir, figsave, filetype):
     df = pd.read_csv(Path(save_dir, "all_events_df.csv"))
     df["exp_stage"] = df.expt + "_" + df.stage
 
+    if True:
+        print("ONLY LOOKING AT LONG TIMES")
+        df = df[["20210122" not in x for x in df.trial_string]]
+
     use = ["MCF10A_TGFB_none", "MCF10A_none"]
 
     log = [True]
@@ -365,6 +373,10 @@ def plot_events_MCF(
 ):
 
     dfn = df.copy()
+
+    if True:
+        print("ONLY LOOKING AT LONG TIMES")
+        dfn = dfn[["20210122" not in x for x in df.trial_string]]
 
     use_bool = np.array([np.any(x in use) for x in dfn.exp_stage])
     dfn = dfn[use_bool]
@@ -459,6 +471,6 @@ def plot_events_MCF(
 if __name__ == "__main__":
     top_dir = Path("/home/peter/data/Firefly/cancer")
     save_dir = Path(top_dir, "analysis", "full")
-    figure_dir = Path("/home/peter/Dropbox/Papers/cancer/v2/")
+    figure_dir = Path("/home/peter/Dropbox/Papers/cancer/reviews/")
     initial_df = Path(top_dir, "analysis", "long_acqs_20210428_experiments_correct.csv")
     make_figures(initial_df, save_dir, figure_dir, redo_stats=True)
