@@ -73,13 +73,15 @@ def make_figures(initial_df, save_dir, figure_dir, filetype=".png"):
     df.exp_stage = [x if x not in MDA_keys else "L231_none" for x in df.exp_stage]
 
     lines = list(np.unique(df.exp_stage))
-    names = ["_".join(x.split("_")[:-1]) for x in lines]
+
+    lines = [l for l in lines if "TGFB" not in l]
 
     results_trial = []
 
     results_slip = []
 
     for l in lines:
+
         results_trial.append(
             df[df.exp_stage == l].groupby("trial").mean()["neg_event_rate"].to_numpy()
         )
@@ -90,43 +92,73 @@ def make_figures(initial_df, save_dir, figure_dir, filetype=".png"):
             .to_numpy()
         )
 
-    fig, ax = plt.subplots()
-    for idx, (l, res) in enumerate(zip(lines, results_trial)):
-        ax.plot(np.ones(len(res)) * idx, res * 1000, ".")
+    # deal with the annoying thing where sometimes the line has L in front of it
+    lines2 = [x[1:] if x[0] == "L" else x for x in lines]
 
-    ax.set_xticks(range(len(lines)))
+    un_cell_lines = list(set(lines2))
+    order = ["MCF10A"]
+
+    results_trial_corr = []
+
+    names = ["_".join(x.split("_")[:-1]) for x in un_cell_lines]
+
+    for l in un_cell_lines:
+
+        results_trial_corr.append([])
+        for l2, res in zip(lines2, results_trial):
+            if l2 == l:
+                results_trial_corr[-1].extend(res)
+
+    fig, ax = plt.subplots()
+    sns.swarmplot(data=[np.array(x) * 1000 for x in results_trial_corr], ax=ax)
+
+    ax.set_xticks(range(len(un_cell_lines)))
     ax.set_xticklabels(names, rotation=90)
     ax.set_xlabel("Cell Line")
     ax.set_ylabel("Negative event rate (events/cell/1000 s)")
+    fig.savefig(
+        Path(
+            figsave,
+            f"all_cells_plot{filetype}",
+        ),
+        bbox_inches="tight",
+        dpi=300,
+        transparent=True,
+    )
 
-    kruskal_p = scipy.stats.kruskal(*results_trial)
+    kruskal_p = scipy.stats.kruskal(*results_trial_corr)
 
-    MDA_res = results_trial[lines.index("L231_none")]
-    MCF_res = results_trial[lines.index("MCF10A_none")]
+    MDA_res = results_trial_corr[un_cell_lines.index("231_none")]
+    MCF_res = results_trial_corr[un_cell_lines.index("MCF10A_none")]
 
     ps_MCF = []
     ps_MDA = []
 
-    for l, res in zip(lines, results_trial):
-        if l != "L231_none":
+    names = []
+    for l, res in zip(un_cell_lines, results_trial_corr):
+        if l != "231_none":
             p_mda = scipy.stats.mannwhitneyu(res, MDA_res)
             ps_MDA.append((l, p_mda.pvalue))
 
         if l != "MCF10A_none":
             p_mcf = scipy.stats.mannwhitneyu(res, MCF_res)
             ps_MCF.append((l, p_mcf.pvalue))
+            names.append(l)
 
     corrected_10a = statsmodels.stats.multitest.multipletests(
         [x[1] for x in ps_MCF], method="fdr_bh"
     )
 
-    ps_MCF_corrected = []
+    ps_MCF_corrected = [
+        (name.split("_")[0], corr_p) for name, corr_p in zip(names, corrected_10a[1])
+    ]
+    print(ps_MCF_corrected)
 
 
 if __name__ == "__main__":
 
-    top_dir = Path("/mnt/rds/home/firefly_link/cancer")
+    top_dir = Path("/home/peter/bigdata/Firefly/cancer/")
     save_dir = Path(top_dir, "analysis", "full")
     figure_dir = Path("/home/peter/Dropbox/Papers/cancer/reviews")
     initial_df = Path(top_dir, "analysis", "long_acqs_20210428_experiments_correct.csv")
-    make_figures(initial_df, save_dir, figure_dir, filetype=".pdf")
+    make_figures(initial_df, save_dir, figure_dir, filetype=".png")
