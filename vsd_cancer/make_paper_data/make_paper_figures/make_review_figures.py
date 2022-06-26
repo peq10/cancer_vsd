@@ -96,7 +96,6 @@ def make_figures(initial_df, save_dir, figure_dir, filetype=".png"):
     lines2 = [x[1:] if x[0] == "L" else x for x in lines]
 
     un_cell_lines = list(set(lines2))
-    order = ["MCF10A"]
 
     results_trial_corr = []
 
@@ -115,7 +114,9 @@ def make_figures(initial_df, save_dir, figure_dir, filetype=".png"):
     ax.set_xticks(range(len(un_cell_lines)))
     ax.set_xticklabels(names, rotation=90)
     ax.set_xlabel("Cell Line")
-    ax.set_ylabel("Negative event rate (events/cell/1000 s)")
+    ax.set_ylabel("Negative event rate\n(events/cell/1000 s)")
+    pf.set_thickaxes(ax, 3)
+    pf.set_all_fontsize(ax, 16)
     fig.savefig(
         Path(
             figsave,
