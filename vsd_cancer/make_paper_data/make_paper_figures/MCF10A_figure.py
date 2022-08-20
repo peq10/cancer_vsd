@@ -158,6 +158,15 @@ def plot_example_and_tcs(save_dir, figsave, filetype):
             transparent=True,
         )
 
+        figdata_name = "/home/peter/Dropbox/Papers/cancer/v2/figure_data/" + "fig_8_"
+
+        if t == mc_str:
+            np.savetxt(figdata_name + f"_8A_x.txt", np.arange(tcs.shape[-1]) * T)
+            np.savetxt(figdata_name + f"_8A_y.txt", (tcs - 1) * 100)
+        else:
+            np.savetxt(figdata_name + f"_8B_x.txt", np.arange(tcs[0].shape[-1]) * T)
+            np.savetxt(figdata_name + f"_8B_y.txt", (tcs - 1) * 100)
+
 
 def plot_compare_mda(
     save_dir,
@@ -259,6 +268,11 @@ def plot_compare_mda(
         dpi=300,
         transparent=True,
     )
+
+    figdata_name = "/home/peter/Dropbox/Papers/cancer/v2/figure_data/" + "fig_8_"
+    np.savetxt(figdata_name + f"_8E_mda.txt", md * 10**scale)
+    np.savetxt(figdata_name + f"_8E_MCF.txt", mc * 10**scale)
+    np.savetxt(figdata_name + f"_8E_tgf.txt", tg * 10**scale)
 
     if redo_stats:
         p_mda_mcf, _, f1 = statsf.bootstrap_test(
@@ -465,6 +479,17 @@ def plot_events_MCF(
     ax3.set_xlabel("MCF10A + TGF-$\\beta$ event amplitude (% $\Delta$R/R$_0$)")
     ax3.set_ylabel("Event duration (s)")
 
+    figdata_name = "/home/peter/Dropbox/Papers/cancer/v2/figure_data/" + "fig_8_"
+    save = neg[["event_amplitude", "event_length"]].copy()
+    save["event_amplitude"] *= 100
+    save["event_length"] *= T
+    save.to_csv(figdata_name + "fig_8C_data.csv")
+
+    save = pos[["event_amplitude", "event_length"]].copy()
+    save["event_amplitude"] *= 100
+    save["event_length"] *= T
+    save.to_csv(figdata_name + "fig_8D_data.csv")
+
     return fig
 
 
@@ -473,4 +498,4 @@ if __name__ == "__main__":
     save_dir = Path(top_dir, "analysis", "full")
     figure_dir = Path("/home/peter/Dropbox/Papers/cancer/reviews/")
     initial_df = Path(top_dir, "analysis", "long_acqs_20210428_experiments_correct.csv")
-    make_figures(initial_df, save_dir, figure_dir, redo_stats=True)
+    make_figures(initial_df, save_dir, figure_dir, redo_stats=False)

@@ -111,6 +111,8 @@ def plot_percent_quiet(save_dir, figsave, filetype):
         dpi=300,
         transparent=True,
     )
+    figdata_name = "/home/peter/Dropbox/Papers/cancer/v2/figure_data/" + "fig_3_"
+    np.savetxt(figdata_name + f"_3C_y.txt", active)
 
     fig, ax = plt.subplots()
     # sns.violinplot(y=active,saturation = 0.5)
@@ -143,6 +145,9 @@ def plot_percent_quiet(save_dir, figsave, filetype):
         dpi=300,
         transparent=True,
     )
+
+    figdata_name = "/home/peter/Dropbox/Papers/cancer/v2/figure_data/" + "fig_3_"
+    np.savetxt(figdata_name + f"_3D_y.txt", active_d.neg_event_rate * 1000)
 
 
 def make_example_trace_fig(
@@ -257,6 +262,11 @@ def make_example_trace_fig(
 
     plt.axis("off")
     pf.plot_scalebar(ax, 0, (tcs[:num_traces].min() - 1) * 100, 200, 3, thickness=3)
+
+    figdata_name = "/home/peter/Dropbox/Papers/cancer/v2/figure_data/" + "fig_3_"
+    np.savetxt(figdata_name + f"_3A_x.txt", np.arange(tcs.shape[-1]) * T)
+    np.savetxt(figdata_name + f"_3A_y.txt", (tcs - 1) * 100)
+    np.savetxt(figdata_name + f"_3A_y_filtered.txt", (tc_filt - 1) * 100)
 
     colors = (np.array(colors) * 255).astype(np.uint8)
     # colors = np.hstack([colors,np.ones((colors.shape[0],1))])
@@ -524,6 +534,12 @@ def plot_events2(
     plt.colorbar(hh[3])
     ax2.set_xlabel("Event amplitude (% $\Delta$R/R$_0$)")
     ax2.set_ylabel("Event length (s)")
+
+    figdata_name = "/home/peter/Dropbox/Papers/cancer/v2/figure_data/" + "fig_3_"
+    save = dfn[["event_amplitude", "event_length"]].copy()
+    save["event_amplitude"] *= 100
+    save["event_length"] *= T
+    save.to_csv(figdata_name + "fig_3B_data.csv")
 
     # get number of events before/after TTX
     thresh = 2

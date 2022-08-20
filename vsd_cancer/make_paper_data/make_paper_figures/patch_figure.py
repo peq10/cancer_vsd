@@ -154,6 +154,7 @@ def make_figures(figure_dir, filetype=".png"):
     fig = plt.figure(constrained_layout=True, figsize=[7, 4.8])
     gs = fig.add_gridspec(2, 3)
 
+    figdata_name = "/home/peter/Dropbox/Papers/cancer/v2/figure_data/" + "fig_1_"
     ax0 = fig.add_subplot(gs[:, 0])
     ax0.imshow(image, cmap="Greys_r")
     ax0.imshow(over)
@@ -168,6 +169,9 @@ def make_figures(figure_dir, filetype=".png"):
     pf.set_all_fontsize(ax1, 12)
     pf.set_thickaxes(ax1, 3)
 
+    np.savetxt(figdata_name + f"_1D_x.txt", np.arange(ex_vm.shape[-1]) * vm_T)
+    np.savetxt(figdata_name + f"_1D_y.txt", ex_vm.T)
+
     ax2 = fig.add_subplot(gs[0, 2])
     ax2.plot(np.arange(ex_tc.shape[-1]) * T, (ex_tc.T - 1) * 100, linewidth=2)
     ax2.set_xlabel("Time (s)")
@@ -175,6 +179,9 @@ def make_figures(figure_dir, filetype=".png"):
     ax2.set_yticks(np.arange(-2, 7, 2))
     pf.set_all_fontsize(ax2, 12)
     pf.set_thickaxes(ax2, 3)
+
+    np.savetxt(figdata_name + f"_1E_x.txt", np.arange(ex_tc.shape[-1]) * T)
+    np.savetxt(figdata_name + f"_1E_y.txt", (ex_tc.T - 1) * 100)
 
     ax3 = fig.add_subplot(gs[1, 1])
     ax3.plot(
@@ -198,6 +205,9 @@ def make_figures(figure_dir, filetype=".png"):
     pf.set_all_fontsize(ax3, 12)
     pf.set_thickaxes(ax3, 3)
 
+    np.savetxt(figdata_name + f"_1F_x.txt", mean_vs[ii, :])
+    np.savetxt(figdata_name + f"_1F_y.txt", (mean_rs[ii, :] - 1) * 100)
+
     ax4 = fig.add_subplot(gs[1, 2])
     scale = 0.02
     sns.violinplot(y=sens[:, -1], saturation=0.5)
@@ -208,6 +218,8 @@ def make_figures(figure_dir, filetype=".png"):
     ax4.set_ylabel("Ratiometric sensitivity\n(% per 100 mV)")
     pf.set_thickaxes(ax4, 3, remove=["top", "right", "bottom"])
     pf.set_all_fontsize(ax4, 12)
+
+    np.savetxt(figdata_name + f"_1G_y.txt", sens[:, -1])
 
     fig.savefig(
         Path(figsave, f"patch_figure{filetype}"),
@@ -216,144 +228,147 @@ def make_figures(figure_dir, filetype=".png"):
         transparent=True,
     )
 
-    # plot an example cell
-    fig = plt.figure(constrained_layout=True, figsize=[7, 4.8])
-    gs = fig.add_gridspec(2, 3)
-
-    ax0 = fig.add_subplot(gs[:, 0])
-    ax0.imshow(image, cmap="Greys_r")
-    ax0.imshow(over)
-
-    plt.axis("off")
-
-    ax1 = fig.add_subplot(gs[0, 1])
-    ax1.plot(np.arange(ex_vm.shape[-1]) * vm_T, ex_vm.T, linewidth=2)
-    ax1.set_xlabel("Time (s)")
-    ax1.set_ylabel("Patch command\nvoltage (mV)")
-    # ax1.set_yticks(np.arange(-1,4))
-    pf.set_all_fontsize(ax1, 12)
-    pf.set_thickaxes(ax1, 3)
-
-    ax2 = fig.add_subplot(gs[0, 2])
-    ax2.plot(np.arange(ex_tc.shape[-1]) * T, (ex_tc.T - 1) * 100, linewidth=2)
-    ax2.set_xlabel("Time (s)")
-    ax2.set_ylabel(r"$\Delta R/R_0$ (%)")
-    ax2.set_yticks(np.arange(-2, 7, 2))
-    pf.set_all_fontsize(ax2, 12)
-    pf.set_thickaxes(ax2, 3)
-
-    ax3 = fig.add_subplot(gs[1, 1])
-    ax3.plot(
-        mean_vs[ii, :],
-        (fits[ii][-1].slope * mean_vs[ii, :] + fits[ii][-1].intercept - 1) * 100,
-        "k",
-        linewidth=3,
-    )
-    for idx in range(mean_vs.shape[1]):
-        ax3.plot(mean_vs[ii, idx], (mean_rs[ii, idx] - 1) * 100, ".r", markersize=12)
-    ax3.set_xlabel("Membrane Voltage (mV)")
-    ax3.set_ylabel(r"$\Delta R/R_0$ (%)")
-    ax3.set_yticks(np.arange(-2, 7, 2))
-    ax3.set_xticks([-50, 0, 50])
-    ax3.text(
-        -60,
-        2,
-        f"{fits[ii][-1].slope*100**2:.1f} % per\n100 mV",
-        fontdict={"fontsize": 12},
-    )
-    pf.set_all_fontsize(ax3, 12)
-    pf.set_thickaxes(ax3, 3)
-
-    ax4 = fig.add_subplot(gs[1, 2])
-    scale = 0.02
-    sns.violinplot(y=sens[:, -1], saturation=0.5)
-    # ax4.plot(np.random.normal(loc = 1,scale = scale,size = sens.shape[0]),sens[:,-1],'.k',markersize = 12)
-    sns.swarmplot(y=sens[:, -1], ax=ax4, color="k", size=7)
-
-    ax4.xaxis.set_visible(False)
-    ax4.set_yticks(np.arange(2, 11, 2))
-    ax4.set_ylabel("Ratiometric sensitivity\n(% per 100 mV)")
-    pf.set_thickaxes(ax4, 3, remove=["top", "right", "bottom"])
-    pf.set_all_fontsize(ax4, 12)
-
-    fig.savefig(
-        Path(figsave, f"patch_figure_red_dots{filetype}"),
-        dpi=300,
-        bbox_inches="tight",
-        transparent=True,
-    )
-
-    # plot an example cell
-    fig = plt.figure(constrained_layout=True, figsize=[7, 4.8])
-    gs = fig.add_gridspec(2, 3)
-
-    ax0 = fig.add_subplot(gs[:, 0])
-    ax0.imshow(image, cmap="Greys_r")
-    ax0.imshow(over)
-
-    plt.axis("off")
-
-    ax1 = fig.add_subplot(gs[0, 1])
-    ax1.plot(np.arange(ex_vm.shape[-1]) * vm_T, ex_vm.T, linewidth=2)
-    ax1.set_xlabel("Time (s)")
-    ax1.set_ylabel("Patch command\nvoltage (mV)")
-    # ax1.set_yticks(np.arange(-1,4))
-    pf.set_all_fontsize(ax1, 12)
-    pf.set_thickaxes(ax1, 3)
-
-    ax2 = fig.add_subplot(gs[0, 2])
-    ax2.plot(np.arange(ex_tc.shape[-1]) * T, (ex_tc.T - 1) * 100, linewidth=2)
-    ax2.set_xlabel("Time (s)")
-    ax2.set_ylabel(r"$\Delta R/R_0$ (%)")
-    ax2.set_yticks(np.arange(-2, 7, 2))
-    pf.set_all_fontsize(ax2, 12)
-    pf.set_thickaxes(ax2, 3)
-
-    ax3 = fig.add_subplot(gs[1, 1])
-    ax3.plot(
-        mean_vs[ii, :],
-        (fits[ii][-1].slope * mean_vs[ii, :] + fits[ii][-1].intercept - 1) * 100,
-        "k",
-        linewidth=3,
-    )
-    for idx in range(mean_vs.shape[1]):
-        ax3.plot(mean_vs[ii, idx], (mean_rs[ii, idx] - 1) * 100, ".r", markersize=12)
-    ax3.set_xlabel("Membrane Voltage (mV)")
-    ax3.set_ylabel(r"$\Delta R/R_0$ (%)")
-    ax3.set_yticks(np.arange(-2, 7, 2))
-    ax3.set_xticks([-50, 0, 50])
-    ax3.text(
-        -60,
-        2,
-        f"{fits[ii][-1].slope*100**2:.1f} % per\n100 mV",
-        fontdict={"fontsize": 12},
-    )
-    pf.set_all_fontsize(ax3, 12)
-    pf.set_thickaxes(ax3, 3)
-
-    ax4 = fig.add_subplot(gs[1, 2])
-    scale = 0.02
-    ax4.violinplot(sens[:, -1])
-    ax4.plot(
-        np.random.normal(loc=1, scale=scale, size=sens.shape[0]),
-        sens[:, -1],
-        ".k",
-        markersize=12,
-    )
-    # sns.swarmplot(y=sens[:,-1],ax = ax4,color = 'k',size = 7)
-
-    ax4.xaxis.set_visible(False)
-    ax4.set_yticks(np.arange(2, 11, 2))
-    ax4.set_ylabel("Ratiometric sensitivity\n(% per 100 mV)")
-    pf.set_thickaxes(ax4, 3, remove=["top", "right", "bottom"])
-    pf.set_all_fontsize(ax4, 12)
-
-    fig.savefig(
-        Path(figsave, f"patch_figure_old_violin{filetype}"),
-        dpi=300,
-        bbox_inches="tight",
-        transparent=True,
-    )
+    # =============================================================================
+    #
+    #     # plot an example cell
+    #     fig = plt.figure(constrained_layout=True, figsize=[7, 4.8])
+    #     gs = fig.add_gridspec(2, 3)
+    #
+    #     ax0 = fig.add_subplot(gs[:, 0])
+    #     ax0.imshow(image, cmap="Greys_r")
+    #     ax0.imshow(over)
+    #
+    #     plt.axis("off")
+    #
+    #     ax1 = fig.add_subplot(gs[0, 1])
+    #     ax1.plot(np.arange(ex_vm.shape[-1]) * vm_T, ex_vm.T, linewidth=2)
+    #     ax1.set_xlabel("Time (s)")
+    #     ax1.set_ylabel("Patch command\nvoltage (mV)")
+    #     # ax1.set_yticks(np.arange(-1,4))
+    #     pf.set_all_fontsize(ax1, 12)
+    #     pf.set_thickaxes(ax1, 3)
+    #
+    #     ax2 = fig.add_subplot(gs[0, 2])
+    #     ax2.plot(np.arange(ex_tc.shape[-1]) * T, (ex_tc.T - 1) * 100, linewidth=2)
+    #     ax2.set_xlabel("Time (s)")
+    #     ax2.set_ylabel(r"$\Delta R/R_0$ (%)")
+    #     ax2.set_yticks(np.arange(-2, 7, 2))
+    #     pf.set_all_fontsize(ax2, 12)
+    #     pf.set_thickaxes(ax2, 3)
+    #
+    #     ax3 = fig.add_subplot(gs[1, 1])
+    #     ax3.plot(
+    #         mean_vs[ii, :],
+    #         (fits[ii][-1].slope * mean_vs[ii, :] + fits[ii][-1].intercept - 1) * 100,
+    #         "k",
+    #         linewidth=3,
+    #     )
+    #     for idx in range(mean_vs.shape[1]):
+    #         ax3.plot(mean_vs[ii, idx], (mean_rs[ii, idx] - 1) * 100, ".r", markersize=12)
+    #     ax3.set_xlabel("Membrane Voltage (mV)")
+    #     ax3.set_ylabel(r"$\Delta R/R_0$ (%)")
+    #     ax3.set_yticks(np.arange(-2, 7, 2))
+    #     ax3.set_xticks([-50, 0, 50])
+    #     ax3.text(
+    #         -60,
+    #         2,
+    #         f"{fits[ii][-1].slope*100**2:.1f} % per\n100 mV",
+    #         fontdict={"fontsize": 12},
+    #     )
+    #     pf.set_all_fontsize(ax3, 12)
+    #     pf.set_thickaxes(ax3, 3)
+    #
+    #     ax4 = fig.add_subplot(gs[1, 2])
+    #     scale = 0.02
+    #     sns.violinplot(y=sens[:, -1], saturation=0.5)
+    #     # ax4.plot(np.random.normal(loc = 1,scale = scale,size = sens.shape[0]),sens[:,-1],'.k',markersize = 12)
+    #     sns.swarmplot(y=sens[:, -1], ax=ax4, color="k", size=7)
+    #
+    #     ax4.xaxis.set_visible(False)
+    #     ax4.set_yticks(np.arange(2, 11, 2))
+    #     ax4.set_ylabel("Ratiometric sensitivity\n(% per 100 mV)")
+    #     pf.set_thickaxes(ax4, 3, remove=["top", "right", "bottom"])
+    #     pf.set_all_fontsize(ax4, 12)
+    #
+    #     fig.savefig(
+    #         Path(figsave, f"patch_figure_red_dots{filetype}"),
+    #         dpi=300,
+    #         bbox_inches="tight",
+    #         transparent=True,
+    #     )
+    #
+    #     # plot an example cell
+    #     fig = plt.figure(constrained_layout=True, figsize=[7, 4.8])
+    #     gs = fig.add_gridspec(2, 3)
+    #
+    #     ax0 = fig.add_subplot(gs[:, 0])
+    #     ax0.imshow(image, cmap="Greys_r")
+    #     ax0.imshow(over)
+    #
+    #     plt.axis("off")
+    #
+    #     ax1 = fig.add_subplot(gs[0, 1])
+    #     ax1.plot(np.arange(ex_vm.shape[-1]) * vm_T, ex_vm.T, linewidth=2)
+    #     ax1.set_xlabel("Time (s)")
+    #     ax1.set_ylabel("Patch command\nvoltage (mV)")
+    #     # ax1.set_yticks(np.arange(-1,4))
+    #     pf.set_all_fontsize(ax1, 12)
+    #     pf.set_thickaxes(ax1, 3)
+    #
+    #     ax2 = fig.add_subplot(gs[0, 2])
+    #     ax2.plot(np.arange(ex_tc.shape[-1]) * T, (ex_tc.T - 1) * 100, linewidth=2)
+    #     ax2.set_xlabel("Time (s)")
+    #     ax2.set_ylabel(r"$\Delta R/R_0$ (%)")
+    #     ax2.set_yticks(np.arange(-2, 7, 2))
+    #     pf.set_all_fontsize(ax2, 12)
+    #     pf.set_thickaxes(ax2, 3)
+    #
+    #     ax3 = fig.add_subplot(gs[1, 1])
+    #     ax3.plot(
+    #         mean_vs[ii, :],
+    #         (fits[ii][-1].slope * mean_vs[ii, :] + fits[ii][-1].intercept - 1) * 100,
+    #         "k",
+    #         linewidth=3,
+    #     )
+    #     for idx in range(mean_vs.shape[1]):
+    #         ax3.plot(mean_vs[ii, idx], (mean_rs[ii, idx] - 1) * 100, ".r", markersize=12)
+    #     ax3.set_xlabel("Membrane Voltage (mV)")
+    #     ax3.set_ylabel(r"$\Delta R/R_0$ (%)")
+    #     ax3.set_yticks(np.arange(-2, 7, 2))
+    #     ax3.set_xticks([-50, 0, 50])
+    #     ax3.text(
+    #         -60,
+    #         2,
+    #         f"{fits[ii][-1].slope*100**2:.1f} % per\n100 mV",
+    #         fontdict={"fontsize": 12},
+    #     )
+    #     pf.set_all_fontsize(ax3, 12)
+    #     pf.set_thickaxes(ax3, 3)
+    #
+    #     ax4 = fig.add_subplot(gs[1, 2])
+    #     scale = 0.02
+    #     ax4.violinplot(sens[:, -1])
+    #     ax4.plot(
+    #         np.random.normal(loc=1, scale=scale, size=sens.shape[0]),
+    #         sens[:, -1],
+    #         ".k",
+    #         markersize=12,
+    #     )
+    #     # sns.swarmplot(y=sens[:,-1],ax = ax4,color = 'k',size = 7)
+    #
+    #     ax4.xaxis.set_visible(False)
+    #     ax4.set_yticks(np.arange(2, 11, 2))
+    #     ax4.set_ylabel("Ratiometric sensitivity\n(% per 100 mV)")
+    #     pf.set_thickaxes(ax4, 3, remove=["top", "right", "bottom"])
+    #     pf.set_all_fontsize(ax4, 12)
+    #
+    #     fig.savefig(
+    #         Path(figsave, f"patch_figure_old_violin{filetype}"),
+    #         dpi=300,
+    #         bbox_inches="tight",
+    #         transparent=True,
+    #     )
+    # =============================================================================
 
     datafile = Path(figsave, "info.txt")
 

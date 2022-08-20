@@ -148,6 +148,11 @@ def make_example_trace(initial_df, save_dir, figsave, filetype):
         transparent=True,
     )
 
+    figdata_name = "/home/peter/Dropbox/Papers/cancer/v2/figure_data/" + "fig_1_"
+    np.savetxt(figdata_name + f"_1H_x.txt", t)
+    np.savetxt(figdata_name + f"_1H_y.txt", (tc - 1) * 100)
+    np.savetxt(figdata_name + f"_1H_y_filtered.txt", (tc_filt - 1) * 100)
+
 
 if __name__ == "__main__":
     top_dir = Path("/home/peter/data/Firefly/cancer")

@@ -77,6 +77,13 @@ def plot_correlation_analysis(top_dir, save_dir, figsave, filetype):
         transparent=True,
     )
 
+    figdata_name = "/home/peter/Dropbox/Papers/cancer/v2/figure_data/" + "fig_9_"
+    np.savetxt(figdata_name + f"_9C_bins.txt", binsizes)
+    np.savetxt(figdata_name + f"_9C_means_observed.txt", means)
+    np.savetxt(figdata_name + f"_9C_means_shuffled.txt", means_null)
+    np.savetxt(figdata_name + f"_9C_CIs_observed.txt", CIs)
+    np.savetxt(figdata_name + f"_9C_CIs_observed.txt", CIs_nd)
+
 
 def plot_example_synchrony(top_dir, save_dir, figsave, filetype, redo_boot=False):
     trial_string_use = "cancer_20201207_slip1_area1_long_acq_corr_corr_long_acqu_blue_0.03465_green_0.07063_heated_to_37_1"
@@ -226,6 +233,11 @@ def plot_example_synchrony(top_dir, save_dir, figsave, filetype, redo_boot=False
         transparent=True,
     )
 
+    figdata_name = "/home/peter/Dropbox/Papers/cancer/v2/figure_data/" + "fig_9_"
+    np.savetxt(figdata_name + f"_9A_x.txt", np.arange(tcs.shape[-1]) * T)
+    np.savetxt(figdata_name + f"_9A_y.txt", (tcs - 1) * 100)
+    np.savetxt(figdata_name + f"_9A_y_filtered.txt", (tc_filt - 1) * 100)
+
     event_dict = np.load(
         Path(trial_save, f"{trial_string}_event_properties.npy"), allow_pickle=True
     ).item()
@@ -264,6 +276,10 @@ def plot_example_synchrony(top_dir, save_dir, figsave, filetype, redo_boot=False
         dpi=300,
         transparent=True,
     )
+
+    figdata_name = "/home/peter/Dropbox/Papers/cancer/v2/figure_data/" + "fig_9_"
+    np.savetxt(figdata_name + f"_9B_binned_spikes.txt", binned_spikes)
+    np.savetxt(figdata_name + f"_9B_binned_spikes_shuffled.txt", binned_spikes_shuffled)
 
     if redo_boot:
         # now get an example bootstrap sampling
@@ -364,6 +380,10 @@ def plot_wave(top_dir, save_dir, figsave, filetype):
     pf.set_all_fontsize(ax, 14)
     fig.savefig(Path(figsave, "../wave_figure2", f"speed_fit{filetype}"))
 
+    figdata_name = "/home/peter/Dropbox/Papers/cancer/v2/figure_data/" + "fig_10_"
+    np.savetxt(figdata_name + f"_10B_x.txt", times)
+    np.savetxt(figdata_name + f"_10B_y.txt", dists)
+
     # plot distance/magnitude
     fit2 = stats.linregress(dists, sizes)
     fig, ax = plt.subplots()
@@ -376,6 +396,10 @@ def plot_wave(top_dir, save_dir, figsave, filetype):
     pf.make_square_plot(ax)
     pf.set_all_fontsize(ax, 14)
     fig.savefig(Path(figsave, "../wave_figure2", f"size_plot{filetype}"))
+
+    figdata_name = "/home/peter/Dropbox/Papers/cancer/v2/figure_data/" + "fig_10_"
+    np.savetxt(figdata_name + f"_10C_x.txt", dists)
+    np.savetxt(figdata_name + f"_10C_y.txt", sizes)
 
     sep = 20  #
     norm_dist = dists / dists.max()
@@ -437,6 +461,11 @@ def plot_wave(top_dir, save_dir, figsave, filetype):
 
     ex_roi = 185
     ex_t = tcs[ex_roi]
+
+    figdata_name = "/home/peter/Dropbox/Papers/cancer/v2/figure_data/" + "fig_10_"
+    np.savetxt(figdata_name + f"_10A_x.txt", np.arange(roi_t.shape[-1]) * T)
+    np.savetxt(figdata_name + f"_10A_y.txt", (roi_t - 1) * 100)
+    np.savetxt(figdata_name + f"_10A_y_filtered.txt", (roi_t_filt - 1) * 100)
 
 
 if __name__ == "__main__":

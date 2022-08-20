@@ -100,6 +100,12 @@ def plot_pre_post_ttx_traces(initial_df, save_dir, figsave, filetype):
         transparent=True,
     )
 
+    figdata_name = "/home/peter/Dropbox/Papers/cancer/v2/figure_data/" + "fig_6_"
+    np.savetxt(figdata_name + f"_6A1_x.txt", np.arange(tcs[0].shape[1]) * T)
+    np.savetxt(figdata_name + f"_6A1_y.txt", tcs[0].T)
+    np.savetxt(figdata_name + f"_6A2_x.txt", np.arange(tcs[0].shape[1]) * T)
+    np.savetxt(figdata_name + f"_6A2_y.txt", tcs[1].T)
+
 
 def plot_TTX_pre_post(save_dir, figsave, filetype, redo_stats):
 
@@ -342,6 +348,11 @@ def plot_washout_summary(
         transparent=True,
     )
 
+    figdata_name = "/home/peter/Dropbox/Papers/cancer/v2/figure_data/" + "fig_6_"
+    np.savetxt(figdata_name + f"_6E_pre.txt", pre * 10**scale)
+    np.savetxt(figdata_name + f"_6E_post.txt", post * 10**scale)
+    np.savetxt(figdata_name + f"_6E_wash.txt", wash * 10**scale)
+
     if redo_stats:
         p_pre_post, _, f1 = statsf.bootstrap_test(
             pre,
@@ -577,6 +588,12 @@ def plot_TTX_summary(
     else:
         raise ValueError("wrong key")
 
+    figdata_name = "/home/peter/Dropbox/Papers/cancer/v2/figure_data/" + "fig_6_"
+    np.savetxt(figdata_name + f"_6C_pre10.txt", pre_10 * 10**scale)
+    np.savetxt(figdata_name + f"_6C_post10.txt", post_10 * 10**scale)
+    np.savetxt(figdata_name + f"_6D_pre1.txt", pre_10 * 10**scale)
+    np.savetxt(figdata_name + f"_6D_post1.txt", post_10 * 10**scale)
+
     fig_1.savefig(
         Path(figsave, "summary", f"TTX_1um_compare_density_{density}_{key}{filetype}"),
         bbox_inches="tight",
@@ -774,6 +791,17 @@ def plot_events_TTX(
         f.write(f"Number events in bins up to edge at {h[1][iid]:.3f} %\n")
         f.write(f"pre: {n_events_pre} \n")
         f.write(f"post: {n_events_post} \n")
+
+    figdata_name = "/home/peter/Dropbox/Papers/cancer/v2/figure_data/" + "fig_6_"
+    save = neg[["event_amplitude", "event_length"]].copy()
+    save["event_amplitude"] *= 100
+    save["event_length"] *= T
+    save.to_csv(figdata_name + "fig_6B1_data.csv")
+
+    save = pos[["event_amplitude", "event_length"]].copy()
+    save["event_amplitude"] *= 100
+    save["event_length"] *= T
+    save.to_csv(figdata_name + "fig_6B2_data.csv")
 
     return fig
 

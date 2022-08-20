@@ -64,6 +64,8 @@ def calculate_proportion_active_FOV(save_dir, figure_dir):
         .agg(["mean"])
     )
 
+    df = df[df.day != 20210122]  # remove < 100 hrs
+
     tgf = df[[x == "MCF10A_TGFB" for x in df.expt]]
     prop_active_tgf = (
         tgf[["active", "neg_event_rate", "prop_pos", "prop_neg", "day_slip", "expt"]]
