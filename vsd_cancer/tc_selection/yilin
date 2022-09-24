@@ -1,0 +1,2 @@
+Firstly, the 'event_properties.npy' were created by 'get_events.py'
+And the 'active' cells were selected by 'tc_selection_all_yilin.py', this code does not look into incomplete trials.
